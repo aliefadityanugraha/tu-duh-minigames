@@ -1,0 +1,260 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+* {
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0px;
+  height: 100%;
+}
+/* a blue color as a generic focus style */
+button:focus-visible {
+  outline: 2px solid #4a90e2 !important;
+  outline: -webkit-focus-ring-color auto 5px !important;
+}
+a {
+  text-decoration: none;
+}
+/* @FONTWARNING[{"type": "restricted", "family": "JetBrains Mono-Regular", "weight": "400", "style": "normal", "allowsCrossOrigin": false}] */
+
+@font-face {
+  font-family: "JetBrains Mono-Regular";
+  src: local("JetBrains Mono-Regular");
+}
+/* @FONTWARNING[{"type": "restricted", "family": "Rubik-Italic", "weight": "400", "style": "italic", "allowsCrossOrigin": false}] */
+
+@font-face {
+  font-family: "Rubik-Italic";
+  src: local("Rubik-Italic");
+}
+/* @FONTWARNING[{"type": "restricted", "family": "Rubik-ExtraBold", "weight": "800", "style": "normal", "allowsCrossOrigin": false}] */
+
+@font-face {
+  font-family: "Rubik-ExtraBold";
+  src: local("Rubik-ExtraBold");
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #190047; /* surface / background */
+    color: #e9ddff; /* on-background */
+    font-family: 'Rubik-ExtraBold', 'Rubik', sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .font-mono-tech {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Neo-Pop Strike Components */
+  
+  /* Buttons */
+  .neo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid #000000;
+    box-shadow: 6px 6px 0px 0px #000000;
+    text-transform: uppercase;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    transition: all 0.1s ease;
+    cursor: pointer;
+    border-radius: 0.5rem;
+  }
+
+  .neo-btn:hover {
+    box-shadow: 8px 8px 0px 0px #000000;
+  }
+
+  .neo-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
+  
+  /* Primary Action Button (Cyber Yellow) */
+  .neo-btn-primary {
+    background-color: #ffc312; /* primary-container */
+    color: #3f2e00; /* on-primary */
+  }
+  .neo-btn-primary:hover {
+    background-color: #ffe5b3; /* primary */
+  }
+
+  /* Secondary Action Button (Mint Green) */
+  .neo-btn-secondary {
+    background-color: #00c899; /* secondary-container */
+    color: #002116; /* on-secondary-fixed */
+  }
+  .neo-btn-secondary:hover {
+    background-color: #41e5b3; /* secondary */
+  }
+
+  /* Tertiary Button (Red / Error / Danger) */
+  .neo-btn-danger {
+    background-color: #93000a; /* error-container */
+    color: #ffdad6; /* on-error-container */
+  }
+  .neo-btn-danger:hover {
+    background-color: #ffb4ab; /* error */
+    color: #690005;
+  }
+
+  /* Cards */
+  .neo-card {
+    border: 4px solid #000000;
+    box-shadow: 6px 6px 0px 0px #000000;
+    border-radius: 0.75rem; /* md */
+    background-color: #270067; /* surface-container */
+    color: #e9ddff; /* on-surface */
+  }
+
+  .neo-card-high {
+    border: 4px solid #000000;
+    box-shadow: 8px 8px 0px 0px #000000;
+    border-radius: 1rem; /* lg */
+    background-color: #330081; /* surface-container-high */
+    color: #e9ddff;
+  }
+
+  .neo-card-flat {
+    border: 4px solid #000000;
+    border-radius: 0.5rem;
+    background-color: #22005c; /* surface-container-low */
+  }
+
+  /* Input fields */
+  .neo-input {
+    border: 4px solid #000000;
+    border-radius: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    background-color: #13003a; /* surface-container-lowest */
+    color: #e9ddff;
+    padding: 0.75rem 1rem;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5);
+    transition: border-color 0.15s ease-in-out;
+  }
+  .neo-input:focus {
+    outline: none;
+    border-color: #ffc312; /* primary-container */
+  }
+
+  /* Chips and Badges */
+  .neo-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid #000000;
+    border-radius: 0.25rem; /* sm */
+    box-shadow: 2px 2px 0px 0px #000000;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 0.875rem; /* 14px */
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.5rem;
+    text-transform: uppercase;
+  }
+
+  /* Legacy layout/flat card compat mapping */
+  .card {
+    border: 4px solid #000000;
+    box-shadow: 4px 4px 0px 0px #000000;
+    background-color: #270067;
+    border-radius: 0.5rem;
+    color: #e9ddff;
+  }
+
+  .card-elevated {
+    border: 4px solid #000000;
+    box-shadow: 6px 6px 0px 0px #000000;
+    background-color: #330081;
+    border-radius: 0.75rem;
+    color: #e9ddff;
+  }
+
+  .glassmorphism {
+    border: 4px solid #000000;
+    box-shadow: 6px 6px 0px 0px #000000;
+    background-color: #22005c;
+    border-radius: 0.75rem;
+    color: #e9ddff;
+  }
+
+  .text-glow-red    { color: #ffb4ab; }
+  .text-glow-green  { color: #41e5b3; }
+  .text-glow-yellow { color: #ffe5b3; }
+  .text-glow-cyan   { color: #5ffcc9; }
+
+  /* Neo-Brutalism hard-edge shadows */
+  .shadow-neo-sm {
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
+  .shadow-neo-md {
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+  .shadow-neo-lg {
+    box-shadow: 6px 6px 0px 0px #000000;
+  }
+}
+
+/* Deep purple space-themed stars background */
+.stars-bg {
+  background-color: #190047;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(69, 0, 168, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 200, 153, 0.1) 0%, transparent 50%),
+    radial-gradient(rgba(233, 221, 255, 0.15) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 24px 24px;
+}
+
+/* Subtle float animations */
+@keyframes floatUpSoft {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes floatDownSoft {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float-soft-1 {
+  animation: floatUpSoft 6s ease-in-out infinite;
+}
+
+.animate-float-soft-2 {
+  animation: floatDownSoft 8s ease-in-out infinite;
+}
+
+/* Pulse glow red matching palette */
+@keyframes pulseGlowRed {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(147, 0, 10, 0.4); border-color: #ffb4ab; }
+  50%       { box-shadow: 0 0 0 4px rgba(147, 0, 10, 0.2); border-color: #93000a; }
+}
+
+.animate-pulse-glow-red {
+  animation: pulseGlowRed 2s infinite ease-in-out;
+}
+
+/* Shimmer for progress bars */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}

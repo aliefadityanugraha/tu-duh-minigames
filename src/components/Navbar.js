@@ -33,7 +33,7 @@ export default function Navbar({ navItems = [], roomCode = null, rightContent = 
       {/* ── Sisi Kiri: Logo + Nav Items ── */}
       <div className="flex items-center gap-6 self-start sm:self-auto">
         <a href="/" className="shrink-0 select-none">
-          <span className="font-rubik italic font-normal text-[#ffc312] text-3xl md:text-4xl tracking-[-1.5px] leading-none whitespace-nowrap hover:text-[#ffe5b3] transition-colors">
+          <span className="font-rubik italic font-bold text-[#ffc312] text-3xl md:text-4xl tracking-[-1.5px] leading-none whitespace-nowrap hover:text-[#ffe5b3] transition-colors">
             TU-DUH!
           </span>
         </a>

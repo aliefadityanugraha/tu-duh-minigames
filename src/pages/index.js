@@ -36,10 +36,10 @@ export default function Home() {
       </Head>
 
       {/* Dekorasi mengambang */}
-      <div className="absolute top-20 left-12 text-5xl opacity-10 select-none animate-float-soft-1 hidden md:block">🧑‍🚀</div>
+      {/* <div className="absolute top-20 left-12 text-5xl opacity-10 select-none animate-float-soft-1 hidden md:block">🧑‍🚀</div>
       <div className="absolute bottom-24 left-20 text-4xl opacity-10 select-none animate-float-soft-2 hidden md:block">🚀</div>
       <div className="absolute top-32 right-16 text-5xl opacity-10 select-none animate-float-soft-2 hidden md:block">🏫</div>
-      <div className="absolute bottom-20 right-24 text-4xl opacity-10 select-none animate-float-soft-1 hidden md:block">🇮🇩</div>
+      <div className="absolute bottom-20 right-24 text-4xl opacity-10 select-none animate-float-soft-1 hidden md:block">🇮🇩</div> */}
 
       <LoginForm onSubmit={handleSubmit} error={error} loading={loading} />
     </div>

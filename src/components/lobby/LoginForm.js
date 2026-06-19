@@ -40,7 +40,7 @@ export default function LoginForm({ onSubmit, error, loading }) {
   const navRightContent = (
     <div className="flex items-center gap-2">
       <span className="neo-badge bg-[#270067] text-[#5ffcc9] border-[#000000] text-xs py-1 px-3">VERSI 1.0.0</span>
-      <span className="neo-badge bg-[#ffc312] text-[#6e5200] border-[#000000] text-xs py-1 px-3 hidden sm:inline-flex">🇮🇩 PANCASILA</span>
+      {/* <span className="neo-badge bg-[#ffc312] text-[#6e5200] border-[#000000] text-xs py-1 px-3 hidden sm:inline-flex">🇮🇩 PANCASILA</span> */}
     </div>
   );
 
@@ -48,7 +48,8 @@ export default function LoginForm({ onSubmit, error, loading }) {
     <div className="flex-1 flex flex-col justify-between w-full min-h-screen relative z-10">
       
       {/* ── TOP BAR (Global Navbar) ── */}
-      <Navbar navItems={lobbyNavItems} rightContent={navRightContent} />
+      {/* <Navbar navItems={lobbyNavItems} rightContent={navRightContent} /> */}
+      <Navbar rightContent={navRightContent} />
 
       {/* ── MAIN AREA ── */}
       <div className="flex-1 flex flex-col items-center justify-center gap-8 px-4 py-12 md:py-20 max-w-4xl mx-auto w-full z-0">
@@ -58,13 +59,13 @@ export default function LoginForm({ onSubmit, error, loading }) {
           <div className="flex w-full max-w-[726.2px] items-center flex-col relative">
             
             {/* Logo TU-DUH! */}
-            <div className="font-rubik font-normal italic text-[#ffc312] text-7xl sm:text-8xl md:text-[180px] tracking-[-4px] sm:tracking-[-6px] md:tracking-[-9px] leading-none flex items-center select-none drop-shadow-[8px_8px_0px_#000000] md:drop-shadow-[12px_12px_0px_#000000] mb-2 sm:mb-4">
+            <div className="font-rubik font-bold italic text-[#ffc312] text-7xl sm:text-8xl md:text-[180px] tracking-[-4px] sm:tracking-[-6px] md:tracking-[-9px] leading-none flex items-center select-none drop-shadow-[8px_8px_0px_#000000] md:drop-shadow-[12px_12px_0px_#000000] mb-2 sm:mb-4">
               TU-DUH!
             </div>
             
             {/* Subtitle Rotated */}
             <div className="flex items-center justify-center px-6 py-2 bg-[#00000066] rounded-lg border-2 border-solid border-black rotate-[-2.00deg] shadow-[6px_6px_0px_#000000] backdrop-blur-[2px] backdrop-brightness-[100%] max-w-sm sm:max-w-md md:max-w-none">
-              <span className="font-mono text-[#5ffcc9] text-base sm:text-xl md:text-[32px] text-center tracking-[0] leading-none whitespace-nowrap select-none">
+              <span className="font-rubik text-[#5ffcc9] text-base sm:text-xl md:text-[32px] text-center tracking-[0] leading-none whitespace-nowrap select-none">
                 SIAP MAIN? GASKEUN!
               </span>
             </div>
@@ -169,12 +170,12 @@ export default function LoginForm({ onSubmit, error, loading }) {
               
               {/* Header */}
               <div className="mb-6">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-black text-xs font-bold uppercase tracking-wider mb-2 ${
+                {/* <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-black text-xs font-bold uppercase tracking-wider mb-2 ${
                   activeModal === 'buat' ? 'bg-[#ffe5b3] text-[#3f2e00]' : 'bg-[#ffe1df] text-[#68000e]'
                 }`}>
                   {activeModal === 'buat' ? <GraduationCap size={12} /> : <Users size={12} />}
                   {activeModal === 'buat' ? 'MODE GURU / BUAT ROOM' : 'SISWA / GABUNG PLAY'}
-                </span>
+                </span> */}
                 <h3 className="font-rubik text-2xl md:text-3xl text-white font-extrabold tracking-tight">
                   {activeModal === 'buat' ? 'Buka Room Baru' : 'Masuk Ke Room'}
                 </h3>
@@ -253,14 +254,14 @@ export default function LoginForm({ onSubmit, error, loading }) {
                     )}
                   </button>
 
-                  <button
+                  {/* <button
                     type="button"
                     onClick={handleCloseModal}
                     disabled={loading}
                     className="w-full py-2 bg-transparent hover:bg-white/5 text-[#d3c5ab] hover:text-white font-mono text-xs font-bold transition-colors underline cursor-pointer"
                   >
                     Batal / Kembali
-                  </button>
+                  </button> */}
                 </div>
 
               </form>

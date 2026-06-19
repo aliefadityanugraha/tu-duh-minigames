@@ -7,7 +7,7 @@ const { startRoomTicker, checkWinConditions, tallyVotes } = require('../lib/game
 function registerJoinHandlers(socket, io) {
 
   // ── Bergabung / membuat room ──
-  socket.on('join-room', ({ roomCode, name, isGuru }) => {
+  socket.on('join-room', ({ roomCode, name, isGuru, sessionId }) => {
     let code = roomCode ? roomCode.toUpperCase() : null;
 
     // Guru tanpa kode → buat room baru
@@ -33,6 +33,29 @@ function registerJoinHandlers(socket, io) {
 
     const room = rooms[code];
     if (!room) { socket.emit('join-error', 'Room tidak ditemukan!'); return; }
+
+    const existingPlayer = sessionId ? room.players.find(p => p.sessionId === sessionId) : null;
+    
+    if (existingPlayer) {
+      // Reconnect
+      existingPlayer.id = socket.id;
+      existingPlayer.isOnline = true;
+      if (room.state === 'lobby') {
+        existingPlayer.name = name; // izinkan ganti nama jika masih di lobi
+      }
+      socket.join(code);
+      socket.roomCode = code;
+      
+      io.to(code).emit('room-updated', getSanitizedRoom(code));
+      socket.emit('join-success', { roomCode: code, player: existingPlayer });
+      
+      if (room.state === 'playing') {
+        socket.emit('role-assigned', { role: existingPlayer.role, isGuru: existingPlayer.isGuru, tasksRequired: room.tasksRequired });
+      }
+      console.log(`${existingPlayer.name} (Reconnected) ke room ${code}`);
+      return;
+    }
+
     if (room.state !== 'lobby') { socket.emit('join-error', 'Game sudah dimulai!'); return; }
 
     const isDuplicate = room.players.some(p => p.name.toLowerCase() === name.toLowerCase());
@@ -42,7 +65,7 @@ function registerJoinHandlers(socket, io) {
       socket.emit('join-error', 'Room sudah penuh.'); return;
     }
 
-    const newPlayer = { id: socket.id, name, isGuru: !!isGuru, role: isGuru ? 'guru' : null, isDead: false, score: 0, answerHistory: [] };
+    const newPlayer = { id: socket.id, sessionId, name, isGuru: !!isGuru, role: isGuru ? 'guru' : null, isDead: false, score: 0, answerHistory: [], isOnline: true, skinId: 0 };
     room.players.push(newPlayer);
     socket.join(code);
     socket.roomCode = code;
@@ -72,8 +95,18 @@ function registerJoinHandlers(socket, io) {
     if (idx === -1) return;
 
     const leaving = room.players[idx];
+    console.log(`${leaving.name} terputus dari room ${code}`);
+
+    // Jika game sedang berjalan, JANGAN hapus pemain (agar bisa reconnect)
+    if (room.state === 'playing') {
+      leaving.isOnline = false;
+      io.to(code).emit('room-updated', getSanitizedRoom(code));
+      io.to(code).emit('player-left', { name: leaving.name, isOffline: true });
+      return; // Berhenti di sini, jangan di-splice!
+    }
+
+    // Jika masih di lobi, hapus dari room
     room.players.splice(idx, 1);
-    console.log(`${leaving.name} keluar dari room ${code}`);
 
     // Bersihkan suara voting jika sedang debat
     if (room.debate?.active) delete room.debate.votes[socket.id];
@@ -100,7 +133,7 @@ function registerJoinHandlers(socket, io) {
 
     checkWinConditions(code, io);
     io.to(code).emit('room-updated', getSanitizedRoom(code));
-    io.to(code).emit('player-left', { name: leaving.name });
+    io.to(code).emit('player-left', { name: leaving.name, isOffline: false });
   });
 }
 

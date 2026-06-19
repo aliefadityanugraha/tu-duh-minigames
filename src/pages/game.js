@@ -212,6 +212,7 @@ export default function Game() {
           isGuru={roleInfo.isGuru}
           isPlayerDead={isPlayerDead}
           onVote={handleVotePlayer}
+          onSendChat={sendDebateChat}
         />
       )}
 

@@ -1,128 +1,163 @@
 import React from 'react';
-import { RotateCcw, Trophy, Info } from 'lucide-react';
 
 /**
- * Layar akhir permainan dengan penjelasan alasan kemenangan.
+ * Layar akhir permainan dengan Neo-Pop Brutalism Podium UI.
  */
 export default function GameEndedCard({ room, roleInfo, onRestart, selfId, isGuru: isGuruProp }) {
-  const medals      = ['🥇', '🥈', '🥉'];
   const showRestart = isGuruProp ?? roleInfo?.isGuru ?? false;
   const isWarga     = room.winner === 'warga';
 
-  // Peta alasan teknis → kalimat penjelasan yang ramah & edukatif
+  // Urutkan pemain berdasarkan skor
+  const sortedPlayers = [...room.players]
+    .filter(p => !p.isGuru)
+    .sort((a, b) => b.score - a.score);
+
+  const top3 = sortedPlayers.slice(0, 3);
+  const others = sortedPlayers.slice(3);
+
+  const p1 = top3[0];
+  const p2 = top3[1];
+  const p3 = top3[2];
+
+  const winTitle = isWarga ? "WARGA MENANG: KEADILAN TEGAK!" : "PROVOKATOR MENANG: KEKACAUAN TERJADI!";
+  const winSubtitle = isWarga ? "MISI BERHASIL • KOTA AMAN DARI DISINFORMASI" : "MISI GAGAL • KOTA DIKUASAI DISINFORMASI";
+  const titleColor = isWarga ? "text-[#ffc312]" : "text-[#ffb4ab]";
+  const subBorder = isWarga ? "border-[#41e5b3]" : "border-[#ffb4ab]";
+  const subText = isWarga ? "text-[#5ffcc9]" : "text-[#ffdad6]";
+
   const winReasonDisplay = _buildWinReason(room.winner, room.winReason, room);
 
   return (
-    <div className={`bg-white rounded-2xl border-2 shadow-flat-md overflow-hidden ${
-      isWarga ? 'border-emerald-300' : 'border-red-300'
-    }`}>
-      {/* Accent bar */}
-      <div className={`h-1.5 ${
-        isWarga
-          ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
-          : 'bg-gradient-to-r from-red-500 to-orange-400'
-      }`} />
+    <div className="flex flex-col items-center relative bg-[#190047] w-full min-h-[calc(100vh-120px)] overflow-y-auto px-4 py-8 custom-scrollbar">
+      {/* Background decoration */}
+      <div className="absolute inset-0 stars-bg opacity-40 pointer-events-none" />
 
-      <div className="p-8 flex flex-col items-center gap-6">
+      {/* Header Info */}
+      <div className="absolute top-4 left-4 p-2 bg-black border-2 border-black z-10 hidden md:block">
+        <span className="font-mono text-[#5ffcc9] text-xs font-bold tracking-wider">GAME ID: #{room.code}</span>
+      </div>
 
-        {/* ── Hasil & Alasan ── */}
-        <div className="text-center space-y-4 max-w-lg w-full">
-          <span className="inline-block px-3 py-1 bg-slate-100 rounded-full text-slate-500 text-xs font-semibold uppercase tracking-wider">
-            Permainan Berakhir
-          </span>
-
-          {/* Ikon pemenang */}
-          <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto text-5xl border-4 ${
-            isWarga
-              ? 'bg-emerald-100 border-emerald-300'
-              : 'bg-red-100 border-red-300'
-          }`}>
-            {isWarga ? '🏆' : '😈'}
-          </div>
-
-          {/* Judul pemenang */}
-          <h2 className={`text-3xl font-extrabold ${isWarga ? 'text-emerald-600' : 'text-red-600'}`}>
-            {isWarga ? 'Warga Menang!' : 'Provokator Menang!'}
-          </h2>
-
-          {/* Kotak alasan kemenangan */}
-          <div className={`rounded-2xl border p-4 text-left space-y-2 ${
-            isWarga
-              ? 'bg-emerald-50 border-emerald-200'
-              : 'bg-red-50 border-red-200'
-          }`}>
-            <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${
-              isWarga ? 'text-emerald-700' : 'text-red-700'
-            }`}>
-              <Info size={13} />
-              Kenapa {isWarga ? 'Warga' : 'Provokator'} menang?
-            </div>
-            <p className={`text-sm leading-relaxed font-medium ${
-              isWarga ? 'text-emerald-800' : 'text-red-800'
-            }`}>
-              {winReasonDisplay.headline}
-            </p>
-            <p className="text-xs leading-relaxed text-slate-500">
-              {winReasonDisplay.detail}
-            </p>
-          </div>
+      <div className="flex flex-col items-center gap-2 relative z-10 mt-6 mb-16">
+        <div className="relative shadow-[6px_6px_0px_#000000] bg-[#190047] border-4 border-black px-6 py-2">
+          <h1 className={`font-rubik italic font-black text-2xl md:text-5xl text-center ${titleColor} tracking-tighter`}>
+            {winTitle}
+          </h1>
         </div>
+        <div className={`px-6 py-2 bg-black border-2 border-solid ${subBorder}`}>
+          <p className={`font-mono ${subText} text-[10px] md:text-sm text-center tracking-[0.2em] uppercase font-bold`}>
+            {winSubtitle}
+          </p>
+        </div>
+        <div className="mt-6 px-6 py-3 bg-[#13003a] border-2 border-black max-w-xl text-center shadow-[4px_4px_0px_#000000]">
+           <p className="font-mono text-[#e9ddff] text-xs font-bold uppercase tracking-wider mb-1">
+             {winReasonDisplay.headline}
+           </p>
+           <p className="font-mono text-[#9c8f78] text-[10px] leading-relaxed">
+             {winReasonDisplay.detail}
+           </p>
+        </div>
+      </div>
 
-        {/* ── Papan Skor ── */}
-        <div className="w-full max-w-md bg-slate-50 rounded-2xl border border-slate-200 p-5 space-y-2">
-          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-3">
-            <Trophy size={12} className="text-amber-500" />
-            Papan Skor Akhir
-          </h4>
-          {[...room.players]
-            .sort((a, b) => b.score - a.score)
-            .map((p, idx) => {
-              const isSelf = p.id === selfId;
-              return (
-                <div
-                  key={p.id}
-                  className={`flex justify-between items-center py-2 px-3 rounded-xl text-sm border transition-all ${
-                    isSelf
-                      ? 'bg-indigo-50 border-indigo-200'
-                      : 'bg-white border-slate-100 hover:border-slate-200'
-                  }`}
-                >
-                  <div className={`flex items-center gap-2 ${isSelf ? 'text-indigo-700 font-bold' : 'text-slate-600'}`}>
-                    <span className="w-6 text-center text-base">
-                      {idx < 3 ? medals[idx] : `#${idx + 1}`}
-                    </span>
-                    <span>
-                      {p.name}
-                      {p.isGuru && ' 🏫'}
-                      {isSelf && <span className="text-indigo-400 font-normal text-xs ml-1">(Anda)</span>}
-                    </span>
-                  </div>
-                  <span className={`font-bold font-mono text-sm ${isSelf ? 'text-indigo-600' : 'text-slate-700'}`}>
-                    {p.score} Poin
+      {/* Podium */}
+      <div className="flex items-end justify-center gap-2 md:gap-6 relative z-10 h-64 mb-20 mt-8 w-full max-w-4xl">
+        {/* Player 2 (Left) */}
+        {p2 ? (
+          <div className="flex flex-col w-[100px] md:w-[160px] items-center gap-2 relative">
+            <div className="flex flex-col items-center mb-2">
+              <span className={`font-mono text-[10px] md:text-xs text-[#5ffcc9] truncate w-full text-center ${p2.id === selfId ? 'font-bold' : ''}`}>
+                @{p2.name}
+              </span>
+              <span className="font-rubik font-black text-[#e9ddff] text-lg md:text-2xl mt-0.5">{p2.score} XP</span>
+            </div>
+            <div className="flex h-32 md:h-40 items-center justify-center w-full bg-[#41e5b3] border-4 border-black shadow-[6px_6px_0px_#000000]">
+              <span className="font-rubik font-black text-[#003829] text-5xl opacity-50">2</span>
+            </div>
+          </div>
+        ) : <div className="w-[100px] md:w-[160px]" />}
+
+        {/* Player 1 (Center) */}
+        {p1 && (
+          <div className="flex flex-col w-[120px] md:w-[200px] items-center gap-2 relative z-20">
+            <div className="flex flex-col items-center mb-2">
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-black border-2 border-[#ffc312] rounded-full flex items-center justify-center mb-1 shadow-[2px_2px_0px_#ffc312]">
+                <span className="text-xl md:text-2xl">👑</span>
+              </div>
+              <span className={`font-mono text-xs md:text-sm text-[#ffc312] truncate w-full text-center ${p1.id === selfId ? 'font-bold' : ''}`}>
+                @{p1.name}
+              </span>
+              <span className="font-rubik font-black text-[#ffc312] text-2xl md:text-4xl mt-0.5">{p1.score} XP</span>
+            </div>
+            <div className="flex h-48 md:h-56 items-center justify-center w-full bg-[#ffc312] border-4 border-black shadow-[8px_8px_0px_#000000]">
+              <span className="font-rubik font-black text-[#6e5200] text-6xl opacity-50">1</span>
+            </div>
+          </div>
+        )}
+
+        {/* Player 3 (Right) */}
+        {p3 ? (
+          <div className="flex flex-col w-[100px] md:w-[160px] items-center gap-2 relative">
+            <div className="flex flex-col items-center mb-2">
+              <span className={`font-mono text-[10px] md:text-xs text-[#ffdad6] truncate w-full text-center ${p3.id === selfId ? 'font-bold' : ''}`}>
+                @{p3.name}
+              </span>
+              <span className="font-rubik font-black text-[#e9ddff] text-lg md:text-2xl mt-0.5">{p3.score} XP</span>
+            </div>
+            <div className="flex h-24 md:h-32 items-center justify-center w-full bg-[#ffb4ab] border-4 border-black shadow-[6px_6px_0px_#000000]">
+              <span className="font-rubik font-black text-[#690005] text-5xl opacity-50">3</span>
+            </div>
+          </div>
+        ) : <div className="w-[100px] md:w-[160px]" />}
+      </div>
+
+      {/* Others List */}
+      {others.length > 0 && (
+        <div className="w-full max-w-xl bg-[#13003a] border-4 border-black shadow-[6px_6px_0px_#000000] p-4 mb-12 relative z-10">
+          <h3 className="font-mono text-[#d3c5ab] text-xs font-bold tracking-wider mb-4 uppercase border-b-4 border-black pb-2">
+            PERINGKAT LAINNYA
+          </h3>
+          <div className="flex flex-col gap-2">
+            {others.map((p, idx) => (
+              <div key={p.id} className={`flex items-center justify-between p-2.5 border-2 ${p.id === selfId ? 'bg-[#270067] border-[#ffc312]' : 'bg-[#190047] border-black'}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-mono font-bold text-[#9c8f78] text-xs w-6 flex-shrink-0">#{idx + 4}</span>
+                  <span className={`font-mono text-sm truncate ${p.id === selfId ? 'text-[#ffc312] font-bold' : 'text-[#e9ddff]'}`}>
+                    @{p.name} {p.id === selfId ? '(You)' : ''}
                   </span>
                 </div>
-              );
-            })}
+                <span className="font-rubik font-bold text-[#41e5b3] text-sm flex-shrink-0">{p.score} XP</span>
+              </div>
+            ))}
+          </div>
         </div>
+      )}
 
-        {/* ── Tombol Restart (Guru) ── */}
-        {showRestart && (
+      {/* Action Buttons */}
+      <div className="relative z-10 flex flex-col items-center">
+        {showRestart ? (
           <button
             onClick={onRestart}
-            className="flex items-center gap-2.5 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-flat-md transition-all active:scale-[0.98] text-sm tracking-wide"
+            className="px-10 py-5 bg-[#ffc312] border-4 border-black shadow-[6px_6px_0px_#000000] hover:bg-[#ffe5b3] transition-all active:translate-x-[3px] active:translate-y-[3px] active:shadow-none flex items-center justify-center gap-3"
           >
-            <RotateCcw size={16} />
-            Mulai Permainan Baru
+            <span className="text-2xl">🔄</span>
+            <span className="font-rubik italic font-black text-[#3f2e00] text-xl tracking-wider">
+              KEMBALI KE MENU UTAMA
+            </span>
           </button>
+        ) : (
+          <div className="px-8 py-4 bg-[#22005c] border-2 border-black text-center">
+            <span className="font-mono text-[#d3c5ab] text-xs italic">
+              Menunggu Guru memulai permainan baru...
+            </span>
+          </div>
         )}
       </div>
+
     </div>
   );
 }
 
 // ── Helper: bangun teks alasan kemenangan yang jelas & edukatif ──
 function _buildWinReason(winner, rawReason, room) {
-  // Deteksi jenis kemenangan dari rawReason
   if (winner === 'warga') {
     if (rawReason?.includes('tugas')) {
       const done = room.tasksCompleted ?? 0;
@@ -162,12 +197,10 @@ function _buildWinReason(winner, rawReason, room) {
       detail:   'Warga yang terpilih gagal menjawab soal penyelamatan sebelum hitungan mundur habis. Provokator berhasil membekukan seluruh aktivitas kelompok dan memenangkan permainan.',
     };
   }
-  if (rawReason?.includes('Jumlah') || rawReason?.includes('melebihi')) {
-    const provCount = room.players.filter(p => p.role === 'provokator' && !p.isDead).length;
-    const wargaCount = room.players.filter(p => p.role === 'warga' && !p.isDead).length;
+  if (rawReason?.includes('Warga telah tereliminasi') || rawReason?.includes('habis')) {
     return {
-      headline: `Provokator menang karena jumlah Warga (${wargaCount}) tidak lagi melebihi Provokator (${provCount})!`,
-      detail:   'Terlalu banyak Warga yang tereliminasi melalui duel atau voting yang salah sasaran. Ketika jumlah Provokator seimbang atau melebihi Warga, Provokator otomatis menguasai forum.',
+      headline: `Provokator memenangkan permainan karena semua Warga telah tereliminasi!`,
+      detail:   'Strategi licik Provokator berhasil. Tidak ada lagi Warga yang tersisa untuk mempertahankan nilai-nilai Pancasila di sektor ini.',
     };
   }
   return {

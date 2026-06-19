@@ -10,9 +10,9 @@ function checkWinConditions(roomCode, io) {
   const citizens     = living.filter(p => p.role === 'warga');
   const provocateurs = living.filter(p => p.role === 'provokator');
 
-  // Provokator menang: semua warga habis atau jumlah warga ≤ provokator
-  if (citizens.length === 0 || citizens.length <= provocateurs.length) {
-    _endGame(roomCode, io, 'provokator', 'Jumlah Provokator sama dengan atau melebihi Warga!');
+  // Provokator menang: semua warga tereliminasi
+  if (citizens.length === 0) {
+    _endGame(roomCode, io, 'provokator', 'Semua Warga telah tereliminasi!');
     return;
   }
 

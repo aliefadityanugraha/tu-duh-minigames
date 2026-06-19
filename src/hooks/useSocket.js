@@ -217,12 +217,31 @@ export const SocketProvider = ({ children }) => {
     setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${text}`, ...prev.slice(0, 30)]);
   };
 
+  const getSessionId = () => {
+    if (typeof window === 'undefined') return null;
+    let sid = sessionStorage.getItem('among_us_session');
+    if (!sid) {
+      sid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      sessionStorage.setItem('among_us_session', sid);
+    }
+    return sid;
+  };
+
   const joinRoom = (roomCode, name, isGuru) => {
     setError(''); setLoading(true);
-    if (socket) socket.emit('join-room', { roomCode, name, isGuru });
+    const sessionId = getSessionId();
+    if (socket) socket.emit('join-room', { roomCode, name, isGuru, sessionId });
   };
 
   const startGame = () => { if (socket) socket.emit('start-game'); };
+
+  const sendDebateChat = (message) => {
+    if (socket) socket.emit('send-debate-chat', { message });
+  };
+
+  const changeSkin = (skinId) => {
+    if (socket) socket.emit('change-skin', { skinId });
+  };
 
   return (
     <SocketContext.Provider value={{
@@ -242,6 +261,10 @@ export const SocketProvider = ({ children }) => {
       // presentasi & debat topik
       presentationNotif, setPresentationNotif,
       topicDebateNotif,
+      // debat
+      sendDebateChat,
+      // skin
+      changeSkin,
     }}>
       {children}
     </SocketContext.Provider>

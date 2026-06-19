@@ -9,11 +9,6 @@ self.__BUILD_MANIFEST = {
   "lowPriorityFiles": [],
   "rootMainFiles": [],
   "pages": {
-    "/": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/index.js"
-    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -24,10 +19,10 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/game": [
+    "/debug-kebaikan": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/game.js"
+      "static/chunks/pages/debug-kebaikan.js"
     ]
   },
   "ampFirstPages": []

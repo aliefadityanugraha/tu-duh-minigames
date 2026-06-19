@@ -32,11 +32,18 @@ function registerGameHandlers(socket, io) {
     if (nonGurus.length < 2) { socket.emit('game-error', 'Minimal 2 siswa untuk memulai!'); return; }
 
     const s = room.settings || DEFAULT_SETTINGS;
+    // Tentukan jumlah provokator
+    let provCount = s.provokatorCount === 'auto'
+      ? (nonGurus.length >= 6 ? 2 : 1)
+      : Math.min(Number(s.provokatorCount), Math.floor(nonGurus.length / 2));
+
+    const wargaCount = nonGurus.length - provCount;
+
     Object.assign(room, {
       state:          'playing',
       winner:         null,
       tasksCompleted: 0,
-      tasksRequired:  nonGurus.length * s.tasksPerPlayer,
+      tasksRequired:  wargaCount * s.tasksPerPlayer,
       gameTimer:      s.gameTimer ?? DEFAULT_SETTINGS.gameTimer,
       sabotage:       null,
       duel:           null,
@@ -46,11 +53,6 @@ function registerGameHandlers(socket, io) {
       gameStats:      { ...EMPTY_GAME_STATS(), startedAt: Date.now() },
     });
     room.gameStats.eventLog.push({ time: Date.now(), type: 'game_start', message: 'Permainan dimulai!' });
-
-    // Tentukan jumlah provokator
-    let provCount = s.provokatorCount === 'auto'
-      ? (nonGurus.length >= 6 ? 2 : 1)
-      : Math.min(Number(s.provokatorCount), Math.floor(nonGurus.length / 2));
 
     // Acak peran
     const shuffled = [...Array(nonGurus.length).keys()].sort(() => Math.random() - 0.5);
@@ -240,7 +242,7 @@ function registerGameHandlers(socket, io) {
     if (!room || room.state !== 'playing') return;
 
     const s = room.settings || DEFAULT_SETTINGS;
-    room.debate = { active: true, timer: s.debateTimer ?? 90, reason: 'teacher_pause', votes: {}, votedOut: null };
+    room.debate = { active: true, timer: s.debateTimer ?? 90, reason: 'teacher_pause', votes: {}, votedOut: null, chat: [] };
     room.gameStats.debatesHeld++;
     room.gameStats.eventLog.push({ time: Date.now(), type: 'debate', message: 'Guru memulai sesi debat voting!' });
 
@@ -330,6 +332,46 @@ function registerGameHandlers(socket, io) {
     } else {
       io.to(code).emit('room-updated', getSanitizedRoom(code));
     }
+  });
+
+  // ────────────────────────────────────────────
+  // KIRIM PESAN CHAT DEBAT
+  // ────────────────────────────────────────────
+  socket.on('send-debate-chat', ({ message }) => {
+    const code = socket.roomCode;
+    const room = rooms[code];
+    if (!room?.debate?.active) return;
+
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+
+    room.debate.chat.push({
+      senderId: player.id,
+      senderName: player.name,
+      role: player.role,
+      message,
+      timestamp: Date.now()
+    });
+
+    io.to(code).emit('room-updated', getSanitizedRoom(code));
+  });
+
+  // ────────────────────────────────────────────
+  // GANTI SKIN (hanya di lobby)
+  // ────────────────────────────────────────────
+  socket.on('change-skin', ({ skinId }) => {
+    const code = socket.roomCode;
+    const room = rooms[code];
+    if (!room || room.state !== 'lobby') return;
+
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+
+    const id = Number(skinId);
+    if (isNaN(id) || id < 0 || id > 7) return; // validasi range
+
+    player.skinId = id;
+    io.to(code).emit('room-updated', getSanitizedRoom(code));
   });
 
   // ────────────────────────────────────────────
@@ -543,6 +585,23 @@ function _resolveDuel(io, room, code, winnerId, loserId, reason) {
   });
 
   checkWinConditions(code, io);
+
+  // Jika game masih lanjut dan yang kalah adalah Warga, picu Emergency Meeting
+  if (room.state === 'playing' && loser && loser.role === 'warga') {
+    const s = room.settings || DEFAULT_SETTINGS;
+    room.debate = { 
+      active: true, 
+      timer: s.debateTimer ?? 90, 
+      reason: 'emergency_meeting', 
+      votes: {}, 
+      votedOut: null, 
+      chat: [] 
+    };
+    room.gameStats.debatesHeld++;
+    room.gameStats.eventLog.push({ time: Date.now(), type: 'debate', message: `Emergency Meeting dipicu karena ${loser.name} tereliminasi!` });
+    io.to(code).emit('debate-triggered', { reason: `EMERGENCY MEETING! Warga ${loser.name} telah tereliminasi. Segera diskusikan pelakunya!` });
+  }
+
   io.to(code).emit('room-updated', getSanitizedRoom(code));
 }
 

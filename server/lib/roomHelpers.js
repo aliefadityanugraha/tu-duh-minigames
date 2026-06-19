@@ -57,7 +57,10 @@ function getSanitizedRoom(roomCode) {
       timer:              room.debate.timer,
       reason:             room.debate.reason,
       votedOut:           room.debate.votedOut,
-      votesReceivedCount: Object.keys(room.debate.votes).length,
+      votesReceivedCount: Object.keys(room.debate.votes || {}).length,
+      chat:               room.debate.chat || [],
+      // Hanya kirim daftar ID pemain yang sudah voting (merahasiakan pilihan mereka)
+      votes:              Object.keys(room.debate.votes || {}).reduce((acc, voterId) => { acc[voterId] = true; return acc; }, {}),
     } : null,
 
     // Debat topik bebas (terpisah dari voting debate)
@@ -82,6 +85,8 @@ function getSanitizedRoom(roomCode) {
       isGuru:             p.isGuru,
       isDead:             p.isDead,
       score:              p.score,
+      isOnline:           p.isOnline,
+      skinId:             p.skinId ?? 0,
       duelCooldownEndsAt: p.duelCooldownEndsAt ?? null, // timestamp ms
     })),
   };

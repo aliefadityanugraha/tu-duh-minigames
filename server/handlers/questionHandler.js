@@ -97,6 +97,9 @@ function registerQuestionHandlers(socket, io) {
       s.provokatorCount = ['auto','1','2','3'].includes(String(newSettings.provokatorCount))
         ? newSettings.provokatorCount : 'auto';
     }
+    if (newSettings.quizRatio         !== undefined) s.quizRatio         = Math.min(1, Math.max(0, parseFloat(newSettings.quizRatio) || 0.4));
+    if (newSettings.minigameEnabled   !== undefined) s.minigameEnabled   = !!newSettings.minigameEnabled;
+    if (newSettings.minTaskDuration   !== undefined) s.minTaskDuration   = Math.min(60, Math.max(3, parseInt(newSettings.minTaskDuration) || 8));
 
     io.to(code).emit('settings-updated', { settings: s });
     io.to(code).emit('room-updated', getSanitizedRoom(code));

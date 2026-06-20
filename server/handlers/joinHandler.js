@@ -37,7 +37,12 @@ function registerJoinHandlers(socket, io) {
     const existingPlayer = sessionId ? room.players.find(p => p.sessionId === sessionId) : null;
     
     if (existingPlayer) {
-      // Reconnect
+      // Reconnect — pindahkan session task ke socket id baru
+      const oldId = existingPlayer.id;
+      if (oldId !== socket.id && room.activeTaskSessions?.[oldId]) {
+        room.activeTaskSessions[socket.id] = room.activeTaskSessions[oldId];
+        delete room.activeTaskSessions[oldId];
+      }
       existingPlayer.id = socket.id;
       existingPlayer.isOnline = true;
       if (room.state === 'lobby') {
@@ -100,6 +105,9 @@ function registerJoinHandlers(socket, io) {
     // Jika game sedang berjalan, JANGAN hapus pemain (agar bisa reconnect)
     if (room.state === 'playing') {
       leaving.isOnline = false;
+      if (room.activeTaskSessions?.[socket.id]) {
+        delete room.activeTaskSessions[socket.id];
+      }
       io.to(code).emit('room-updated', getSanitizedRoom(code));
       io.to(code).emit('player-left', { name: leaving.name, isOffline: true });
       return; // Berhenti di sini, jangan di-splice!

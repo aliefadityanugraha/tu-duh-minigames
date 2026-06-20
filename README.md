@@ -6,85 +6,156 @@ Game edukasi multiplayer interaktif yang menggabungkan keseruan mekanik *social 
 
 ## 🎮 Konsep Permainan
 
-Pemain akan bergabung ke dalam sebuah *Room* (Lobi) yang dikontrol oleh seorang **Guru (Admin)**. Pemain akan dibagi menjadi dua peran rahasia: **Warga** dan **Provokator**.
+Pemain bergabung ke dalam sebuah *Room* (Lobi) yang dikontrol oleh seorang **Guru (Admin)**. Pemain dibagi menjadi dua peran rahasia: **Warga** dan **Provokator**.
 
-- **Warga (Citizen):** Bertugas menyelesaikan misi-misi (*Mission Book*) yang berisi studi kasus pengamalan Pancasila untuk mencapai persentase kemenangan 100%. Warga juga harus mencari tahu siapa Provokator di antara mereka.
-- **Provokator (Impostor):** Bertugas menghentikan Warga menyelesaikan misi dengan cara memberikan jawaban salah pada saat *Duel* atau memicu *Sabotase*. Provokator menang jika jumlah Warga tersisa sama dengan atau kurang dari jumlah Provokator, atau jika waktu permainan habis sebelum misi selesai.
-- **Guru (Moderator):** Bertindak sebagai *Game Master*. Guru memiliki akses ke "Guru Control Panel" untuk mengawasi status seluruh pemain, memicu debat, menghentikan game, mengatur timer, hingga menunjuk siswa untuk melakukan presentasi secara acak.
+- **Warga (Citizen):** Menyelesaikan misi di *Mission Book* — berupa **kuis Pancasila** dan **mini-game interaktif** — untuk mencapai target *Team Mission*. Warga juga harus mengidentifikasi Provokator melalui musyawarah.
+- **Provokator (Impostor):** Menggagalkan misi Warga lewat *Duel* dan *Sabotase*. Provokator menang jika:
+  - Semua Warga tereliminasi, **atau**
+  - Jumlah Warga tersisa **≤** jumlah Provokator (kondisi parity), **atau**
+  - Waktu permainan habis sebelum misi selesai, **atau**
+  - Sabotase gagal diatasi tepat waktu.
+- **Guru (Moderator):** *Game Master* dengan akses ke Control Panel — mengawasi pemain, mengatur timer, memicu debat, presentasi acak, dan mengelola bank soal.
 
 ---
 
 ## ⚡ Fitur & Mekanik Utama
 
 ### 1. 📖 Mission Book (Tugas Warga)
-Setiap Warga memiliki *Mission Book* interaktif di layar mereka. Mereka harus menjawab soal-soal dan studi kasus seputar Pancasila. Menjawab benar akan menambah progres misi keseluruhan (*Team Mission*).
+
+Setiap Warga memiliki *Mission Book* interaktif. Misi bisa berupa:
+
+| Tipe | Deskripsi |
+|---|---|
+| **📝 Kuis Pancasila** | Soal pilihan ganda dari bank soal Guru |
+| **🎮 Mini-Game** | Game interaktif bertema Sila 2–5 |
+
+Guru dapat mengatur porsi kuis vs mini-game di **Pengaturan Game** (default: 40% kuis, 60% mini-game). Menyelesaikan misi dengan benar menambah progres *Team Mission* (+1 skor pribadi).
+
+**Mini-game yang tersedia:**
+
+| Mini-Game | Sila | Mekanik |
+|---|---|---|
+| Hubungkan Kebaikan | 2 | Sambung simbol kebaikan ↔ nilai kemanusiaan |
+| Dekripsi Pesan | 3 | Dekripsi sandi Caesar → "BHINNEKA" |
+| Urutan Mufakat | 4 | Urutkan tahapan musyawarah |
+| Timbangan Keadilan | 5 | Balance logistik antar-wilayah |
 
 ### 2. 🚨 Sabotase (Aksi Provokator)
-Provokator dapat menyabotase sistem! Saat sabotase aktif, layar seluruh Warga akan terkunci. Satu Warga akan dipilih secara acak untuk menjadi pahlawan (*Rescue*). Warga terpilih ini harus bisa menjawab soal Pancasila dalam batas waktu tertentu untuk mengembalikan sistem seperti semula. Jika gagal, Provokator menang!
+
+Provokator memicu sabotase dalam **2 fase**:
+
+1. **Fase Provokator** — Provokator menjawab soal math kilat (15 detik) untuk mengaktifkan sabotase.
+2. **Fase Rescue** — Layar Warga terkunci. Satu Warga dipilih acak sebagai pahlawan rescue dan harus menjawab soal Pancasila dalam batas waktu. Jika gagal, Provokator menang!
 
 ### 3. ⚔️ Duel 1v1 (Sudden Death)
-Provokator dapat menantang satu Warga hidup secara langsung. Keduanya akan diberikan satu pertanyaan berebut (*Rebutan Kilat*). 
-- Jika Warga menjawab salah, ia tidak langsung mati, namun waktu Duel akan terpotong secara instan dan soal akan diganti. 
-- Siapa yang pertama kali berhasil menjawab dengan *Benar*, akan memenangkan duel dan lawannya akan langsung **tereliminasi**.
+
+Provokator menantang satu Warga hidup. Keduanya berebut menjawab soal Pancasila:
+
+- Siapa yang **pertama menjawab benar** memenangkan duel; lawan **tereliminasi**.
+- Jawaban **salah** → waktu duel **berkurang 5 detik** dan soal diganti.
+- Timer habis → duel seri, tidak ada eliminasi.
+- Cooldown 30 detik setelah duel untuk Provokator.
 
 ### 4. 📢 Musyawarah Kelas (Voting)
-Guru dapat memberhentikan sementara waktu (Pause) permainan untuk mengadakan Sesi Musyawarah. Semua pemain akan berkumpul, berdebat (berbicara di dunia nyata/kelas), dan melakukan *Voting* (Pencoblosan) di layar gawai masing-masing untuk menebak dan mengeliminasi Provokator.
+
+Guru dapat menghentikan permainan untuk sesi musyawarah. Selama debat voting, **timer permainan utama di-pause**. Pemain berdiskusi (lisan di kelas) lalu melakukan *voting* di layar. Mayoritas suara mengeliminasi satu pemain.
+
+*Emergency Meeting* juga otomatis dipicu setelah Warga tereliminasi lewat duel.
 
 ### 5. 🎤 Presentasi Acak
-Sistem bisa memilih satu anak secara acak melalui fitur *Random Presentation*. Seluruh layar pemain lain akan memunculkan notifikasi bahwa anak tersebut sedang diminta berbicara oleh Guru.
+
+Guru memicu *Random Presentation* — satu pemain dipilih acak untuk presentasi. Pemain lain melihat notifikasi siapa yang sedang berbicara.
 
 ### 6. 💬 Debat Topik Bebas
-Guru dapat melempar sebuah *custom topic* (misal: "Apakah gotong royong luntur di era digital?") ke seluruh layar pemain. Game akan masuk mode *Topic Debate* lengkap dengan timer hitung mundur untuk sesi diskusi lisan.
+
+Guru melempar topik diskusi kustom ke seluruh layar (misal: *"Apakah gotong royong luntur di era digital?"*). Mode *Topic Debate* berjalan dengan timer hitung mundur; timer permainan utama ikut di-pause.
+
+### 7. 📊 Fitur Tambahan
+
+- **Bank Soal Kustom** — Guru menambah/edit/hapus soal di lobby
+- **Live Stats** — Statistik permainan real-time (bisa disiarkan ke semua pemain)
+- **Halaman Stats** (`/stats`) — Ringkasan statistik sesi
+- **Ganti Karakter** — 8 skin di lobby sebelum permainan dimulai
+- **Pengaturan Game** — Durasi timer, jumlah tugas, porsi kuis/mini-game, jumlah Provokator
 
 ---
 
 ## 🎨 Gaya Visual (Neo-Pop / Brutalism)
 
-UI/UX pada game ini mengadopsi estetika *Neo-Pop Brutalism* dengan karakteristik:
-- **Warna Kontras Tinggi:** Penggunaan warna mencolok (Kuning Terang, Ungu Gelap, Hijau Neon, Merah Darah).
-- **Garis Tegas:** *Border* hitam tebal (4px) di hampir seluruh elemen.
-- **Shadow Flat:** Bayangan kotak yang keras (`shadow-[6px_6px_0px_#000000]`) tanpa efek *blur*, menciptakan efek 3D *chunky*.
-- **Tipografi:** Kombinasi *font* miring tebal (Italic Rubik) dan gaya *monospace* terminal (*tech/hacker vibes*).
+- **Warna kontras tinggi:** Kuning terang, ungu gelap, hijau neon, merah darah
+- **Garis tegas:** Border hitam tebal (4px) di hampir seluruh elemen
+- **Shadow flat:** `shadow-[6px_6px_0px_#000000]` tanpa blur
+- **Tipografi:** Rubik Italic + monospace terminal
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** [Next.js 14](https://nextjs.org/) & React 18
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/) dengan modifikasi custom utility (`globals.css`)
-- **Backend & Realtime:** Node.js, [Socket.io](https://socket.io/) (Komunikasi WebSockets dua arah yang super cepat)
-- **Icons:** [Lucide React](https://lucide.dev/)
+| Layer | Teknologi |
+|---|---|
+| Frontend | [Next.js 14](https://nextjs.org/) & React 18 |
+| Styling | [Tailwind CSS](https://tailwindcss.com/) |
+| Backend & Realtime | Node.js, [Socket.io](https://socket.io/) |
+| Icons | [Lucide React](https://lucide.dev/) |
 
 ---
 
-## 🚀 Cara Menjalankan Secara Lokal (Development)
+## 🚀 Cara Menjalankan Secara Lokal
 
-1. Pastikan Anda sudah menginstal [Node.js](https://nodejs.org/) (versi 18+ direkomendasikan).
-2. Lakukan *clone* repository ini:
+1. Instal [Node.js](https://nodejs.org/) versi 18+.
+2. Clone repository dan masuk ke folder proyek:
    ```bash
-   git clone https://github.com/aliefadityanugraha/tu-duh-.git
-   cd among-us-pancasila
+   git clone <url-repository-anda>
+   cd among-us
    ```
-3. Instal semua dependensi:
+3. Instal dependensi:
    ```bash
    npm install
    ```
-4. Jalankan *development server*:
+4. Jalankan development server:
    ```bash
    npm run dev
    ```
-5. Buka `http://localhost:3000` di *browser* (disarankan menggunakan lebih dari satu *tab* atau *device* untuk melakukan pengetesan *multiplayer*).
+5. Buka `http://localhost:3000` di browser. Gunakan beberapa tab/device untuk uji multiplayer.
+
+**Production:**
+```bash
+npm run build
+npm start
+```
 
 ---
 
 ## 📁 Struktur Direktori Penting
 
-- `/src/pages` - Berisi *routing* halaman utama (`/`, `/game`, `/stats`).
-- `/src/components` - Seluruh komponen UI modular (WargaPanel, ProvokateurPanel, AdminView, dll).
-- `/src/hooks/useSocket.js` - *Custom hook* krusial yang mengatur *state* dan *listener* Socket.io di sisi *Client*.
-- `/server/server.js` - *Entry point* server khusus Express & Socket.io.
-- `/server/handlers/` - Modul backend yang mengatur logika game, sinkronisasi ruang (*room*), dan pertanyaan (*questions*).
-- `/server/lib/gameLogic.js` - Otak pemrosesan kondisi menang/kalah dan *timer* interval.
+```
+src/
+ ├── pages/              # Routing: /, /game, /stats
+ ├── components/
+ │    ├── minigames/     # Mini-game Pancasila (Sila 2–5)
+ │    ├── panels/        # WargaPanel, ProvokateurPanel, TaskContainer
+ │    ├── game/          # PlayerView, AdminView, GameHeader
+ │    └── overlays/      # Duel, Sabotase, Debat, Presentasi
+ └── hooks/useSocket.js  # State & listener Socket.io client
+
+server/
+ ├── server.js           # Entry point Express + Socket.io
+ ├── handlers/           # gameHandler, joinHandler, questionHandler
+ ├── data/               # defaults, questions, minigames
+ └── lib/                # gameLogic, roomHelpers, mathQuiz
+```
+
+Dokumen arsitektur mini-game: [`implementation plan.md`](implementation%20plan.md)
+
+---
+
+## 🧪 Uji Coba Mini-Game
+
+Halaman debug untuk menguji mini-game secara terpisah:
+
+```
+http://localhost:3000/debug-kebaikan
+```
 
 ---
 

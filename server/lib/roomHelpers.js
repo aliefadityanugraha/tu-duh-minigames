@@ -47,6 +47,7 @@ function getSanitizedRoom(roomCode) {
     duel: room.duel ? {
       active:      room.duel.active,
       timer:       room.duel.timer,
+      maxTimer:    room.duel.maxTimer ?? room.duel.timer,
       provocateur: room.players.find(p => p.id === room.duel.provocateur)?.name,
       citizen:     room.players.find(p => p.id === room.duel.citizen)?.name,
       question:    _stripQuestion(room.duel.question),
@@ -58,7 +59,12 @@ function getSanitizedRoom(roomCode) {
       reason:             room.debate.reason,
       votedOut:           room.debate.votedOut,
       votesReceivedCount: Object.keys(room.debate.votes || {}).length,
-      chat:               room.debate.chat || [],
+      chat: (room.debate.chat || []).map(c => ({
+        senderId:   c.senderId,
+        senderName: c.senderName,
+        message:    c.message,
+        timestamp:  c.timestamp,
+      })),
       // Hanya kirim daftar ID pemain yang sudah voting (merahasiakan pilihan mereka)
       votes:              Object.keys(room.debate.votes || {}).reduce((acc, voterId) => { acc[voterId] = true; return acc; }, {}),
     } : null,
@@ -87,7 +93,9 @@ function getSanitizedRoom(roomCode) {
       score:              p.score,
       isOnline:           p.isOnline,
       skinId:             p.skinId ?? 0,
-      duelCooldownEndsAt: p.duelCooldownEndsAt ?? null, // timestamp ms
+      duelCooldownEndsAt: p.duelCooldownEndsAt ?? null,
+      // Ungkap peran hanya setelah permainan selesai
+      ...(room.state === 'ended' && !p.isGuru ? { role: p.role } : {}),
     })),
   };
 }

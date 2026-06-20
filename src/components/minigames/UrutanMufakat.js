@@ -1,16 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, CheckCircle2, Shield, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowUp, ArrowDown, Shield } from 'lucide-react';
+
+import { fireTaskComplete } from './shellClasses';
+import {
+  MinigameRoot, MinigameHeader, MinigameWorkArea, MinigameHint,
+  MinigameButton, MinigameWinBanner, MinigameFooter, SILA_LABELS,
+} from './MinigameShell';
 
 /**
  * UrutanMufakat - Chronological Block Ordering Minigame Component
  * Implements Sila ke-4 (Kerakyatan yang Dipimpin oleh Hikmat Kebijaksanaan...)
  * 
  * Props:
- * - onGameComplete: function called when the game is won
+ * - onComplete: ({ success }) => void — standar TaskContainer
+ * - onGameComplete: legacy debug callback
+ * - compact: true = mode Mission Book panel
  */
-export default function UrutanMufakat({ onGameComplete }) {
+export default function UrutanMufakat({ onGameComplete, onComplete, compact = false }) {
   const CORRECT_ORDER = ["Masalah", "Diskusi", "Pendapat", "Keputusan", "Pelaksanaan"];
 
   const SLOT_DETAILS = [
@@ -68,9 +76,7 @@ export default function UrutanMufakat({ onGameComplete }) {
     const isCorrect = newBlocks.every((val, idx) => val === CORRECT_ORDER[idx]);
     if (isCorrect) {
       setIsWin(true);
-      if (onGameComplete) {
-        onGameComplete();
-      }
+      fireTaskComplete(onComplete, onGameComplete);
     }
   };
 
@@ -78,9 +84,7 @@ export default function UrutanMufakat({ onGameComplete }) {
     const isCorrect = blocks.every((val, idx) => val === CORRECT_ORDER[idx]);
     if (isCorrect) {
       setIsWin(true);
-      if (onGameComplete) {
-        onGameComplete();
-      }
+      fireTaskComplete(onComplete, onGameComplete);
     } else {
       alert("Urutan musyawarah belum mufakat! Periksa kembali alur pengambilan keputusan.");
     }
@@ -92,67 +96,22 @@ export default function UrutanMufakat({ onGameComplete }) {
   };
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto bg-indigo-950 p-2 sm:p-4 md:p-6 lg:p-8 font-sans min-h-screen flex items-center justify-center">
-      {/* Outer Console Board */}
-      <div className="w-full bg-yellow-100 shadow-[12px_12px_0px_0px_rgba(0,0,0,1.00)] outline outline-[5px] outline-offset-[-5px] outline-black border-4 border-black relative overflow-hidden flex flex-col transition-all duration-300">
-        
-        {/* Header Bar */}
-        <div className="w-full h-auto sm:h-24 bg-yellow-400 border-b-[5px] border-black flex flex-col sm:flex-row items-center sm:justify-between px-4 py-3 sm:py-0 gap-3">
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            {/* Scales badge */}
-            <div className="w-12 h-12 bg-orange-200 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1.00)] outline outline-4 outline-offset-[-4px] outline-black flex justify-center items-center shrink-0">
-              <Shield className="w-7 h-7 text-black" />
-            </div>
-            {/* Title & Subtitle */}
-            <div className="flex flex-col text-left">
-              <h1 className="text-black text-xl sm:text-2xl md:text-3xl font-extrabold uppercase tracking-tight leading-none font-sans">
-                KRONOLOGI MUSYAWARAH MUFAKAT
-              </h1>
-              <span className="text-black/70 text-[10px] sm:text-xs font-bold tracking-wider font-mono-tech mt-1">
-                SILA 4: KERAKYATAN YANG DIPIMPIN OLEH HIKMAT KEBIJAKSANAAN...
-              </span>
-            </div>
-          </div>
-          
-          {/* Status Badge */}
-          <div className="flex items-center gap-2 sm:self-center shrink-0">
-            {isWin ? (
-              <div className="neo-badge bg-green-500 text-black border-black text-xs py-1 px-3 animate-bounce">
-                🎉 MUFAKAT TERCAPAI
-              </div>
-            ) : (
-              <div className="neo-badge bg-red-500 text-white border-black text-xs py-1 px-3">
-                ⚖️ BERKONSENSUS
-              </div>
-            )}
-          </div>
-        </div>
+    <MinigameRoot compact={compact}>
+      <MinigameHeader
+        compact={compact}
+        icon={Shield}
+        iconBg="bg-orange-200"
+        title="Urutan Musyawarah Mufakat"
+        sila={SILA_LABELS[4]}
+        statusVariant={isWin ? 'win' : 'playing'}
+        statusLabel={isWin ? '🎉 MUFAKAT' : '⚖️ URUTKAN'}
+      />
 
-        {/* Main Work Area */}
-        <div className="p-4 sm:p-6 md:p-8 flex flex-col items-center gap-6 w-full min-h-[500px]">
-          
-          {/* Instructions sticky card / Note */}
-          <div className="w-full max-w-2xl bg-white p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1.00)] relative origin-top rotate-[0.5deg] flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-yellow-600 shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-extrabold text-sm sm:text-base text-black uppercase">PETUNJUK SILA KE-4</h3>
-              <p className="text-xs sm:text-sm text-neutral-700 font-mono-tech mt-1 leading-relaxed">
-                Urutkan tahapan musyawarah dari atas ke bawah agar mencapai mufakat. Gunakan tombol panah [▲] dan [▼] pada masing-masing balok.
-              </p>
-            </div>
-            {!isWin && (
-              <button 
-                onClick={handleReset}
-                className="ml-auto p-1 bg-black text-white hover:bg-neutral-800 flex items-center justify-center shrink-0 cursor-pointer"
-                title="Acak Ulang Balok"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Slots & Blocks container */}
-          <div className="w-full max-w-3xl p-4 sm:p-6 bg-slate-200/50 rounded-xl shadow-[inset_0px_2px_8px_rgba(0,0,0,0.1)] outline outline-4 outline-offset-[-4px] outline-black/30 flex flex-col gap-4">
+      <MinigameWorkArea compact={compact}>
+        <MinigameHint title="Petunjuk Sila ke-4">
+          Urutkan tahapan musyawarah dari atas ke bawah. Gunakan tombol ▲ dan ▼ pada setiap balok.
+        </MinigameHint>
+          <div className="w-full p-3 sm:p-4 bg-slate-100 border-4 border-black flex flex-col gap-2 sm:gap-3">
             {blocks.map((blockName, index) => {
               const theme = BLOCK_THEMES[blockName];
               const slot = SLOT_DETAILS[index];
@@ -216,28 +175,18 @@ export default function UrutanMufakat({ onGameComplete }) {
             })}
           </div>
 
-          {/* Action Check button */}
-          <div className="w-full max-w-xs pt-4 flex justify-center items-center">
+          <div className="w-full max-w-md mx-auto pt-1">
             {isWin ? (
-              <div className="w-full py-4 bg-green-500 text-black border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1.00)] flex justify-center items-center gap-2 font-black uppercase text-sm tracking-widest animate-bounce">
-                <span>CONSENSUAL BERHASIL ✓</span>
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
+              <MinigameWinBanner win winMessage="Mufakat tercapai! Menunggu konfirmasi misi..." />
             ) : (
-              <button
-                type="button"
-                onClick={handleManualCheck}
-                className="w-full py-4 bg-yellow-400 hover:bg-yellow-300 active:translate-y-[2px] border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1.00)] flex justify-center items-center gap-2 font-black uppercase text-sm tracking-widest cursor-pointer transition-all"
-              >
-                <span>CEK MUFAKAT</span>
-                <div className="w-5 h-2 bg-yellow-900 border border-black rounded-sm"></div>
-              </button>
+              <MinigameButton variant="secondary" onClick={handleManualCheck} className="w-full py-2.5 sm:py-3 text-xs sm:text-sm">
+                CEK MUFAKAT
+              </MinigameButton>
             )}
           </div>
+      </MinigameWorkArea>
 
-        </div>
-
-      </div>
-    </div>
+      <MinigameFooter compact={compact} onReset={handleReset} resetLabel="ACAK ULANG" showReset={!isWin} disabled={isWin} />
+    </MinigameRoot>
   );
 }

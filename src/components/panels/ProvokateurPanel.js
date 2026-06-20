@@ -16,8 +16,8 @@ export default function ProvokateurPanel({
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
   const hasCooldown = duelCooldownRemaining > 0;
-  const sabotageBlocked = !!room.sabotage || !!room.duel || room.debate?.active;
-  const duelBlocked = !!room.duel || !!room.sabotage || room.debate?.active || hasCooldown;
+  const sabotageBlocked = !!room.sabotage || !!room.duel || room.debate?.active || room.topicDebate?.active;
+  const duelBlocked = !!room.duel || !!room.sabotage || room.debate?.active || room.topicDebate?.active || hasCooldown;
 
   const handleQuizSubmit = () => {
     if (quizSelected === null || quizSubmitted) return;

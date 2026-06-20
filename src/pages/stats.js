@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { io } from 'socket.io-client';
 import {
   Users, ArrowRight, Award, Radio, LogOut, Target, Swords,
-  AlertTriangle, MessageSquare, CheckCircle2, XCircle, Activity
+  AlertTriangle, MessageSquare, CheckCircle2, XCircle, Activity, Gamepad2
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
@@ -53,7 +53,7 @@ const EVENT_META = {
   duel:               { icon: '⚔️', color: '#D97706' },
   duel_resolved:      { icon: '🏁', color: '#7C3AED' },
   debate:             { icon: '📢', color: '#0891B2' },
-  eliminated:         { icon: '💀', color: '#EF4444' },
+  minigame_completed: { icon: '🎮', color: '#6366F1' },
 };
 
 export default function PublicStats() {
@@ -139,6 +139,9 @@ export default function PublicStats() {
   const animWrong    = useAnimatedValue(stats?.totalAnswersWrong || 0);
   const animSabotages = useAnimatedValue(stats?.sabotagesTriggered || 0);
   const animDuels    = useAnimatedValue(stats?.duelsTriggered || 0);
+  const minigamesDone = stats?.minigamesCompleted ?? 0;
+  const quizCorrect = stats ? Math.max(0, stats.totalAnswersCorrect - minigamesDone) : 0;
+  const animMinigames = useAnimatedValue(minigamesDone);
   const animDebates  = useAnimatedValue(stats?.debatesHeld || 0);
 
   const eventLog = stats?.eventLog ? [...stats.eventLog].reverse() : [];
@@ -277,9 +280,10 @@ export default function PublicStats() {
             <section className="xl:col-span-3 space-y-5">
 
               {/* KPI cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 {[
                   { label: 'Misi Kelompok', value: animTasks, sub: `${taskPercent}% selesai`, icon: <Target size={16}/>, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', bar: taskPercent, barColor: 'bg-emerald-500' },
+                  { label: 'Mini-Games', value: animMinigames, sub: `${quizCorrect} kuis · ${minigamesDone} game`, icon: <Gamepad2 size={16}/>, color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200', bar: null },
                   { label: 'Total Sabotase', value: animSabotages, sub: `${stats?.sabotagesResolved||0} diatasi · ${stats?.sabotagesFailed||0} gagal`, icon: <AlertTriangle size={16}/>, color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200', bar: null },
                   { label: 'Duel 1v1', value: animDuels, sub: `Warga ${stats?.duelsWonByWarga||0} · Prov ${stats?.duelsWonByProvokator||0}`, icon: <Swords size={16}/>, color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', bar: null },
                   { label: 'Rapat & Debat', value: animDebates, sub: `${stats?.playersEliminated||0} dieliminasi`, icon: <MessageSquare size={16}/>, color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200', bar: null },
@@ -360,7 +364,7 @@ export default function PublicStats() {
                         </div>
                       </div>
                       <p className="text-[10px] text-slate-400 leading-relaxed">
-                        Perbandingan jawaban benar vs salah dari seluruh Warga.
+                        Perbandingan jawaban benar vs salah. Task selesai: {quizCorrect} kuis, {minigamesDone} mini-game.
                       </p>
                     </div>
                   ) : (

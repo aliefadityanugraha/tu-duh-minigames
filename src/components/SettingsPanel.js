@@ -15,6 +15,9 @@ export default function SettingsPanel({ socket, currentSettings = {}, playerCoun
     gameTimer:        300,
     provokatorCount:  'auto',
     maxPlayers:       10,
+    quizRatio:        0.4,
+    minigameEnabled:  true,
+    minTaskDuration:  8,
   };
 
   const merged = { ...defaults, ...currentSettings };
@@ -94,6 +97,15 @@ export default function SettingsPanel({ socket, currentSettings = {}, playerCoun
               min={1} max={15} step={1} unit="soal"
               accentColor="#16A34A"
               onChange={v => handleChange('tasksPerPlayer', v)}
+            />
+            <SettingSlider
+              icon={<ListChecks size={15} className="text-violet-600" />}
+              label="Porsi Kuis vs Mini-Game"
+              description={`${Math.round((settings.quizRatio ?? 0.4) * 100)}% kuis, ${Math.round((1 - (settings.quizRatio ?? 0.4)) * 100)}% mini-game`}
+              value={Math.round((settings.quizRatio ?? 0.4) * 100)}
+              min={0} max={100} step={10} unit="% kuis"
+              accentColor="#7C3AED"
+              onChange={v => handleChange('quizRatio', v / 100)}
             />
             <SettingSlider
               icon={<Timer size={15} className="text-amber-600" />}

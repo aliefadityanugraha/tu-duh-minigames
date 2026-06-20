@@ -21,8 +21,8 @@ export default function DuelOverlay({ duel, selfName, onSubmitAnswer }) {
     onSubmitAnswer(selected);
   };
 
-  const DUEL_MAX = 20;
-  const timerPct = Math.max(0, ((duel?.timer ?? 0) / DUEL_MAX) * 100);
+  const DUEL_MAX = duel?.maxTimer ?? duel?.timer ?? 20;
+  const timerPct = DUEL_MAX > 0 ? Math.max(0, ((duel?.timer ?? 0) / DUEL_MAX) * 100) : 0;
   const isUrgent = (duel?.timer ?? 0) <= 5;
   const timerColor = (duel?.timer ?? 0) > 10 ? 'bg-amber-500' : (duel?.timer ?? 0) > 5 ? 'bg-orange-500' : 'bg-red-500';
 

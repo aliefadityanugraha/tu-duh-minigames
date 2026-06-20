@@ -16,6 +16,7 @@ const { rooms, getSanitizedRoom } = require('../lib/roomHelpers');
 const { DEFAULT_SETTINGS, EMPTY_GAME_STATS } = require('../data/defaults');
 const { checkWinConditions, tallyVotes } = require('../lib/gameLogic');
 const { generateMathQuiz } = require('../lib/mathQuiz');
+const { pickVariedMinigame, pickVariedQuestion, shouldDeliverQuiz, isMinigameType } = require('../data/minigames');
 
 const DUEL_COOLDOWN_MS = 30_000; // 30 detik cooldown setelah duel
 
@@ -51,6 +52,7 @@ function registerGameHandlers(socket, io) {
       topicDebate:    null,
       presentation:   null,
       gameStats:      { ...EMPTY_GAME_STATS(), startedAt: Date.now() },
+      activeTaskSessions: {},
     });
     room.gameStats.eventLog.push({ time: Date.now(), type: 'game_start', message: 'Permainan dimulai!' });
 
@@ -86,6 +88,7 @@ function registerGameHandlers(socket, io) {
       sabotage: null, duel: null, debate: null, topicDebate: null,
       presentation: null, showStatsToAll: false,
       gameStats: EMPTY_GAME_STATS(),
+      activeTaskSessions: {},
     });
     room.players.forEach(p => {
       p.isDead = false; p.score = 0;
@@ -100,22 +103,51 @@ function registerGameHandlers(socket, io) {
   });
 
   // ────────────────────────────────────────────
-  // AMBIL SOAL BERIKUTNYA (task Warga)
+  // AMBIL SOAL BERIKUTNYA (task Warga) — legacy
   // ────────────────────────────────────────────
   socket.on('get-next-question', () => {
+    _deliverNextTask(socket);
+  });
+
+  // ────────────────────────────────────────────
+  // AMBIL TASK BERIKUTNYA (kuis atau mini-game)
+  // ────────────────────────────────────────────
+  socket.on('get-next-task', () => {
+    _deliverNextTask(socket);
+  });
+
+  // ────────────────────────────────────────────
+  // SUBMIT TASK (kuis atau mini-game selesai)
+  // ────────────────────────────────────────────
+  socket.on('submit-task', ({ sessionId, type, questionId, answerIndex, context }) => {
     const code = socket.roomCode;
     const room = rooms[code];
     if (!room || room.state !== 'playing') return;
 
     const player = room.players.find(p => p.id === socket.id);
-    // Jangan kirim soal jika task sedang terkunci (sabotase aktif fase rescue)
-    if (player?.taskLocked) {
-      socket.emit('task-locked', { message: 'Tugas Anda sedang terkunci karena sabotase aktif!' });
+    if (!player || player.isDead || player.role !== 'warga' || player.taskLocked) return;
+    if (context !== 'task') return;
+
+    const session = room.activeTaskSessions?.[socket.id];
+    if (!session || session.sessionId !== sessionId || session.type !== type) {
+      socket.emit('task-error', { message: 'Sesi task tidak valid atau sudah kedaluwarsa.' });
       return;
     }
 
-    const q = room.questions[Math.floor(Math.random() * room.questions.length)];
-    socket.emit('next-question-delivery', { id: q.id, sila: q.sila, type: q.type, question: q.question, options: q.options });
+    if (isMinigameType(type)) {
+      const s = room.settings || DEFAULT_SETTINGS;
+      const minMs = (s.minTaskDuration ?? DEFAULT_SETTINGS.minTaskDuration) * 1000;
+      if (Date.now() - session.issuedAt < minMs) {
+        socket.emit('task-error', { message: 'Task diselesaikan terlalu cepat. Selesaikan mini-game dengan benar!' });
+        return;
+      }
+      _handleMinigameComplete(socket, io, room, player, type, code);
+    } else if (type === 'quiz') {
+      const isCorrect = _checkAnswer(room, questionId, answerIndex, 'task');
+      _handleTaskAnswer(socket, io, room, player, questionId, isCorrect, code);
+    }
+
+    delete room.activeTaskSessions[socket.id];
   });
 
   // ────────────────────────────────────────────
@@ -217,14 +249,16 @@ function registerGameHandlers(socket, io) {
 
     const q = room.questions[Math.floor(Math.random() * room.questions.length)];
     const s = room.settings || DEFAULT_SETTINGS;
+    const duelDuration = s.duelTimer ?? 20;
 
     room.duel = {
       active:      true,
       provocateur: player.id,
       citizen:     target.id,
       question:    q,
-      timer:       s.duelTimer ?? 20,
-      answered:    {}, // { playerId: answerIndex }
+      timer:       duelDuration,
+      maxTimer:    duelDuration,
+      answered:    {},
     };
 
     room.gameStats.duelsTriggered++;
@@ -398,8 +432,93 @@ function _getGuruRoom(socket, rooms) {
   return room;
 }
 
+function _deliverNextTask(socket) {
+  const code = socket.roomCode;
+  const room = rooms[code];
+  if (!room || room.state !== 'playing') return;
+
+  const player = room.players.find(p => p.id === socket.id);
+  if (!player || player.isDead || player.role !== 'warga') return;
+  if (player?.taskLocked) {
+    socket.emit('task-locked', { message: 'Tugas Anda sedang terkunci karena sabotase aktif!' });
+    return;
+  }
+
+  if (!room.questions?.length) {
+    socket.emit('task-error', { message: 'Bank soal kosong! Minta Guru menambahkan soal.' });
+    return;
+  }
+
+  if (!room.activeTaskSessions) room.activeTaskSessions = {};
+
+  const pending = room.activeTaskSessions[socket.id];
+  if (pending) {
+    socket.emit('task-error', { message: 'Selesaikan misi aktif terlebih dahulu sebelum mengambil misi baru.' });
+    return;
+  }
+
+  const s = room.settings || DEFAULT_SETTINGS;
+  const minigameOn = s.minigameEnabled !== false;
+  const quizRatio = minigameOn ? (s.quizRatio ?? 0.4) : 1;
+  const isQuiz = shouldDeliverQuiz(player, quizRatio, minigameOn);
+
+  const sessionId = `${socket.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const issuedAt = Date.now();
+
+  let payload;
+  if (isQuiz) {
+    const q = pickVariedQuestion(room.questions, player);
+    if (!q) {
+      socket.emit('task-error', { message: 'Bank soal kosong! Minta Guru menambahkan soal.' });
+      return;
+    }
+    room.activeTaskSessions[socket.id] = { sessionId, type: 'quiz', issuedAt, questionId: q.id };
+    payload = {
+      type: 'quiz',
+      sessionId,
+      data: { id: q.id, sila: q.sila, type: q.type, question: q.question, options: q.options },
+    };
+  } else {
+    const game = pickVariedMinigame(player);
+    room.activeTaskSessions[socket.id] = { sessionId, type: game.id, issuedAt };
+    payload = {
+      type: game.id,
+      sessionId,
+      data: { sila: game.sila, label: game.label },
+    };
+  }
+
+  socket.emit('next-task-delivery', payload);
+}
+
+function _handleMinigameComplete(socket, io, room, player, minigameType, code) {
+  player.score++;
+  room.tasksCompleted++;
+  room.gameStats.totalAnswersCorrect++;
+  if (!room.gameStats.minigamesCompleted) room.gameStats.minigamesCompleted = 0;
+  room.gameStats.minigamesCompleted++;
+  player.answerHistory.push({ minigameType, correct: true, timestamp: Date.now() });
+  room.gameStats.eventLog.push({
+    time: Date.now(),
+    type: 'minigame_completed',
+    message: `${player.name} menyelesaikan mini-game "${minigameType.replace(/-/g, ' ')}".`,
+  });
+  socket.emit('task-feedback', {
+    correct: true,
+    explanation: 'Mini-game berhasil diselesaikan! Nilai Pancasila diamalkan.',
+    score: player.score,
+    taskType: minigameType,
+  });
+  socket.emit('answer-feedback', {
+    correct: true,
+    explanation: 'Mini-game berhasil diselesaikan!',
+    score: player.score,
+  });
+  checkWinConditions(code, io);
+  io.to(code).emit('room-updated', getSanitizedRoom(code));
+}
+
 /**
- * Cek jawaban — untuk soal math (sabotase provokator) pakai id string,
  * untuk soal Pancasila pakai id number dari bank soal.
  */
 function _checkAnswer(room, questionId, answerIndex, context) {
@@ -422,6 +541,10 @@ function _checkAnswer(room, questionId, answerIndex, context) {
 }
 
 function _handleTaskAnswer(socket, io, room, player, questionId, isCorrect, code) {
+  if (room.activeTaskSessions?.[socket.id]) {
+    delete room.activeTaskSessions[socket.id];
+  }
+
   const question = room.questions.find(q => q.id === questionId);
   if (!question) return;
 
@@ -430,11 +553,27 @@ function _handleTaskAnswer(socket, io, room, player, questionId, isCorrect, code
     room.tasksCompleted++;
     room.gameStats.totalAnswersCorrect++;
     player.answerHistory.push({ questionId, correct: true, timestamp: Date.now() });
+    const feedback = {
+      correct: true,
+      explanation: question.explanation,
+      score: player.score,
+      taskType: 'quiz',
+      correctIndex: question.answer,
+    };
+    socket.emit('task-feedback', feedback);
     socket.emit('answer-feedback', { correct: true, explanation: question.explanation, score: player.score });
     checkWinConditions(code, io);
   } else {
     room.gameStats.totalAnswersWrong++;
     player.answerHistory.push({ questionId, correct: false, timestamp: Date.now() });
+    const feedback = {
+      correct: false,
+      explanation: question.explanation,
+      score: player.score,
+      taskType: 'quiz',
+      correctIndex: question.answer,
+    };
+    socket.emit('task-feedback', feedback);
     socket.emit('answer-feedback', { correct: false, explanation: question.explanation, score: player.score });
   }
   io.to(code).emit('room-updated', getSanitizedRoom(code));
@@ -542,14 +681,13 @@ function _handleDuelAnswer(socket, io, room, player, questionId, isCorrect, code
     return;
   }
 
-  // Jika menjawab salah → ganti soal baru (waktu terbuang secara alami)
+  // Jika menjawab salah → ganti soal baru & potong waktu duel
   const newQ = room.questions[Math.floor(Math.random() * room.questions.length)];
   room.duel.question = newQ;
-  
-  // Reset answered status for next question
+  room.duel.timer = Math.max(0, (room.duel.timer ?? 0) - 5);
   room.duel.answered = {};
 
-  socket.emit('duel-answer-wrong', { message: 'Jawaban salah! Menunggu soal baru...' });
+  socket.emit('duel-answer-wrong', { message: 'Jawaban salah! Waktu duel berkurang 5 detik. Soal diganti...' });
   io.to(code).emit('room-updated', getSanitizedRoom(code));
 }
 

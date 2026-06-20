@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   BarChart3, AlertTriangle, Swords, MessageSquare,
-  CheckCircle2, XCircle, Target, Award, Activity, ChevronDown, ChevronUp
+  CheckCircle2, XCircle, Target, Award, Activity, ChevronDown, ChevronUp, Gamepad2
 } from 'lucide-react';
 
 function useAnimatedValue(target, duration = 600) {
@@ -56,6 +56,7 @@ const EVENT_META = {
   task_wrong:         { icon: '❌', color: '#ffb4ab', bg: '#93000a' },
   topic_debate:       { icon: '💬', color: '#8fb2ff', bg: '#003e87' },
   presentation:       { icon: '🎤', color: '#ffb7d7', bg: '#71003d' },
+  minigame_completed: { icon: '🎮', color: '#8fb2ff', bg: '#003e87' },
 };
 
 export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
@@ -66,6 +67,8 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
   const taskPercent = room.tasksRequired > 0
     ? Math.round((room.tasksCompleted / room.tasksRequired) * 100) : 0;
   const totalAnswers = stats.totalAnswersCorrect + stats.totalAnswersWrong;
+  const minigamesDone = stats.minigamesCompleted ?? 0;
+  const quizCorrect = Math.max(0, stats.totalAnswersCorrect - minigamesDone);
   const accuracyPercent = totalAnswers > 0
     ? Math.round((stats.totalAnswersCorrect / totalAnswers) * 100) : 0;
 
@@ -79,6 +82,7 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
   const animTasks   = useAnimatedValue(room.tasksCompleted);
   const animCorrect = useAnimatedValue(stats.totalAnswersCorrect);
   const animWrong   = useAnimatedValue(stats.totalAnswersWrong);
+  const animMinigames = useAnimatedValue(minigamesDone);
 
   const kpiCards = [
     {
@@ -88,6 +92,14 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
       icon: <Target size={15} />,
       color: '#41e5b3',
       bg: '#003829',
+    },
+    {
+      label: 'Mini-Games',
+      value: animMinigames,
+      sub: `${quizCorrect} kuis benar · ${minigamesDone} game selesai`,
+      icon: <Gamepad2 size={15} />,
+      color: '#8fb2ff',
+      bg: '#003e87',
     },
     {
       label: 'Sabotase',
@@ -166,7 +178,7 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
         <div className="p-5 space-y-4 bg-[#13003a]">
 
           {/* KPI cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {kpiCards.map((card, i) => (
               <div
                 key={i}
@@ -236,6 +248,37 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
               </div>
             </div>
           </div>
+
+          {/* Task type breakdown */}
+          {(stats.totalAnswersCorrect > 0 || minigamesDone > 0) && (
+            <div className="bg-[#190047] border-2 border-black shadow-[3px_3px_0px_#000000] p-4">
+              <div className="font-mono text-[10px] font-bold text-[#8fb2ff] uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <Gamepad2 size={14} /> DISTRIBUSI TASK SELESAI
+              </div>
+              <div className="flex gap-1 h-6 bg-[#13003a] border-2 border-black p-0.5">
+                {quizCorrect > 0 && (
+                  <div
+                    style={{ width: `${(quizCorrect / stats.totalAnswersCorrect) * 100}%` }}
+                    className="bg-[#41e5b3] flex items-center justify-center text-[10px] font-bold text-[#003829] transition-all duration-700 min-w-[24px]"
+                  >
+                    📝 {quizCorrect}
+                  </div>
+                )}
+                {minigamesDone > 0 && (
+                  <div
+                    style={{ width: `${(minigamesDone / stats.totalAnswersCorrect) * 100}%` }}
+                    className="bg-[#8fb2ff] flex items-center justify-center text-[10px] font-bold text-[#003e87] transition-all duration-700 min-w-[24px]"
+                  >
+                    🎮 {minigamesDone}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between mt-2 font-mono text-[10px] font-bold tracking-wider">
+                <span className="text-[#41e5b3]">📝 Kuis Benar ({quizCorrect})</span>
+                <span className="text-[#8fb2ff]">🎮 Mini-Game ({minigamesDone})</span>
+              </div>
+            </div>
+          )}
 
           {/* Distribution bar */}
           {totalAnswers > 0 && (

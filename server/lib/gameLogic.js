@@ -16,6 +16,12 @@ function checkWinConditions(roomCode, io) {
     return;
   }
 
+  // Provokator menang: jumlah Warga <= jumlah Provokator (parity)
+  if (citizens.length > 0 && citizens.length <= provocateurs.length) {
+    _endGame(roomCode, io, 'provokator', `Jumlah Warga (${citizens.length}) tidak lagi melebihi Provokator (${provocateurs.length})!`);
+    return;
+  }
+
   // Warga menang: semua provokator tereliminasi
   if (provocateurs.length === 0) {
     _endGame(roomCode, io, 'warga', 'Semua Provokator berhasil dieliminasi!');
@@ -124,8 +130,9 @@ function startRoomTicker(roomCode, io) {
 
     let changed = false;
 
-    // ── 1. Game timer keseluruhan ──
-    if (r.state === 'playing' && r.gameTimer != null && r.gameTimer > 0) {
+    // ── 1. Game timer keseluruhan (pause saat musyawarah / debat topik) ──
+    const timerPaused = r.debate?.active || r.topicDebate?.active;
+    if (r.state === 'playing' && !timerPaused && r.gameTimer != null && r.gameTimer > 0) {
       r.gameTimer--;
       changed = true;
       if (r.gameTimer <= 0) {

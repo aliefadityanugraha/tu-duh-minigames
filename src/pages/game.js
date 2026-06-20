@@ -19,25 +19,32 @@ export default function Game() {
   const router = useRouter();
   const {
     socket, room, player, roleInfo, logs,
-    currentQuestion, feedback, isAnswered,
+    currentTask, feedback, isAnswered,
     selectedOption, setSelectedOption,
+    setCurrentTask, setFeedback, setIsAnswered, setTaskError,
+    taskError, minigameRetryKey,
     sabotageFeedback, setSabotageFeedback,
     sabotageQuiz,
     sabotageRescue,
     taskLocked,
     duelCooldownRemaining,
     presentationNotif, setPresentationNotif,
+    sendDebateChat,
   } = useSocket();
 
   const [muted, setMuted]         = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
 
-  // Minta soal pertama saat game mulai (Warga)
+  // Minta task pertama saat game mulai (hanya Warga hidup)
   useEffect(() => {
-    if (socket && room && room.state === 'playing' && !roleInfo.isGuru && !currentQuestion && !taskLocked) {
-      socket.emit('get-next-question');
+    if (
+      socket && room && room.state === 'playing' &&
+      roleInfo.role === 'warga' && !player?.isDead &&
+      !currentTask && !taskLocked
+    ) {
+      socket.emit('get-next-task');
     }
-  }, [socket, room?.state, roleInfo.isGuru, currentQuestion, taskLocked]);
+  }, [socket, room?.state, roleInfo.role, player?.isDead, currentTask, taskLocked]);
 
   // ── Koneksi terputus ──
   if (!room) {
@@ -62,13 +69,66 @@ export default function Game() {
 
   // ── Action handlers ──
 
-  // Task
+  // Task — kuis
   const handleOptionSelect = (idx) => { if (isAnswered) return; setSelectedOption(idx); };
-  const handleSubmitAnswer = () => {
-    if (selectedOption === null || isAnswered || !currentQuestion) return;
-    socket.emit('submit-answer', { questionId: currentQuestion.id, answerIndex: selectedOption, context: 'task' });
+  const handleSubmitQuiz = () => {
+    if (selectedOption === null || isAnswered || !currentTask || currentTask.type !== 'quiz') return;
+    if (!currentTask.sessionId) {
+      setTaskError('Sesi misi tidak valid. Klik MISI BERIKUTNYA untuk mengambil misi baru.');
+      return;
+    }
+    setTaskError(null);
+    socket.emit('submit-task', {
+      sessionId: currentTask.sessionId,
+      type: 'quiz',
+      questionId: currentTask.data.id,
+      answerIndex: selectedOption,
+      context: 'task',
+    });
   };
-  const handleNextQuestion = () => socket.emit('get-next-question');
+
+  // Task — mini-game selesai
+  const handleMinigameComplete = ({ sessionId, type }) => {
+    if (isAnswered || !currentTask) return;
+    socket.emit('submit-task', { sessionId, type, context: 'task' });
+  };
+
+  const handleNextTask = () => {
+    setCurrentTask(null);
+    setFeedback(null);
+    setIsAnswered(false);
+    setSelectedOption(null);
+    setTaskError(null);
+    // useEffect akan emit get-next-task saat currentTask menjadi null
+  };
+
+  const handleClearTaskError = () => setTaskError(null);
+
+  const handleRetryQuizSubmit = () => {
+    if (!currentTask || currentTask.type !== 'quiz' || isAnswered) return;
+    setTaskError(null);
+    if (!currentTask.sessionId) {
+      handleNextTask();
+      return;
+    }
+    if (selectedOption === null) return;
+    socket.emit('submit-task', {
+      sessionId: currentTask.sessionId,
+      type: 'quiz',
+      questionId: currentTask.data.id,
+      answerIndex: selectedOption,
+      context: 'task',
+    });
+  };
+
+  const handleRetryMinigameSubmit = () => {
+    if (!currentTask || currentTask.type === 'quiz' || isAnswered) return;
+    socket.emit('submit-task', {
+      sessionId: currentTask.sessionId,
+      type: currentTask.type,
+      context: 'task',
+    });
+  };
 
   // Sabotase — Provokator submit soal math (fase 1)
   const handleSubmitSabotageQuiz = (idx) => {
@@ -154,7 +214,7 @@ export default function Game() {
           room={room}
           player={player}
           roleInfo={roleInfo}
-          currentQuestion={currentQuestion}
+          currentTask={currentTask}
           isAnswered={isAnswered}
           selectedOption={selectedOption}
           feedback={feedback}
@@ -162,8 +222,14 @@ export default function Game() {
           sabotageQuiz={sabotageQuiz}
           duelCooldownRemaining={duelCooldownRemaining}
           onSelectOption={handleOptionSelect}
-          onSubmitAnswer={handleSubmitAnswer}
-          onNextQuestion={handleNextQuestion}
+          onSubmitQuiz={handleSubmitQuiz}
+          onMinigameComplete={handleMinigameComplete}
+          onNextTask={handleNextTask}
+          onClearTaskError={handleClearTaskError}
+          onRetryMinigameSubmit={handleRetryMinigameSubmit}
+          onRetryQuizSubmit={handleRetryQuizSubmit}
+          taskError={taskError}
+          minigameRetryKey={minigameRetryKey}
           onTriggerSabotage={handleTriggerSabotage}
           onTriggerDuel={handleTriggerDuel}
           onSubmitSabotageQuiz={handleSubmitSabotageQuiz}
@@ -213,6 +279,7 @@ export default function Game() {
           isPlayerDead={isPlayerDead}
           onVote={handleVotePlayer}
           onSendChat={sendDebateChat}
+          selfRole={roleInfo.role}
         />
       )}
 

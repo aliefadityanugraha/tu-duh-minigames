@@ -15,8 +15,9 @@ export const SocketProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [logs, setLogs]       = useState([]);
 
-  // State soal & feedback
-  const [currentQuestion, setCurrentQuestion]   = useState(null);
+  // State task (kuis atau mini-game) & feedback
+  const [currentTask, setCurrentTask]         = useState(null);
+  const [currentQuestion, setCurrentQuestion] = useState(null); // legacy alias
   const [feedback, setFeedback]                 = useState(null);
   const [isAnswered, setIsAnswered]             = useState(false);
   const [selectedOption, setSelectedOption]     = useState(null);
@@ -39,6 +40,8 @@ export const SocketProvider = ({ children }) => {
 
   // State task locked (Warga yang bukan target rescue)
   const [taskLocked, setTaskLocked] = useState(false);
+  const [taskError, setTaskError] = useState(null);
+  const [minigameRetryKey, setMinigameRetryKey] = useState(0);
 
   useEffect(() => {
     const s = io();
@@ -79,18 +82,52 @@ export const SocketProvider = ({ children }) => {
     // ── Peran ditetapkan ──
     s.on('role-assigned', ({ role, isGuru }) => {
       setRoleInfo({ role, isGuru });
+      setCurrentTask(null); setCurrentQuestion(null);
       setFeedback(null); setIsAnswered(false); setSelectedOption(null);
+      setTaskError(null); setMinigameRetryKey(0);
       setSabotageQuiz(null); setSabotageRescue(null);
       setTaskLocked(false);
       router.push('/game');
     });
 
-    // ── Soal task ──
-    s.on('next-question-delivery', (q) => {
-      setCurrentQuestion(q);
-      setFeedback(null); setIsAnswered(false); setSelectedOption(null);
+    // ── Task delivery (kuis atau mini-game) ──
+    const _applyTaskDelivery = (task) => {
+      setCurrentTask(task);
+      if (task.type === 'quiz') setCurrentQuestion(task.data);
+      else setCurrentQuestion(null);
+      setFeedback(null);
+      setIsAnswered(false);
+      setSelectedOption(null);
+      setTaskError(null);
+      setMinigameRetryKey(0);
+    };
+
+    s.on('next-task-delivery', (task) => {
+      _applyTaskDelivery(task);
     });
-    s.on('answer-feedback', (res) => { setFeedback(res); setIsAnswered(true); });
+    s.on('next-question-delivery', () => {
+      // Legacy — delivery ditangani next-task-delivery; abaikan agar tidak timpa sessionId
+    });
+
+    const _applyTaskFeedback = (res) => {
+      setFeedback(res);
+      setIsAnswered(true);
+      setTaskError(null);
+    };
+    s.on('task-feedback', _applyTaskFeedback);
+
+    s.on('task-error', ({ message }) => {
+      setTaskError(message);
+      // Remount mini-game hanya jika session benar-benar invalid
+      if (message.includes('tidak valid') || message.includes('kedaluwarsa')) {
+        setMinigameRetryKey(k => k + 1);
+      }
+      addLog(`⚠️ ${message}`);
+    });
+    s.on('game-error', (msg) => {
+      setError(msg);
+      addLog(`⚠️ ${msg}`);
+    });
 
     // ── Task locked (Warga non-target saat sabotase fase 2) ──
     s.on('task-locked', ({ message }) => {
@@ -188,8 +225,9 @@ export const SocketProvider = ({ children }) => {
       addLog('🔄 Game di-restart ke lobi.');
       // Jangan reset roleInfo di sini — biarkan room-updated yang sync
       // roleInfo.isGuru harus tetap true agar WaitingRoom menampilkan tombol Guru
-      setCurrentQuestion(null); setFeedback(null);
+      setCurrentTask(null); setCurrentQuestion(null); setFeedback(null);
       setIsAnswered(false); setSelectedOption(null);
+      setTaskError(null); setMinigameRetryKey(0);
       setSabotageQuiz(null); setSabotageRescue(null);
       setTaskLocked(false); setPresentationNotif(null);
       setTopicDebateNotif(null); setDuelCooldownRemaining(0);
@@ -248,9 +286,10 @@ export const SocketProvider = ({ children }) => {
       socket, room, player, roleInfo,
       error, setError, loading, setLoading,
       logs, joinRoom, startGame,
-      // soal & feedback
-      currentQuestion, feedback, isAnswered, selectedOption,
-      setSelectedOption, setIsAnswered, setFeedback,
+      // soal & task
+      currentTask, currentQuestion, feedback, isAnswered, selectedOption,
+      setCurrentTask, setSelectedOption, setIsAnswered, setFeedback,
+      taskError, setTaskError, minigameRetryKey,
       // sabotase
       sabotageFeedback, setSabotageFeedback,
       sabotageQuiz, setSabotageQuiz,

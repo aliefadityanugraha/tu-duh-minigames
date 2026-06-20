@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function DebateOverlay({ debate, players, selfId, isGuru, isPlayerDead, onVote, onSendChat }) {
+export default function DebateOverlay({ debate, players, selfId, selfRole, isGuru, isPlayerDead, onVote, onSendChat }) {
   const [hasVoted, setHasVoted] = useState(false);
   const [votedFor, setVotedFor] = useState(null);
   const [chatInput, setChatInput] = useState('');
@@ -85,7 +85,7 @@ export default function DebateOverlay({ debate, players, selfId, isGuru, isPlaye
               )}
               {debate.chat && debate.chat.map((c, idx) => {
                 const isMe = c.senderId === selfId;
-                const isProvokatorMe = isMe && c.role === 'provokator';
+                const isProvokatorMe = isMe && selfRole === 'provokator';
                 
                 // Color coding for chat bubbles
                 const bgClass = isMe ? 'bg-[#00c899]' : 'bg-[#190047]';

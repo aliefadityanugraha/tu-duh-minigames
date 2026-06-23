@@ -44,8 +44,82 @@ export const SocketProvider = ({ children }) => {
   const [minigameRetryKey, setMinigameRetryKey] = useState(0);
 
   useEffect(() => {
-    const s = io();
+    const s = io({
+      // Reconnect otomatis dengan exponential backoff
+      reconnection:        true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay:   1000,
+      reconnectionDelayMax: 10000,
+      timeout:             60000, // Tingkatkan dari 20s ke 60s untuk koneksi idle
+      // Mulai dengan polling lalu upgrade ke websocket (lebih stabil di idle)
+      transports: ['websocket', 'polling'],
+      // Konfigurasi ping/pong sinkron dengan server
+      pingInterval: 30000,
+      pingTimeout:  120000,
+    });
     setSocket(s);
+
+    // ── Koneksi / reconnect ──
+    s.on('connect', () => {
+      console.log('[Socket] Terhubung:', s.id);
+    });
+
+    s.on('disconnect', (reason) => {
+      console.log('[Socket] Terputus:', reason);
+      // Jika server yang memutuskan, Socket.io akan reconnect otomatis
+      if (reason === 'io server disconnect') {
+        // Server memutus koneksi — reconnect otomatis
+        s.connect();
+      }
+    });
+
+    s.on('reconnect', (attempt) => {
+      console.log('[Socket] Reconnected setelah', attempt, 'percobaan');
+    });
+
+    s.on('reconnect_failed', () => {
+      console.warn('[Socket] Reconnect gagal. Mencoba lagi...');
+    });
+
+    s.on('reconnect_error', (err) => {
+      console.warn('[Socket] Reconnect error:', err.message);
+    });
+
+    s.on('reconnect_attempt', () => {
+      console.log('[Socket] Mencoba reconnect...');
+    });
+
+    // ── Auto re-join setelah reconnect ──
+    // Saat koneksi putus lalu terhubung lagi, socket.id berubah.
+    // Kita perlu kirim join-room lagi dengan sessionId agar server bisa
+    // mengenali pemain lama dan menyambung kembali ke room yang sama.
+    s.on('connect', () => {
+      // Baca data dari sessionStorage (persisten meski koneksi putus)
+      if (typeof window === 'undefined') return;
+      const saved = _loadSession();
+      if (saved?.roomCode && saved?.name && saved?.sessionId) {
+        console.log('[Socket] Auto re-join room:', saved.roomCode);
+        s.emit('join-room', {
+          roomCode:  saved.roomCode,
+          name:      saved.name,
+          isGuru:    saved.isGuru ?? false,
+          sessionId: saved.sessionId,
+        });
+      }
+    });
+
+    // Handle jika room sudah dihapus server saat idle
+    s.on('join-error', (msg) => {
+      if (msg.includes('tidak ditemukan')) {
+        console.warn('[Socket] Room sudah tidak ada, mungkin sudah dihapus karena idle.');
+        // Bersihkan session agar user bisa join ulang
+        if (typeof window !== 'undefined') {
+          _clearSession();
+        }
+      }
+      setError(msg);
+      setLoading(false);
+    });
 
     // ── Join ──
     s.on('join-success', ({ roomCode, player }) => {
@@ -53,6 +127,8 @@ export const SocketProvider = ({ children }) => {
       setRoleInfo({ role: player.role, isGuru: player.isGuru });
       setLoading(false);
       addLog(`Bergabung ke Room ${roomCode}.`);
+      // Simpan session untuk auto re-join jika koneksi terputus
+      _saveSession({ roomCode, name: player.name, isGuru: player.isGuru });
     });
     s.on('join-error', (msg) => { setError(msg); setLoading(false); });
 
@@ -224,13 +300,14 @@ export const SocketProvider = ({ children }) => {
     s.on('game-restarted', () => {
       addLog('🔄 Game di-restart ke lobi.');
       // Jangan reset roleInfo di sini — biarkan room-updated yang sync
-      // roleInfo.isGuru harus tetap true agar WaitingRoom menampilkan tombol Guru
       setCurrentTask(null); setCurrentQuestion(null); setFeedback(null);
       setIsAnswered(false); setSelectedOption(null);
       setTaskError(null); setMinigameRetryKey(0);
       setSabotageQuiz(null); setSabotageRescue(null);
       setTaskLocked(false); setPresentationNotif(null);
       setTopicDebateNotif(null); setDuelCooldownRemaining(0);
+      // Update session: room code tetap, tapi hapus data game
+      _clearSession();
       router.push('/');
     });
 
@@ -263,6 +340,23 @@ export const SocketProvider = ({ children }) => {
       sessionStorage.setItem('among_us_session', sid);
     }
     return sid;
+  };
+
+  // ── Session persistence untuk auto re-join ──
+  const _loadSession = () => {
+    if (typeof window === 'undefined') return null;
+    const data = sessionStorage.getItem('among_us_room_session');
+    return data ? JSON.parse(data) : null;
+  };
+
+  const _saveSession = ({ roomCode, name, isGuru }) => {
+    if (typeof window === 'undefined') return;
+    sessionStorage.setItem('among_us_room_session', JSON.stringify({ roomCode, name, isGuru }));
+  };
+
+  const _clearSession = () => {
+    if (typeof window === 'undefined') return;
+    sessionStorage.removeItem('among_us_room_session');
   };
 
   const joinRoom = (roomCode, name, isGuru) => {

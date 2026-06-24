@@ -3,6 +3,7 @@ import { Users, MessageSquare } from 'lucide-react';
 import LiveStatsPanel from '../LiveStatsPanel';
 import GuruPanel from '../panels/GuruPanel';
 import GameEndedCard from './GameEndedCard';
+import { SKINS } from '../lobby/WaitingRoom';
 
 export default function AdminView({
   room, player, roleInfo, logs,
@@ -59,7 +60,8 @@ export default function AdminView({
             <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 border-b-4 border-black">
               {room.players.map((p, idx) => {
                 const isMe = p.id === player?.id;
-                const color = p.isGuru ? '#ffc312' : avatarColors[idx % avatarColors.length];
+                const skin = SKINS.find(s => s.id === p.skinId) || SKINS[0];
+                const color = p.isGuru ? '#ffc312' : skin.bg;
                 return (
                   <div
                     key={p.id}
@@ -69,7 +71,7 @@ export default function AdminView({
                   >
                     <div className="relative flex-shrink-0">
                       <div className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-lg overflow-hidden" style={{ backgroundColor: color }}>
-                        {p.isGuru ? '🏫' : p.isDead ? '👻' : '🧑‍🚀'}
+                        {p.isGuru ? '🏫' : p.isDead ? '👻' : (SKINS.find(s => s.id === p.skinId)?.emoji || '🧑‍🚀')}
                       </div>
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">

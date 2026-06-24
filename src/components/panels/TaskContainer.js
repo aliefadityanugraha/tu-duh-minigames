@@ -61,19 +61,36 @@ export default function TaskContainer({
   const showMinigameSuccess = isAnswered && feedback && !taskError;
   const showMinigamePending = minigameWon && !isAnswered && !taskError;
 
+  const timerVisible = taskTimer != null && !isAnswered && !minigameWon;
+  const TimerBanner = () => {
+    if (taskTimer == null) return null;
+    return (
+      <div
+        className="shrink-0 overflow-hidden"
+        style={{
+          maxHeight: timerVisible ? '4rem' : '0px',
+          opacity: timerVisible ? 1 : 0,
+          transition: 'max-height 0.35s ease-in-out, opacity 0.25s ease-in-out',
+        }}
+      >
+        <div className={`shrink-0 w-full flex items-center justify-between px-5 py-2.5 ${
+          taskTimer <= 5 ? 'bg-[#93000a] text-[#ffdad6] animate-pulse' : 'bg-[#270067] text-[#ffc312]'
+        }`}>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
+            <span>⏱</span> WAKTU MISI
+          </span>
+          <span className="font-mono text-base font-black">{taskTimer}s</span>
+        </div>
+      </div>
+    );
+  };
+
   if (isQuiz) {
     return (
-      <>
-        {taskTimer != null && !isAnswered && (
-          <div className={`mx-5 mt-2 flex items-center justify-between px-4 py-2 border-4 border-black ${
-            taskTimer <= 5 ? 'bg-[#93000a] text-[#ffdad6] animate-pulse' : 'bg-[#270067] text-[#ffc312]'
-          }`}>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-wider">⏱️ WAKTU MISI</span>
-            <span className="font-mono text-lg font-black">{taskTimer}s</span>
-          </div>
-        )}
+      <div className="flex flex-col h-full overflow-y-auto">
+        <TimerBanner />
         {taskError && (
-          <div className="mx-5 mt-3 p-3 bg-[#93000a] border-4 border-black flex flex-col gap-2 animate-fadeIn">
+          <div className="m-5 p-3 bg-[#93000a] border-4 border-black flex flex-col gap-2 animate-fadeIn">
             <p className="font-mono text-[#ffdad6] text-xs leading-relaxed">{taskError}</p>
             <div className="flex gap-2">
               {!isAnswered && selectedOption !== null && (
@@ -95,17 +112,19 @@ export default function TaskContainer({
             </div>
           </div>
         )}
-        <QuizTask
-          taskData={data}
-          isAnswered={isAnswered}
-          selectedOption={selectedOption}
-          feedback={feedback}
-          isPlayerDead={isPlayerDead}
-          onSelectOption={onSelectOption}
-          onSubmitAnswer={onSubmitQuiz}
-          onNextTask={onNextTask}
-        />
-      </>
+        <div className="w-full mb-5">
+          <QuizTask
+            taskData={data}
+            isAnswered={isAnswered}
+            selectedOption={selectedOption}
+            feedback={feedback}
+            isPlayerDead={isPlayerDead}
+            onSelectOption={onSelectOption}
+            onSubmitAnswer={onSubmitQuiz}
+            onNextTask={onNextTask}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -122,87 +141,65 @@ export default function TaskContainer({
   return (
     <>
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 bg-[#270067] border-b-2 border-black shrink-0">
-          <div className="neo-badge bg-[#41e5b3] text-[#003829] border-black text-[10px] py-0.5 px-2">
-            🎮 MINI-GAME
+
+      {taskError && (
+        <div className="shrink-0 m-5 p-3 bg-[#93000a] border-4 border-black flex flex-col gap-2 animate-fadeIn">
+          <div className="flex items-start gap-2">
+            <AlertTriangle size={14} className="text-[#ffb4ab] shrink-0 mt-0.5" />
+            <p className="font-mono text-[#ffdad6] text-xs leading-relaxed">{taskError}</p>
           </div>
-          <div className="flex items-center gap-2">
-            {taskTimer != null && !isAnswered && !minigameWon && (
-              <span className={`neo-badge text-[10px] py-0.5 px-2 border-black ${
-                taskTimer <= 5 ? 'bg-[#93000a] text-[#ffdad6] animate-pulse' : 'bg-[#ffc312] text-[#3f2e00]'
-              }`}>
-                ⏱️ {taskTimer}s
-              </span>
-            )}
-            {silaLabel && (
-              <span className="font-mono text-[#9c8f78] text-[10px] uppercase tracking-wider">{silaLabel}</span>
-            )}
-            {!isAnswered && !isPlayerDead && !minigameWon && (
-              <button
-                type="button"
-                onClick={() => setIsFullscreen(true)}
-                className="flex items-center gap-1 px-2 py-1 bg-[#ffc312] text-[#3f2e00] border-2 border-black font-mono text-[9px] font-bold hover:bg-[#ffe5b3]"
-                title="Layar penuh"
-              >
-                <Maximize2 size={11} /> FULL
-              </button>
-            )}
+          <button
+            type="button"
+            onClick={handleRetryError}
+            className="w-full py-2 bg-[#ffc312] text-[#3f2e00] border-2 border-black font-mono font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#ffe5b3]"
+          >
+            <RotateCcw size={12} /> KIRIM ULANG
+          </button>
+        </div>
+      )}
+
+      <div className="w-full flex-1 min-h-0">
+        <div className="h-full flex flex-col">
+          <TimerBanner />
+
+          <div className="flex-1 min-h-0 w-full overflow-hidden relative">
+            <MinigameComponent
+              key={`${sessionId}-${minigameRetryKey}`}
+              onComplete={handleMinigameComplete}
+            />
           </div>
         </div>
+      </div>
 
-        {taskError && (
-          <div className="shrink-0 mx-3 mt-3 p-3 bg-[#93000a] border-4 border-black flex flex-col gap-2 animate-fadeIn">
-            <div className="flex items-start gap-2">
-              <AlertTriangle size={14} className="text-[#ffb4ab] shrink-0 mt-0.5" />
-              <p className="font-mono text-[#ffdad6] text-xs leading-relaxed">{taskError}</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleRetryError}
-              className="w-full py-2 bg-[#ffc312] text-[#3f2e00] border-2 border-black font-mono font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#ffe5b3]"
-            >
-              <RotateCcw size={12} /> KIRIM ULANG
-            </button>
+      {showMinigamePending && (
+        <div className="fixed bottom-0 left-0 w-full z-50 p-4 bg-[#190047] border-t-4 border-black animate-fadeIn">
+          <div className="flex items-center gap-3 p-3 border-4 border-black bg-[#270067] text-[#ffc312]">
+            <Loader2 size={16} className="animate-spin shrink-0" />
+            <span className="font-mono font-bold text-xs">Mini-game selesai — menunggu konfirmasi...</span>
           </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto">
-          <MinigameComponent
-            key={`${sessionId}-${minigameRetryKey}`}
-            compact
-            onComplete={handleMinigameComplete}
-          />
         </div>
+      )}
 
-        {showMinigamePending && (
-          <div className="shrink-0 p-4 bg-[#190047] border-t-4 border-black animate-fadeIn">
-            <div className="flex items-center gap-3 p-3 border-4 border-black bg-[#270067] text-[#ffc312]">
-              <Loader2 size={16} className="animate-spin shrink-0" />
-              <span className="font-mono font-bold text-xs">Mini-game selesai — menunggu konfirmasi...</span>
+      {showMinigameSuccess && (
+        <div className="fixed bottom-0 left-0 w-full z-50 p-4 bg-[#190047] border-t-4 border-black animate-fadeIn">
+          <div className="flex items-start gap-3 p-3 border-4 border-black bg-[#003829] text-[#41e5b3]">
+            <CheckCircle2 size={16} className="flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="font-mono font-bold text-xs block">✅ MINI-GAME SELESAI! +1 SKOR</span>
+              {feedback.explanation && (
+                <p className="text-[10px] leading-relaxed opacity-80 mt-0.5">{feedback.explanation}</p>
+              )}
             </div>
           </div>
-        )}
-
-        {showMinigameSuccess && (
-          <div className="shrink-0 p-4 bg-[#190047] border-t-4 border-black animate-fadeIn">
-            <div className="flex items-start gap-3 p-3 border-4 border-black bg-[#003829] text-[#41e5b3]">
-              <CheckCircle2 size={16} className="flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-mono font-bold text-xs block">✅ MINI-GAME SELESAI! +1 SKOR</span>
-                {feedback.explanation && (
-                  <p className="text-[10px] leading-relaxed opacity-80 mt-0.5">{feedback.explanation}</p>
-                )}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={onNextTask}
-              className="w-full mt-2 py-3 neo-btn neo-btn-secondary text-sm flex items-center justify-center gap-2"
-            >
-              MISI BERIKUTNYA <ArrowRight size={14} />
-            </button>
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={onNextTask}
+            className="w-full mt-2 py-3 neo-btn neo-btn-secondary text-sm flex items-center justify-center gap-2"
+          >
+            MISI BERIKUTNYA <ArrowRight size={14} />
+          </button>
+        </div>
+      )}
       </div>
 
       {isFullscreen && (

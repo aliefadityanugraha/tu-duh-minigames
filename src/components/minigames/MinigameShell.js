@@ -3,8 +3,8 @@ import { CheckCircle2, RotateCcw } from 'lucide-react';
 import { getMinigameShellClasses } from './shellClasses';
 
 /** Bungkus luar + board mini-game */
-export function MinigameRoot({ compact, children }) {
-  const shell = getMinigameShellClasses(compact);
+export function MinigameRoot({ children }) {
+  const shell = getMinigameShellClasses();
   return (
     <div className={shell.outer}>
       <div className={shell.board}>{children}</div>
@@ -12,10 +12,9 @@ export function MinigameRoot({ compact, children }) {
   );
 }
 
-/** Header seragam — fullscreen / overlay (compact pakai header TaskContainer) */
-export function MinigameHeader({ compact, icon: Icon, iconBg = 'bg-white', title, sila, statusVariant = 'playing', statusLabel }) {
-  if (compact) return null;
-  const shell = getMinigameShellClasses(false);
+/** Header seragam */
+export function MinigameHeader({ icon: Icon, iconBg = 'bg-white', title, sila, statusVariant = 'playing', statusLabel }) {
+  const shell = getMinigameShellClasses();
 
   const badgeClass = {
     playing: 'bg-red-500 text-white',
@@ -45,8 +44,8 @@ export function MinigameHeader({ compact, icon: Icon, iconBg = 'bg-white', title
 }
 
 /** Area konten utama */
-export function MinigameWorkArea({ compact, children, className = '' }) {
-  const shell = getMinigameShellClasses(compact);
+export function MinigameWorkArea({ children, className = '' }) {
+  const shell = getMinigameShellClasses();
   return (
     <div className={`${shell.workArea} ${className}`}>
       {children}
@@ -59,13 +58,13 @@ export function MinigameSection({ label, children, className = '' }) {
   return (
     <div className={`w-full flex flex-col gap-0 ${className}`}>
       {label && (
-        <div className="px-2 py-1.5 bg-black border-2 border-black">
+        <div className="bg-black px-2 py-1 sm:px-3 sm:py-1.5 border-2 border-black inline-block self-start">
           <span className="text-white text-[10px] sm:text-xs font-bold font-mono-tech uppercase tracking-widest">
             {label}
           </span>
         </div>
       )}
-      <div className="p-3 sm:p-4 bg-white border-4 border-t-0 border-black">
+      <div className="p-3 sm:p-4 bg-white border-4 border-t-0 border-black flex-1 flex flex-col">
         {children}
       </div>
     </div>
@@ -112,9 +111,9 @@ export function MinigameProgress({ label, value, win = false, hint }) {
         <span>{label}</span>
         <span className={win ? 'text-green-600' : ''}>{pct}%</span>
       </div>
-      <div className="w-full h-5 sm:h-6 bg-white border-4 border-black overflow-hidden">
+      <div className="w-full h-5 sm:h-6 bg-white border-[3px] border-black relative">
         <div
-          className={`h-full border-r-4 border-black transition-all duration-300 ${win ? 'bg-green-500' : 'bg-teal-400'}`}
+          className={`absolute top-0 left-0 h-full border-r-[3px] border-black transition-all duration-300 ${win ? 'bg-green-500' : 'bg-teal-400'}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -146,9 +145,8 @@ export function MinigameButton({ variant = 'primary', className = '', children, 
 export function MinigameWinBanner({ syncing, win, winMessage = 'Misi selesai! Menunggu konfirmasi...', syncingMessage = 'Memproses...' }) {
   if (!syncing && !win) return null;
   return (
-    <div className={`w-full p-2.5 sm:p-3 border-4 border-black flex items-center justify-center gap-2 ${
-      win ? 'bg-green-500 text-black animate-fadeIn' : 'bg-yellow-400 text-black animate-pulse'
-    }`}>
+    <div className={`w-full p-2.5 sm:p-3 border-4 border-black flex items-center justify-center gap-2 ${win ? 'bg-green-500 text-black animate-fadeIn' : 'bg-yellow-400 text-black animate-pulse'
+      }`}>
       {win ? (
         <>
           <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -162,22 +160,8 @@ export function MinigameWinBanner({ syncing, win, winMessage = 'Misi selesai! Me
 }
 
 /** Footer amber dengan tombol reset opsional */
-export function MinigameFooter({ compact, onReset, resetLabel = 'RESET', showReset = true, disabled = false, children }) {
-  const shell = getMinigameShellClasses(compact);
-
-  if (compact) {
-    if (!showReset || disabled) return null;
-    return (
-      <div className={shell.footer}>
-        <div className="flex justify-end w-full">
-          <MinigameButton variant="secondary" onClick={onReset} className="px-4 py-2 text-[10px]">
-            {resetLabel}
-          </MinigameButton>
-        </div>
-      </div>
-    );
-  }
-
+export function MinigameFooter({ onReset, resetLabel = 'RESET', showReset = true, disabled = false, children }) {
+  const shell = getMinigameShellClasses();
   return (
     <div className={shell.footer}>
       <div className="flex-1 min-w-0">{children}</div>

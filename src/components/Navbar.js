@@ -40,8 +40,12 @@ export default function Navbar({ navItems = [], roomCode = null, rightContent = 
 
         {navItems.length > 0 && (
           <div className="flex items-center gap-4">
-            {navItems.map((item, idx) => (
-              item.href ? (
+            {navItems.map((item, idx) => {
+              if (item.custom) {
+                return <React.Fragment key={idx}>{item.custom}</React.Fragment>;
+              }
+              
+              return item.href ? (
                 <a
                   key={idx}
                   href={item.href}
@@ -66,8 +70,8 @@ export default function Navbar({ navItems = [], roomCode = null, rightContent = 
                   {item.icon && <span className="text-base">{item.icon}</span>}
                   <span>{item.label}</span>
                 </span>
-              )
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

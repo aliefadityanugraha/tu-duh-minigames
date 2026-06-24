@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { ArrowLeft, Eye, Layers, Palette } from 'lucide-react';
 
@@ -21,6 +21,7 @@ import HubungkanKebaikan from '../components/minigames/HubungkanKebaikan';
 import DekripsiPesan from '../components/minigames/DekripsiPesan';
 import UrutanMufakat from '../components/minigames/UrutanMufakat';
 import TimbanganKeadilan from '../components/minigames/TimbanganKeadilan';
+import TebakRumahIbadah from '../components/minigames/TebakRumahIbadah';
 
 // ─── MOCK DATA ──────────────────────────────────────────────────────
 
@@ -128,6 +129,8 @@ const SCREENS = [
   { id: 'mg-urutan-compact', group: 'Minigame', label: '🔢 Urutan Mufakat — Compact' },
   { id: 'mg-timbangan-full', group: 'Minigame', label: '⚖️ Timbangan Keadilan — Full' },
   { id: 'mg-timbangan-compact', group: 'Minigame', label: '⚖️ Timbangan Keadilan — Compact' },
+  { id: 'mg-ibadah-full',    group: 'Minigame', label: '🕌 Tebak Rumah Ibadah — Full' },
+  { id: 'mg-ibadah-compact', group: 'Minigame', label: '🕌 Tebak Rumah Ibadah — Compact' },
   { id: 'sabotage-overlay',  group: 'Overlay', label: 'Sabotage Overlay (Warga view)' },
   { id: 'sabotage-overlay-prov', group: 'Overlay', label: 'Sabotage Overlay (Prov view)' },
   { id: 'sabotage-rescue', group: 'Overlay', label: 'Sabotage Rescue Overlay' },
@@ -170,11 +173,26 @@ function buildRoom(overrides = {}) {
 // ─── COMPONENT ───────────────────────────────────────────────────────
 
 export default function DevMode() {
+  const [mounted, setMounted] = useState(false);
   const [activeScreen, setActiveScreen] = useState('warga-playing');
+  const [mockIsAnswered, setMockIsAnswered] = useState(false);
+  const [mockFeedback, setMockFeedback] = useState(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  useEffect(() => {
+    setMockIsAnswered(false);
+    setMockFeedback(null);
+  }, [activeScreen]);
+  
   const [darkMode, setDarkMode] = useState(true);
 
   const noop = () => {};
   const noopWithArg = () => {};
+
+  if (!mounted) return null;
 
   const screen = SCREENS.find(s => s.id === activeScreen);
 
@@ -410,6 +428,12 @@ export default function DevMode() {
       currentTask = null; feedback = null; isAnswered = false; selectedOption = null; taskError = null; taskTimer = null;
   }
 
+  // Override with mock state if applicable
+  if (mockIsAnswered) {
+    isAnswered = true;
+    feedback = mockFeedback;
+  }
+
   const isPlayerDead = !!player?.isDead;
   const selfId = player?.id;
 
@@ -544,6 +568,10 @@ export default function DevMode() {
         return <MinigameStandalone component={TimbanganKeadilan} compact={false} label="Timbangan Keadilan (Sila #5)" />;
       case 'mg-timbangan-compact':
         return <MinigameStandalone component={TimbanganKeadilan} compact={true} label="Timbangan Keadilan (Sila #5)" />;
+      case 'mg-ibadah-full':
+        return <MinigameStandalone component={TebakRumahIbadah} compact={false} label="Tebak Rumah Ibadah (Sila #1)" />;
+      case 'mg-ibadah-compact':
+        return <MinigameStandalone component={TebakRumahIbadah} compact={true} label="Tebak Rumah Ibadah (Sila #1)" />;
 
       // ── All PlayerView-based screens ──
       default:
@@ -564,8 +592,17 @@ export default function DevMode() {
             duelCooldownRemaining={0}
             taskTimer={taskTimer}
             onSelectOption={noopWithArg}
-            onSubmitQuiz={noop}
-            onMinigameComplete={noopWithArg}
+            onSubmitQuiz={() => {
+              setMockIsAnswered(true);
+              setMockFeedback({ correct: true, explanation: "Jawaban simulasi diterima." });
+            }}
+            onMinigameComplete={() => {
+              // Simulasi jeda server yang sangat cepat (300ms)
+              setTimeout(() => {
+                setMockIsAnswered(true);
+                setMockFeedback({ correct: true, explanation: "Mini-game simulasi berhasil!" });
+              }, 300);
+            }}
             onNextTask={noop}
             onClearTaskError={noop}
             onRetryMinigameSubmit={noop}

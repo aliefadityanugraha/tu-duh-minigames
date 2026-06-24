@@ -1,6 +1,6 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
-import TaskContainer from './TaskContainer';
+import TaskContainer from './MiniGamesContainer';
 import { getLockedTaskPreviews } from '../../lib/taskPreview';
 
 /**

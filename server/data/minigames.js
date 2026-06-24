@@ -1,5 +1,6 @@
 // Daftar mini-game yang valid — sinkron dengan src/components/minigames/index.js
 const MINIGAME_TYPES = [
+  { id: 'tebak-ibadah',       sila: 1, label: 'Tebak Rumah Ibadah' },
   { id: 'hubungkan-kebaikan', sila: 2, label: 'Hubungkan Kebaikan' },
   { id: 'dekripsi-pesan',     sila: 3, label: 'Susun Kata' },
   { id: 'urutan-mufakat',     sila: 4, label: 'Urutan Mufakat' },

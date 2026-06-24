@@ -72,9 +72,16 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
   const accuracyPercent = totalAnswers > 0
     ? Math.round((stats.totalAnswersCorrect / totalAnswers) * 100) : 0;
 
-  const elapsedMs = stats.startedAt ? Date.now() - stats.startedAt : 0;
-  const elapsedMin = Math.floor(elapsedMs / 60000);
-  const elapsedSec = Math.floor((elapsedMs % 60000) / 1000);
+  const [elapsed, setElapsed] = useState({ min: 0, sec: 0 });
+  useEffect(() => {
+    const update = () => {
+      const ms = stats.startedAt ? Date.now() - stats.startedAt : 0;
+      setElapsed({ min: Math.floor(ms / 60000), sec: Math.floor((ms % 60000) / 1000) });
+    };
+    update();
+    const iv = setInterval(update, 1000);
+    return () => clearInterval(iv);
+  }, [stats.startedAt]);
 
   const alivePlayers = room.players.filter(p => !p.isGuru && !p.isDead).length;
   const totalStudents = room.players.filter(p => !p.isGuru).length;
@@ -143,7 +150,7 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
           <div className="text-left">
             <div className="font-rubik italic text-[#41e5b3] text-lg font-bold leading-none">STATISTIK LIVE GAME</div>
             <div className="font-mono text-[#d3c5ab] text-[10px] tracking-wider mt-1">
-              REAL-TIME · {elapsedMin}m {elapsedSec.toString().padStart(2, '0')}s BERLANGSUNG
+              REAL-TIME · {elapsed.min}m {elapsed.sec.toString().padStart(2, '0')}s BERLANGSUNG
             </div>
           </div>
         </div>

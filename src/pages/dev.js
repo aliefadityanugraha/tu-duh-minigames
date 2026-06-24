@@ -15,6 +15,12 @@ import PresentationOverlay from '../components/overlays/PresentationOverlay';
 import TopicDebateOverlay from '../components/overlays/TopicDebateOverlay';
 import LoginForm from '../components/lobby/LoginForm';
 import WaitingRoom from '../components/lobby/WaitingRoom';
+import TaskContainer from '../components/panels/TaskContainer';
+import { MINIGAME_REGISTRY } from '../components/minigames';
+import HubungkanKebaikan from '../components/minigames/HubungkanKebaikan';
+import DekripsiPesan from '../components/minigames/DekripsiPesan';
+import UrutanMufakat from '../components/minigames/UrutanMufakat';
+import TimbanganKeadilan from '../components/minigames/TimbanganKeadilan';
 
 // ─── MOCK DATA ──────────────────────────────────────────────────────
 
@@ -114,6 +120,14 @@ const SCREENS = [
   { id: 'minigame-dekripsi', group: 'Task', label: 'Minigame — Dekripsi Pesan' },
   { id: 'minigame-urutan',   group: 'Task', label: 'Minigame — Urutan Mufakat' },
   { id: 'minigame-timbangan', group: 'Task', label: 'Minigame — Timbangan Keadilan' },
+  { id: 'mg-kebaikan-full',   group: 'Minigame', label: '🧩 Hubungkan Kebaikan — Full' },
+  { id: 'mg-kebaikan-compact', group: 'Minigame', label: '🧩 Hubungkan Kebaikan — Compact' },
+  { id: 'mg-dekripsi-full',  group: 'Minigame', label: '📝 Dekripsi Pesan — Full' },
+  { id: 'mg-dekripsi-compact', group: 'Minigame', label: '📝 Dekripsi Pesan — Compact' },
+  { id: 'mg-urutan-full',    group: 'Minigame', label: '🔢 Urutan Mufakat — Full' },
+  { id: 'mg-urutan-compact', group: 'Minigame', label: '🔢 Urutan Mufakat — Compact' },
+  { id: 'mg-timbangan-full', group: 'Minigame', label: '⚖️ Timbangan Keadilan — Full' },
+  { id: 'mg-timbangan-compact', group: 'Minigame', label: '⚖️ Timbangan Keadilan — Compact' },
   { id: 'sabotage-overlay',  group: 'Overlay', label: 'Sabotage Overlay (Warga view)' },
   { id: 'sabotage-overlay-prov', group: 'Overlay', label: 'Sabotage Overlay (Prov view)' },
   { id: 'sabotage-rescue', group: 'Overlay', label: 'Sabotage Rescue Overlay' },
@@ -127,7 +141,7 @@ const SCREENS = [
   { id: 'game-header',     group: 'UI',     label: 'Game Header' },
 ];
 
-const GROUP_ORDER = ['Lobby', 'Game', 'Task', 'Overlay', 'End', 'Stats', 'UI'];
+const GROUP_ORDER = ['Lobby', 'Game', 'Task', 'Minigame', 'Overlay', 'End', 'Stats', 'UI'];
 
 // ─── MOCK ROOM FACTORY ───────────────────────────────────────────────
 
@@ -299,6 +313,20 @@ export default function DevMode() {
       currentTask = { type: 'timbangan-keadilan', sessionId: 'dev-mg4', timer: 15, data: { sila: 5, label: 'Timbangan Keadilan' } };
       feedback = null; isAnswered = false; selectedOption = null; taskError = null; taskTimer = 15;
       room = buildRoom(); player = MOCK_PLAYERS[0]; roleInfo = { role: 'warga', isGuru: false };
+      break;
+
+    // ── STANDALONE MINIGAMES ──
+    case 'mg-kebaikan-full':
+    case 'mg-kebaikan-compact':
+    case 'mg-dekripsi-full':
+    case 'mg-dekripsi-compact':
+    case 'mg-urutan-full':
+    case 'mg-urutan-compact':
+    case 'mg-timbangan-full':
+    case 'mg-timbangan-compact':
+      // No room/player needed — rendered standalone below
+      room = null; player = null; roleInfo = null;
+      currentTask = null; feedback = null; isAnswered = false; selectedOption = null; taskError = null; taskTimer = null;
       break;
 
     // ── OVERLAYS ──
@@ -499,6 +527,24 @@ export default function DevMode() {
           />
         );
 
+      // ── Standalone Minigames ──
+      case 'mg-kebaikan-full':
+        return <MinigameStandalone component={HubungkanKebaikan} compact={false} label="Hubungkan Kebaikan (Sila #2)" />;
+      case 'mg-kebaikan-compact':
+        return <MinigameStandalone component={HubungkanKebaikan} compact={true} label="Hubungkan Kebaikan (Sila #2)" />;
+      case 'mg-dekripsi-full':
+        return <MinigameStandalone component={DekripsiPesan} compact={false} label="Dekripsi Pesan / Susun Kata (Sila #3)" />;
+      case 'mg-dekripsi-compact':
+        return <MinigameStandalone component={DekripsiPesan} compact={true} label="Dekripsi Pesan / Susun Kata (Sila #3)" />;
+      case 'mg-urutan-full':
+        return <MinigameStandalone component={UrutanMufakat} compact={false} label="Urutan Mufakat (Sila #4)" />;
+      case 'mg-urutan-compact':
+        return <MinigameStandalone component={UrutanMufakat} compact={true} label="Urutan Mufakat (Sila #4)" />;
+      case 'mg-timbangan-full':
+        return <MinigameStandalone component={TimbanganKeadilan} compact={false} label="Timbangan Keadilan (Sila #5)" />;
+      case 'mg-timbangan-compact':
+        return <MinigameStandalone component={TimbanganKeadilan} compact={true} label="Timbangan Keadilan (Sila #5)" />;
+
       // ── All PlayerView-based screens ──
       default:
         return (
@@ -553,7 +599,7 @@ export default function DevMode() {
             Preview: {screen?.group} → {screen?.label}
           </span>
           <span className="font-mono text-[#3f2e00] text-[10px]">
-            (role: {roleInfo?.isGuru ? 'Guru' : roleInfo?.role || 'n/a'} | player: {player?.name || 'n/a'} | dead: {isPlayerDead ? 'Yes' : 'No'})
+            (role: {roleInfo?.isGuru ? 'Guru' : roleInfo?.role || 'n/a'} | player: {player?.name || 'standalone'} | dead: {isPlayerDead ? 'Yes' : 'No'})
           </span>
         </div>
 
@@ -634,6 +680,40 @@ function DevNavbar({ activeScreen, setActiveScreen, darkMode, setDarkMode }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── STANDALONE MINIGAME WRAPPER ──────────────────────────────────────
+
+function MinigameStandalone({ component, compact, label }) {
+  const noop = () => {};
+  const C = component;
+  return (
+    <div className="flex flex-col h-full">
+      <div className="shrink-0 px-4 py-3 bg-[#270067] border-b-4 border-black flex items-center justify-between">
+        <div>
+          <div className="font-rubik italic text-[#41e5b3] text-xl font-bold leading-none">MINIGAME DEV</div>
+          <div className="font-mono text-[#d3c5ab] text-[10px] tracking-[1px] uppercase mt-0.5">{label}</div>
+        </div>
+        <span className={`neo-badge text-[10px] py-0.5 px-2 border-black ${
+          compact ? 'bg-[#ffc312] text-[#3f2e00]' : 'bg-[#41e5b3] text-[#003829]'
+        }`}>
+          {compact ? 'COMPACT MODE' : 'FULL MODE'}
+        </span>
+      </div>
+      <div className="flex-1 overflow-y-auto bg-[#190047] p-4">
+        <C
+          compact={compact}
+          onComplete={noop}
+          onGameComplete={noop}
+        />
+      </div>
+      <div className="shrink-0 px-4 py-2 bg-[#13003a] border-t-2 border-[#4f4632]">
+        <p className="font-mono text-[#9c8f78] text-[10px] text-center italic">
+          💡 Edit style di komponen minigame langsung — perubahan auto-refresh di dev server
+        </p>
+      </div>
     </div>
   );
 }

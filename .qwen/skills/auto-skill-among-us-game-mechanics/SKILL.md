@@ -248,3 +248,17 @@ These bugs were found and **all fixed** on 2026-06-24. When modifying related co
 **Q. Lost `{condition && (` JSX wrapper ✅ FIXED**
 - When adding a timer banner inside an existing `if (isQuiz)` return block that already had `{taskError && (...)}`, the `{taskError && (` wrapper was lost during edits, leaving a stray `)}` closing bracket that broke JSX parsing. The `<div>` for taskError was rendered unconditionally instead of gated by `taskError`.
 - **Guard**: When inserting new JSX elements between existing conditional wrappers `{condition && (...)}` and sibling components inside a fragment, always verify the wrapper braces `{` and closing `)}` stay paired. Read the file after edits to confirm JSX structure is intact — a stray `)}` with no matching opening `{condition && (` is a syntax error that kills the build.
+
+**R. Source files can disappear between sessions ✅ RECREATED**
+- `TaskContainer.js` vanished from `src/components/panels/` between conversations — likely a filesystem sync or git issue. Next.js threw `Module not found: Can't resolve './TaskContainer'`. The file was recreated with the full corrected content (including the timer banner fix from Q).
+- **Guard**: When a "module not found" error appears for a file you know should exist, check the filesystem first (`ls` the directory). If the file is truly gone, recreate it from the last known correct content rather than assuming a path/import issue.
+
+### 10. Developer Mode Page (`/dev`)
+A dedicated style-preview page exists at `src/pages/dev.js` that allows navigating to all game screens with mock data without playing the game. Includes:
+- 36+ screen previews across Lobby, Game, Task, Minigame, Overlay, End, Stats, UI groups
+- Standalone minigame views (Full + Compact modes) for each of the 4 minigames
+- Mock data factory (`buildRoom(overrides)`) for consistent state simulation
+- Dev navbar with group-based navigation, dark/light background toggle, info badge
+- No Socket.io connection required — all callbacks are noops
+
+This page is for **style editing only** — it does not simulate server events or game progression.

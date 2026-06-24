@@ -193,7 +193,7 @@ export default function GuruPanel({ room, onPauseDebat, onResetGame, onTriggerTo
                     {p.role === 'provokator' ? '😈 PROVOKATOR' : '🇮🇩 WARGA'}
                   </span>
                   {p.duelCooldownEndsAt && (
-                    <span className="block font-mono text-[9px] text-[#ffc312] mt-0.5">
+                    <span className="block font-mono text-[9px] text-[#ffc312] mt-0.5" suppressHydrationWarning>
                       ⏳ CD DUEL {Math.max(0, Math.ceil((p.duelCooldownEndsAt - Date.now()) / 1000))}s
                     </span>
                   )}

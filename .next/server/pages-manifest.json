@@ -1,7 +1,0 @@
-{
-  "/_app": "pages/_app.js",
-  "/_error": "pages/_error.js",
-  "/_document": "pages/_document.js",
-  "/debug-ibadah": "pages/debug-ibadah.js",
-  "/": "pages/index.js"
-}

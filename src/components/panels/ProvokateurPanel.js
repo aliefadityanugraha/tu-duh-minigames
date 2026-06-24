@@ -1,19 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ShieldAlert, Swords, Clock, Lock } from 'lucide-react';
+import TaskContainer from './TaskContainer';
 
 /**
- * Panel Provokator — aksi Sabotase & Duel 1v1 dengan Neo-Pop design.
+ * Panel Provokator — aksi Sabotase & Duel 1v1, plus bisa menjawab soal untuk mengurangi progress Warga.
  */
 export default function ProvokateurPanel({
   room, selfId, isPlayerDead,
   onTriggerSabotage, onTriggerDuel,
   duelCooldownRemaining,
   sabotageQuiz, onSubmitSabotageQuiz,
+  taskTimer,
+  // Task props (provokator bisa menjawab soal seperti warga)
+  currentTask, isAnswered, selectedOption, feedback,
+  taskError, minigameRetryKey,
+  onSelectOption, onSubmitQuiz, onMinigameComplete, onNextTask, onClearTaskError, onRetryMinigameSubmit, onRetryQuizSubmit,
 }) {
   const livingCitizens = room.players.filter(p => !p.isGuru && !p.isDead && p.id !== selfId);
   const [duelTargetId, setDuelTargetId] = useState(null);
   const [quizSelected, setQuizSelected] = useState(null);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const quizResetTimer = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (quizResetTimer.current) clearTimeout(quizResetTimer.current);
+    };
+  }, []);
 
   const hasCooldown = duelCooldownRemaining > 0;
   const sabotageBlocked = !!room.sabotage || !!room.duel || room.debate?.active || room.topicDebate?.active;
@@ -23,7 +36,8 @@ export default function ProvokateurPanel({
     if (quizSelected === null || quizSubmitted) return;
     setQuizSubmitted(true);
     onSubmitSabotageQuiz(quizSelected);
-    setTimeout(() => { setQuizSelected(null); setQuizSubmitted(false); }, 1500);
+    if (quizResetTimer.current) clearTimeout(quizResetTimer.current);
+    quizResetTimer.current = setTimeout(() => { setQuizSelected(null); setQuizSubmitted(false); }, 1500);
   };
 
   React.useEffect(() => {
@@ -113,6 +127,7 @@ export default function ProvokateurPanel({
 
         {/* ── TOMBOL AKSI UTAMA ── */}
         {!sabotageQuiz && (
+          <>
           <div className="flex flex-col gap-4">
             {/* Sabotase button */}
             <button
@@ -202,6 +217,34 @@ export default function ProvokateurPanel({
               )}
             </div>
           </div>
+
+          {/* ── SEKSI SOAL: Provokator bisa menjawab soal untuk mengurangi progress Warga ── */}
+          <div className="flex flex-col border-t-2 border-[#4f4632] pt-3 mt-1">
+            <div className="flex items-center justify-between px-1 mb-2">
+              <div>
+                <p className="font-mono text-[#d3c5ab] text-[11px] uppercase tracking-wider">📝 Misi Pengacau</p>
+                <p className="font-mono text-[#9c8f78] text-[9px]">Jawab benar = kurangi progress Warga</p>
+              </div>
+            </div>
+            <TaskContainer
+              currentTask={currentTask}
+              isAnswered={isAnswered}
+              selectedOption={selectedOption}
+              feedback={feedback}
+              taskError={taskError}
+              minigameRetryKey={minigameRetryKey}
+              isPlayerDead={isPlayerDead}
+              taskTimer={taskTimer}
+              onSelectOption={onSelectOption}
+              onSubmitQuiz={onSubmitQuiz}
+              onMinigameComplete={onMinigameComplete}
+              onNextTask={onNextTask}
+              onClearTaskError={onClearTaskError}
+              onRetryMinigameSubmit={onRetryMinigameSubmit}
+              onRetryQuizSubmit={onRetryQuizSubmit}
+            />
+          </div>
+          </>
         )}
 
       </div>

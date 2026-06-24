@@ -15,6 +15,7 @@ export default function TaskContainer({
   taskError,
   minigameRetryKey,
   isPlayerDead,
+  taskTimer,
   onSelectOption,
   onSubmitQuiz,
   onMinigameComplete,
@@ -55,7 +56,8 @@ export default function TaskContainer({
 
   const handleRetryError = () => {
     onClearTaskError?.();
-    if (minigameWon) onRetryMinigameSubmit?.();
+    // Only retry if the server hasn't confirmed the answer yet
+    if (!isAnswered && minigameWon) onRetryMinigameSubmit?.();
   };
 
   const showMinigameSuccess = isAnswered && feedback && !taskError;
@@ -64,6 +66,14 @@ export default function TaskContainer({
   if (isQuiz) {
     return (
       <>
+        {taskTimer != null && !isAnswered && (
+          <div className={`mx-5 mt-2 flex items-center justify-between px-4 py-2 border-4 border-black ${
+            taskTimer <= 5 ? 'bg-[#93000a] text-[#ffdad6] animate-pulse' : 'bg-[#270067] text-[#ffc312]'
+          }`}>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wider">⏱️ WAKTU MISI</span>
+            <span className="font-mono text-lg font-black">{taskTimer}s</span>
+          </div>
+        )}
         {taskError && (
           <div className="mx-5 mt-3 p-3 bg-[#93000a] border-4 border-black flex flex-col gap-2 animate-fadeIn">
             <p className="font-mono text-[#ffdad6] text-xs leading-relaxed">{taskError}</p>
@@ -119,6 +129,13 @@ export default function TaskContainer({
             🎮 MINI-GAME
           </div>
           <div className="flex items-center gap-2">
+            {taskTimer != null && !isAnswered && !minigameWon && (
+              <span className={`neo-badge text-[10px] py-0.5 px-2 border-black ${
+                taskTimer <= 5 ? 'bg-[#93000a] text-[#ffdad6] animate-pulse' : 'bg-[#ffc312] text-[#3f2e00]'
+              }`}>
+                ⏱️ {taskTimer}s
+              </span>
+            )}
             {silaLabel && (
               <span className="font-mono text-[#9c8f78] text-[10px] uppercase tracking-wider">{silaLabel}</span>
             )}

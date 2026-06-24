@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Agent(Explore)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "computer_use__launch_app"
+    ]
+  },
+  "$version": 4
+}

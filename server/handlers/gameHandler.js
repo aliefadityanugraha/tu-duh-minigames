@@ -19,6 +19,7 @@ const { generateMathQuiz } = require('../lib/mathQuiz');
 const { pickVariedMinigame, pickVariedQuestion, shouldDeliverQuiz, isMinigameType } = require('../data/minigames');
 
 const DUEL_COOLDOWN_MS = 30_000; // 30 detik cooldown setelah duel
+const DUEL_WRONG_ANSWER_COOLDOWN_MS = 10_000; // 10 detik cooldown provokator salah jawab di duel
 
 function registerGameHandlers(socket, io) {
 
@@ -125,7 +126,7 @@ function registerGameHandlers(socket, io) {
     if (!room || room.state !== 'playing') return;
 
     const player = room.players.find(p => p.id === socket.id);
-    if (!player || player.isDead || player.role !== 'warga' || player.taskLocked) return;
+    if (!player || player.isDead || (player.role !== 'warga' && player.role !== 'provokator') || player.taskLocked) return;
     if (context !== 'task') return;
 
     const session = room.activeTaskSessions?.[socket.id];
@@ -165,7 +166,7 @@ function registerGameHandlers(socket, io) {
 
     switch (context) {
       case 'task':
-        if (player.role === 'warga' && room.state === 'playing' && !player.taskLocked)
+        if ((player.role === 'warga' || player.role === 'provokator') && room.state === 'playing' && !player.taskLocked)
           _handleTaskAnswer(socket, io, room, player, questionId, isCorrect, code);
         break;
 
@@ -264,7 +265,10 @@ function registerGameHandlers(socket, io) {
     room.gameStats.duelsTriggered++;
     room.gameStats.eventLog.push({ time: Date.now(), type: 'duel', message: `Duel: ${player.name} vs ${target.name}` });
 
-    io.to(code).emit('duel-triggered', { provocateur: player.name, citizen: target.name });
+    // Notifikasi duel HANYA ke kedua peserta (privat)
+    io.to(player.id).emit('duel-triggered', { provocateur: player.name, citizen: target.name });
+    io.to(target.id).emit('duel-triggered', { provocateur: player.name, citizen: target.name });
+    // Room-updated ke semua pemain (duel info di-filter di getSanitizedRoom untuk non-peserta)
     io.to(code).emit('room-updated', getSanitizedRoom(code));
   });
 
@@ -292,7 +296,8 @@ function registerGameHandlers(socket, io) {
     if (!room || room.state !== 'playing' || room.topicDebate?.active || room.debate?.active) return;
 
     const s = room.settings || DEFAULT_SETTINGS;
-    const topicText = (topic || '').trim() || 'Topik bebas — diskusikan nilai Pancasila dalam kehidupan sehari-hari!';
+    const rawTopic = (topic || '').trim();
+    const topicText = rawTopic.slice(0, 150) || 'Topik bebas — diskusikan nilai Pancasila dalam kehidupan sehari-hari!';
 
     room.topicDebate = {
       active: true,
@@ -358,7 +363,19 @@ function registerGameHandlers(socket, io) {
     const voter = room.players.find(p => p.id === socket.id);
     if (!voter || voter.isDead || voter.isGuru) return;
 
-    room.debate.votes[voter.id] = targetPlayerId;
+    // Lock: voter sudah vote → reject overwrite
+    if (room.debate.votes[voter.id] != null) return;
+
+    // Skip vote
+    if (targetPlayerId === 'skip') {
+      room.debate.votes[voter.id] = 'skip';
+    } else {
+      // Validasi target: harus player hidup di room ini, bukan diri sendiri
+      if (targetPlayerId === voter.id) return;
+      const target = room.players.find(p => p.id === targetPlayerId);
+      if (!target || target.isDead || target.isGuru) return;
+      room.debate.votes[voter.id] = targetPlayerId;
+    }
 
     const living = room.players.filter(p => !p.isDead && !p.isGuru);
     if (Object.keys(room.debate.votes).length >= living.length) {
@@ -379,11 +396,15 @@ function registerGameHandlers(socket, io) {
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
 
+    // Sanitize & limit message length
+    const sanitized = (String(message || '')).trim().slice(0, 200);
+    if (!sanitized) return;
+
     room.debate.chat.push({
       senderId: player.id,
       senderName: player.name,
       role: player.role,
-      message,
+      message: sanitized,
       timestamp: Date.now()
     });
 
@@ -438,7 +459,7 @@ function _deliverNextTask(socket) {
   if (!room || room.state !== 'playing') return;
 
   const player = room.players.find(p => p.id === socket.id);
-  if (!player || player.isDead || player.role !== 'warga') return;
+  if (!player || player.isDead || (player.role !== 'warga' && player.role !== 'provokator')) return;
   if (player?.taskLocked) {
     socket.emit('task-locked', { message: 'Tugas Anda sedang terkunci karena sabotase aktif!' });
     return;
@@ -459,11 +480,13 @@ function _deliverNextTask(socket) {
 
   const s = room.settings || DEFAULT_SETTINGS;
   const minigameOn = s.minigameEnabled !== false;
-  const quizRatio = minigameOn ? (s.quizRatio ?? 0.4) : 1;
+  // Provokator selalu dapat quiz saja (bisa menjawab soal untuk mengurangi progress warga)
+  const quizRatio = player.role === 'provokator' ? 1 : (minigameOn ? (s.quizRatio ?? 0.4) : 1);
   const isQuiz = shouldDeliverQuiz(player, quizRatio, minigameOn);
 
   const sessionId = `${socket.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const issuedAt = Date.now();
+  const TASK_TIMEOUT = 15; // 15 detik per misi
 
   let payload;
   if (isQuiz) {
@@ -472,18 +495,20 @@ function _deliverNextTask(socket) {
       socket.emit('task-error', { message: 'Bank soal kosong! Minta Guru menambahkan soal.' });
       return;
     }
-    room.activeTaskSessions[socket.id] = { sessionId, type: 'quiz', issuedAt, questionId: q.id };
+    room.activeTaskSessions[socket.id] = { sessionId, type: 'quiz', issuedAt, questionId: q.id, timer: TASK_TIMEOUT };
     payload = {
       type: 'quiz',
       sessionId,
+      timer: TASK_TIMEOUT,
       data: { id: q.id, sila: q.sila, type: q.type, question: q.question, options: q.options },
     };
   } else {
     const game = pickVariedMinigame(player);
-    room.activeTaskSessions[socket.id] = { sessionId, type: game.id, issuedAt };
+    room.activeTaskSessions[socket.id] = { sessionId, type: game.id, issuedAt, timer: TASK_TIMEOUT };
     payload = {
       type: game.id,
       sessionId,
+      timer: TASK_TIMEOUT,
       data: { sila: game.sila, label: game.label },
     };
   }
@@ -548,9 +573,16 @@ function _handleTaskAnswer(socket, io, room, player, questionId, isCorrect, code
   const question = room.questions.find(q => q.id === questionId);
   if (!question) return;
 
+  const isProvokator = player.role === 'provokator';
+
   if (isCorrect) {
     player.score++;
-    room.tasksCompleted++;
+    // Provokator: mengurangi progress warga; Warga: menambah progress
+    if (isProvokator) {
+      room.tasksCompleted = Math.max(0, room.tasksCompleted - 1);
+    } else {
+      room.tasksCompleted++;
+    }
     room.gameStats.totalAnswersCorrect++;
     player.answerHistory.push({ questionId, correct: true, timestamp: Date.now() });
     const feedback = {
@@ -610,8 +642,10 @@ function _handleSabotageProvokatorAnswer(socket, io, room, player, isCorrect, co
   });
 
   const s = room.settings || DEFAULT_SETTINGS;
+  const rescueTimer = s.sabotageTimer ?? 40;
   room.sabotage.phase          = 'warga_rescue';
-  room.sabotage.timer          = s.sabotageTimer ?? 40;
+  room.sabotage.timer          = rescueTimer;
+  room.sabotage.maxTimer       = rescueTimer;
   room.sabotage.targetWargaId  = targetWarga.id;
   room.sabotage.targetWargaName = targetWarga.name;
 
@@ -687,6 +721,11 @@ function _handleDuelAnswer(socket, io, room, player, questionId, isCorrect, code
   room.duel.timer = Math.max(0, (room.duel.timer ?? 0) - 5);
   room.duel.answered = {};
 
+  // Provokator salah jawab → cooldown 10 detik untuk duel berikutnya
+  if (isProv) {
+    player.duelCooldownEndsAt = Date.now() + DUEL_WRONG_ANSWER_COOLDOWN_MS;
+  }
+
   socket.emit('duel-answer-wrong', { message: 'Jawaban salah! Waktu duel berkurang 5 detik. Soal diganti...' });
   io.to(code).emit('room-updated', getSanitizedRoom(code));
 }
@@ -694,13 +733,17 @@ function _handleDuelAnswer(socket, io, room, player, questionId, isCorrect, code
 function _resolveDuel(io, room, code, winnerId, loserId, reason) {
   if (!room.duel) return; // sudah diselesaikan
 
+  const provId = room.duel.provocateur;
+  const citId = room.duel.citizen;
+
   const winner = room.players.find(p => p.id === winnerId);
   const loser  = room.players.find(p => p.id === loserId);
 
   if (loser)  loser.isDead = true;
-  if (winner) winner.score += 3;
+  // Score hanya dari quiz/minigame — duel tidak menambah XP
+  // Warga yang menang duel tetap tidak tambah score, eliminasi saja
 
-  const winnerIsProv = winner?.id === room.duel.provocateur;
+  const winnerIsProv = winner?.id === provId;
   if (winnerIsProv) room.gameStats.duelsWonByProvokator++;
   else              room.gameStats.duelsWonByWarga++;
 
@@ -711,16 +754,19 @@ function _resolveDuel(io, room, code, winnerId, loserId, reason) {
   });
 
   // Set cooldown pada Provokator (siapapun yang menang/kalah)
-  const provPlayer = room.players.find(p => p.id === room.duel.provocateur);
+  const provPlayer = room.players.find(p => p.id === provId);
   if (provPlayer) provPlayer.duelCooldownEndsAt = Date.now() + DUEL_COOLDOWN_MS;
 
   room.duel = null;
 
-  io.to(code).emit('duel-resolved', {
+  // Notifikasi duel-resolved HANYA ke peserta duel (privat)
+  const resolvedPayload = {
     winner: winner?.name ?? null,
     loser:  loser?.name ?? null,
     reason: `${winner?.name} menang! ${reason} ${loser?.name} tereliminasi.`,
-  });
+  };
+  io.to(provId).emit('duel-resolved', resolvedPayload);
+  io.to(citId).emit('duel-resolved', resolvedPayload);
 
   checkWinConditions(code, io);
 

@@ -73,11 +73,15 @@ function registerJoinHandlers(socket, io) {
     const isDuplicate = room.players.some(p => p.name.toLowerCase() === name.toLowerCase());
     if (isDuplicate) { socket.emit('join-error', `Nama "${name}" sudah terpakai.`); return; }
 
+    // Server-side name validation
+    const sanitized = (String(name || '')).trim().slice(0, 12);
+    if (sanitized.length < 2) { socket.emit('join-error', 'Nama harus antara 2–12 karakter.'); return; }
+
     if (room.players.length >= (room.settings.maxPlayers || 10)) {
       socket.emit('join-error', 'Room sudah penuh.'); return;
     }
 
-    const newPlayer = { id: socket.id, sessionId, name, isGuru: !!isGuru, role: isGuru ? 'guru' : null, isDead: false, score: 0, answerHistory: [], isOnline: true, skinId: 0 };
+    const newPlayer = { id: socket.id, sessionId, name: sanitized, isGuru: !!isGuru, role: isGuru ? 'guru' : null, isDead: false, score: 0, answerHistory: [], isOnline: true, skinId: 0 };
     room.players.push(newPlayer);
     socket.join(code);
     socket.roomCode = code;
@@ -95,6 +99,56 @@ function registerJoinHandlers(socket, io) {
     socket.join(code);
     socket.roomCode = code;
     socket.emit('room-updated', getSanitizedRoom(code));
+  });
+
+  // ── Keluar secara intentional (logout button) ──
+  socket.on('leave-room', () => {
+    const code = socket.roomCode;
+    const room = rooms[code];
+    if (!room) return;
+
+    const idx = room.players.findIndex(p => p.id === socket.id);
+    if (idx === -1) return;
+
+    const leaving = room.players[idx];
+    console.log(`${leaving.name} keluar dari room ${code}`);
+
+    // Selalu hapus pemain dari room (baik lobby maupun playing)
+    room.players.splice(idx, 1);
+    room.lastActivity = Date.now();
+
+    if (room.activeTaskSessions?.[socket.id]) {
+      delete room.activeTaskSessions[socket.id];
+    }
+
+    // Bersihkan suara voting jika sedang debat
+    if (room.debate?.active) delete room.debate.votes[socket.id];
+
+    // Selesaikan duel jika salah satu petarung keluar
+    if (room.duel?.active && (room.duel.provocateur === socket.id || room.duel.citizen === socket.id)) {
+      const survivorId = room.duel.provocateur === socket.id ? room.duel.citizen : room.duel.provocateur;
+      const survivor   = room.players.find(p => p.id === survivorId);
+      room.duel = null;
+      io.to(code).emit('duel-resolved', {
+        winner: survivor?.name ?? 'Unknown',
+        loser:  leaving.name,
+        reason: `${leaving.name} keluar di tengah duel!`,
+      });
+    }
+
+    // Paksa tally jika semua pemain hidup sudah memilih
+    if (room.debate?.active) {
+      const living = room.players.filter(p => !p.isDead && !p.isGuru);
+      if (Object.keys(room.debate.votes).length >= living.length && living.length > 0) {
+        tallyVotes(code, io);
+      }
+    }
+
+    // Cek win conditions — pemain keluar bisa mengubah keseimbangan
+    checkWinConditions(code, io);
+
+    io.to(code).emit('room-updated', getSanitizedRoom(code));
+    io.to(code).emit('player-left', { name: leaving.name, isOffline: false });
   });
 
   // ── Disconnect ──

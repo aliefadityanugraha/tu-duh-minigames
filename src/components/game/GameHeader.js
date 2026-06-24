@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Navbar from '../Navbar';
 
 // Header sticky in-game
-export default function GameHeader({ room, player, roleInfo, socket, muted, setMuted, statsOpen, setStatsOpen }) {
+export default function GameHeader({ room, player, roleInfo, socket, muted, setMuted, statsOpen, setStatsOpen, onLeaveRoom }) {
   const router = useRouter();
   const isPlayerDead = !!player?.isDead;
 
@@ -91,7 +91,10 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
 
       {/* Logout */}
       <button
-        onClick={() => router.push('/')}
+        onClick={() => {
+          if (onLeaveRoom) onLeaveRoom();
+          router.push('/');
+        }}
         className="p-2 bg-[#93000a] hover:bg-[#ffb4ab] hover:text-[#690005] text-[#ffdad6] border-2 border-black rounded transition-all shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
         title="Keluar"
       >

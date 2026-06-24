@@ -30,16 +30,18 @@ export default function Game() {
     duelCooldownRemaining,
     presentationNotif, setPresentationNotif,
     sendDebateChat,
+    leaveRoom,
+    taskTimer,
   } = useSocket();
 
   const [muted, setMuted]         = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
 
-  // Minta task pertama saat game mulai (hanya Warga hidup)
+  // Minta task pertama saat game mulai (Warga DAN Provokator)
   useEffect(() => {
     if (
       socket && room && room.state === 'playing' &&
-      roleInfo.role === 'warga' && !player?.isDead &&
+      (roleInfo.role === 'warga' || roleInfo.role === 'provokator') && !player?.isDead &&
       !currentTask && !taskLocked
     ) {
       socket.emit('get-next-task');
@@ -187,6 +189,7 @@ export default function Game() {
         setMuted={setMuted}
         statsOpen={statsOpen}
         setStatsOpen={setStatsOpen}
+        onLeaveRoom={leaveRoom}
       />
 
       {/* ── Layout Guru ── */}
@@ -221,6 +224,7 @@ export default function Game() {
           taskLocked={taskLocked}
           sabotageQuiz={sabotageQuiz}
           duelCooldownRemaining={duelCooldownRemaining}
+          taskTimer={taskTimer}
           onSelectOption={handleOptionSelect}
           onSubmitQuiz={handleSubmitQuiz}
           onMinigameComplete={handleMinigameComplete}
@@ -256,12 +260,14 @@ export default function Game() {
         sabotageRescue && (
         <SabotageRescueOverlay
           sabotageRescue={sabotageRescue}
+          maxTimer={room.sabotage?.maxTimer ?? 40}
           onSubmitAnswer={handleSubmitSabotageRescue}
         />
       )}
 
-      {/* 3. Duel overlay */}
-      {room.state === 'playing' && room.duel?.active && (
+      {/* 3. Duel overlay — hanya untuk peserta duel (privat) */}
+      {room.state === 'playing' && room.duel?.active &&
+        (player?.name === room.duel?.provocateur || player?.name === room.duel?.citizen) && (
         <DuelOverlay
           duel={room.duel}
           selfName={player?.name || ''}

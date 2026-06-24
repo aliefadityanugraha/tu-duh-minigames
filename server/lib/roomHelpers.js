@@ -7,10 +7,15 @@ const rooms = {};
 /** Menghasilkan kode room unik 6 karakter huruf kapital */
 function generateRoomCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
+  let code;
+  let attempts = 0;
+  do {
+    code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    attempts++;
+  } while (rooms[code] && attempts < 100);
   return code;
 }
 
@@ -40,6 +45,7 @@ function getSanitizedRoom(roomCode) {
       active:          room.sabotage.active,
       phase:           room.sabotage.phase,       // 'provokator_quiz' | 'warga_rescue'
       timer:           room.sabotage.timer,
+      maxTimer:        room.sabotage.maxTimer ?? room.settings?.sabotageTimer ?? 40,
       targetWargaName: room.sabotage.targetWargaName ?? null,
       question:        _stripQuestion(room.sabotage.question),
     } : null,

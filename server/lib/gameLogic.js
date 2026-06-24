@@ -73,11 +73,14 @@ function tallyVotes(roomCode, io) {
   let eliminatedPlayer = null;
   let reason           = '';
 
+  const livingCount = room.players.filter(p => !p.isDead && !p.isGuru).length;
+  const majorityThreshold = Math.ceil(livingCount / 2);
+
   if (skipVotes >= highestVotes && skipVotes > 0) {
     reason = 'Mayoritas memilih Skip. Tidak ada yang dieliminasi.';
   } else if (isTie) {
     reason = 'Hasil voting seri! Tidak ada yang dieliminasi.';
-  } else if (highestVotedId) {
+  } else if (highestVotedId && highestVotes >= majorityThreshold) {
     const target = room.players.find(p => p.id === highestVotedId);
     if (target) {
       target.isDead = true;
@@ -88,6 +91,8 @@ function tallyVotes(roomCode, io) {
     } else {
       reason = 'Tidak ada suara sah yang mencukupi.';
     }
+  } else if (highestVotedId) {
+    reason = `Suara tidak mencapai mayoritas (${highestVotes}/${majorityThreshold}). Tidak ada yang dieliminasi.`;
   } else {
     reason = 'Tidak ada suara yang masuk.';
   }
@@ -168,8 +173,13 @@ function startRoomTicker(roomCode, io) {
       changed = true;
       if (r.duel.timer <= 0) {
         // Waktu habis → seri, tidak ada yang tereliminasi
+        const provId = r.duel.provocateur;
+        const citId = r.duel.citizen;
         r.duel = null;
-        io.to(roomCode).emit('duel-resolved', { winner: null, loser: null, reason: 'Waktu duel habis! Kedua pihak selamat.' });
+        // Notifikasi hanya ke peserta duel (privat)
+        const timeoutPayload = { winner: null, loser: null, reason: 'Waktu duel habis! Kedua pihak selamat.' };
+        io.to(provId).emit('duel-resolved', timeoutPayload);
+        io.to(citId).emit('duel-resolved', timeoutPayload);
       }
     }
 
@@ -188,6 +198,37 @@ function startRoomTicker(roomCode, io) {
         r.topicDebate.active = false;
         r.topicDebate = null;
         io.to(roomCode).emit('topic-debate-ended', { message: 'Sesi debat topik selesai!' });
+      }
+    }
+
+    // ── 6. Timer per-misi (15 detik per task) ──
+    if (r.activeTaskSessions && r.state === 'playing') {
+      const timerPausedTask = r.sabotage?.active || r.duel?.active || r.debate?.active || r.topicDebate?.active;
+      if (!timerPausedTask) {
+        for (const [socketId, session] of Object.entries(r.activeTaskSessions)) {
+          if (session.timer != null && session.timer > 0) {
+            session.timer--;
+            // Kirim timer update ke pemain yang punya session ini
+            io.to(socketId).emit('task-timer-update', { sessionId: session.sessionId, timer: session.timer });
+            if (session.timer <= 0) {
+              // Timeout — misi otomatis berganti, tanpa score
+              const player = r.players.find(p => p.id === socketId);
+              if (player) {
+                r.gameStats.totalAnswersWrong++;
+                player.answerHistory.push({
+                  questionId: session.questionId ?? null,
+                  minigameType: session.type !== 'quiz' ? session.type : null,
+                  correct: false,
+                  timestamp: Date.now(),
+                });
+              }
+              delete r.activeTaskSessions[socketId];
+              // Beritahu pemain bahwa misi timeout
+              io.to(socketId).emit('task-timeout', { sessionId: session.sessionId, message: 'Waktu misi habis! Misi berganti otomatis.' });
+              changed = true;
+            }
+          }
+        }
       }
     }
 

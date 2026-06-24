@@ -40,18 +40,21 @@ export default function UrutanMufakat({ onGameComplete, onComplete, compact = fa
 
   const [blocks, setBlocks] = useState([]);
   const [isWin, setIsWin] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Shuffle function (Fisher-Yates)
   const shuffleArray = (array) => {
     const arr = [...array];
-    // Keep shuffling until it does NOT match the correct order
+    // Keep shuffling until it does NOT match the correct order (safety limit: 100 attempts)
     let isSame = true;
-    while (isSame) {
+    let attempts = 0;
+    while (isSame && attempts < 100) {
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
       }
       isSame = arr.every((val, idx) => val === CORRECT_ORDER[idx]);
+      attempts++;
     }
     return arr;
   };
@@ -64,6 +67,7 @@ export default function UrutanMufakat({ onGameComplete, onComplete, compact = fa
   // Swapping handler
   const handleSwap = (index, direction) => {
     if (isWin) return;
+    setErrorMsg('');
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= blocks.length) return;
 
@@ -84,9 +88,10 @@ export default function UrutanMufakat({ onGameComplete, onComplete, compact = fa
     const isCorrect = blocks.every((val, idx) => val === CORRECT_ORDER[idx]);
     if (isCorrect) {
       setIsWin(true);
+      setErrorMsg('');
       fireTaskComplete(onComplete, onGameComplete);
     } else {
-      alert("Urutan musyawarah belum mufakat! Periksa kembali alur pengambilan keputusan.");
+      setErrorMsg("Urutan musyawarah belum mufakat! Periksa kembali alur pengambilan keputusan.");
     }
   };
 
@@ -176,6 +181,11 @@ export default function UrutanMufakat({ onGameComplete, onComplete, compact = fa
           </div>
 
           <div className="w-full max-w-md mx-auto pt-1">
+            {errorMsg && !isWin && (
+              <div className="mb-2 p-2.5 bg-red-100 border-2 border-red-400 rounded text-red-700 text-xs font-mono font-bold text-center animate-fadeIn">
+                {errorMsg}
+              </div>
+            )}
             {isWin ? (
               <MinigameWinBanner win winMessage="Mufakat tercapai! Menunggu konfirmasi misi..." />
             ) : (

@@ -5,7 +5,7 @@ import { AlertTriangle, Timer } from 'lucide-react';
  * Overlay khusus untuk Warga yang terpilih sebagai target rescue sabotase.
  * Muncul di atas semua konten, hanya untuk 1 Warga terpilih.
  */
-export default function SabotageRescueOverlay({ sabotageRescue, onSubmitAnswer }) {
+export default function SabotageRescueOverlay({ sabotageRescue, maxTimer = 40, onSubmitAnswer }) {
   const [selected, setSelected]     = useState(null);
   const [submitted, setSubmitted]   = useState(false);
 
@@ -18,8 +18,8 @@ export default function SabotageRescueOverlay({ sabotageRescue, onSubmitAnswer }
   if (!sabotageRescue) return null;
 
   const { question, timer } = sabotageRescue;
-  const RESCUE_MAX  = 40;
-  const timerPct    = Math.max(0, (timer / RESCUE_MAX) * 100);
+  const RESCUE_MAX  = maxTimer;
+  const timerPct    = Math.min(100, Math.max(0, (timer / RESCUE_MAX) * 100));
   const isUrgent    = timer <= 10;
 
   const handleSubmit = () => {

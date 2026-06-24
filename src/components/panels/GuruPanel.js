@@ -122,6 +122,7 @@ export default function GuruPanel({ room, onPauseDebat, onResetGame, onTriggerTo
                     value={topicInput}
                     onChange={e => setTopicInput(e.target.value)}
                     placeholder="Ketik topik debat... (kosongkan = bebas)"
+                    maxLength={150}
                     className="w-full bg-[#13003a] border-2 border-black p-3 font-mono text-[#e9ddff] text-sm focus:outline-none focus:border-[#ffc312]"
                     onKeyDown={e => e.key === 'Enter' && handleTopicSubmit()}
                   />
@@ -191,9 +192,9 @@ export default function GuruPanel({ room, onPauseDebat, onResetGame, onTriggerTo
                   }`}>
                     {p.role === 'provokator' ? '😈 PROVOKATOR' : '🇮🇩 WARGA'}
                   </span>
-                  {p.duelCooldownEndsAt && Date.now() < p.duelCooldownEndsAt && (
+                  {p.duelCooldownEndsAt && (
                     <span className="block font-mono text-[9px] text-[#ffc312] mt-0.5">
-                      ⏳ CD DUEL
+                      ⏳ CD DUEL {Math.max(0, Math.ceil((p.duelCooldownEndsAt - Date.now()) / 1000))}s
                     </span>
                   )}
                 </div>

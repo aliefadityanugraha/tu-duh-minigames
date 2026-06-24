@@ -10,7 +10,7 @@ import { getLockedTaskPreviews } from '../../lib/taskPreview';
 export default function WargaPanel({
   currentTask, isAnswered, selectedOption, feedback,
   taskError, minigameRetryKey,
-  isPlayerDead, taskLocked,
+  isPlayerDead, taskLocked, taskTimer,
   onSelectOption, onSubmitQuiz, onMinigameComplete, onNextTask, onClearTaskError, onRetryMinigameSubmit, onRetryQuizSubmit,
 }) {
 
@@ -66,6 +66,7 @@ export default function WargaPanel({
           taskError={taskError}
           minigameRetryKey={minigameRetryKey}
           isPlayerDead={isPlayerDead}
+          taskTimer={taskTimer}
           onSelectOption={onSelectOption}
           onSubmitQuiz={onSubmitQuiz}
           onMinigameComplete={onMinigameComplete}

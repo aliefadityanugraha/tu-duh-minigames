@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function DebateOverlay({ debate, players, selfId, selfRole, isGuru, isPlayerDead, onVote, onSendChat }) {
-  const [hasVoted, setHasVoted] = useState(false);
-  const [votedFor, setVotedFor] = useState(null);
   const [chatInput, setChatInput] = useState('');
-  
+
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -17,6 +15,10 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
 
   const eligibleVoters = players.filter(p => !p.isDead && !p.isGuru);
   const votablePlayers = players.filter(p => !p.isGuru);
+
+  // Derive vote state from server data — prevents double-vote on remount
+  const hasVoted = selfId && Object.keys(debate.votes || {}).includes(selfId);
+  const votedFor = hasVoted ? debate.votes[selfId] : null;
   
   // Format MM:SS for timer
   const timer = debate.timer ?? 0;
@@ -30,8 +32,6 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
 
   const handleVote = (targetId) => {
     if (hasVoted || isPlayerDead || isGuru) return;
-    setHasVoted(true);
-    setVotedFor(targetId);
     onVote(targetId);
   };
 
@@ -42,12 +42,9 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
     setChatInput('');
   };
 
-  // Helper to count votes received visually (dots)
+  // Helper to count votes received visually (dots) — only shown after debate ends
   const getDotsForPlayer = (playerId) => {
-    // We only show that someone has voted, not who they voted for until the end.
-    // Wait, the prompt says "titik tersebut muncul sebagai indikator 'Pemain ini sudah memberikan suara'".
-    // So if THIS player has voted, we show a dot under their name.
-    // But votes object in debate is { voterId: targetId }
+    if (debate.active) return false; // hide during active voting
     const hasThisPlayerVoted = Object.keys(debate.votes || {}).includes(playerId);
     return hasThisPlayerVoted;
   };
@@ -152,7 +149,7 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                 const isSelf = p.id === selfId;
                 const isDead = p.isDead;
                 const iVotedForThis = votedFor === p.id;
-                const disabled = hasVoted || isPlayerDead || isGuru || isDead;
+                const disabled = hasVoted || isPlayerDead || isGuru || isDead || isSelf;
                 const hasVotedStatus = getDotsForPlayer(p.id);
 
                 return (
@@ -181,7 +178,7 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                     </div>
 
                     {/* Vote Button */}
-                    {!isDead && (
+                    {!isDead && !isSelf && (
                       <button 
                         onClick={() => handleVote(p.id)}
                         disabled={disabled}
@@ -195,6 +192,11 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                           {iVotedForThis ? 'VOTED' : 'VOTE'}
                         </span>
                       </button>
+                    )}
+                    {!isDead && isSelf && (
+                      <div className="w-full flex items-center justify-center gap-1 p-2 border-2 border-black bg-[#4f4632] text-gray-400 font-mono text-xs font-bold">
+                        CANNOT VOTE SELF
+                      </div>
                     )}
                   </div>
                 );

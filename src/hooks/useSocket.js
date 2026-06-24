@@ -42,6 +42,7 @@ export const SocketProvider = ({ children }) => {
   const [taskLocked, setTaskLocked] = useState(false);
   const [taskError, setTaskError] = useState(null);
   const [minigameRetryKey, setMinigameRetryKey] = useState(0);
+  const [taskTimer, setTaskTimer] = useState(null);
 
   useEffect(() => {
     const s = io({
@@ -108,11 +109,10 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
-    // Handle jika room sudah dihapus server saat idle
+    // Handle jika room sudah dihapus server saat idle / error join
     s.on('join-error', (msg) => {
       if (msg.includes('tidak ditemukan')) {
         console.warn('[Socket] Room sudah tidak ada, mungkin sudah dihapus karena idle.');
-        // Bersihkan session agar user bisa join ulang
         if (typeof window !== 'undefined') {
           _clearSession();
         }
@@ -128,9 +128,9 @@ export const SocketProvider = ({ children }) => {
       setLoading(false);
       addLog(`Bergabung ke Room ${roomCode}.`);
       // Simpan session untuk auto re-join jika koneksi terputus
-      _saveSession({ roomCode, name: player.name, isGuru: player.isGuru });
+      const sessionId = getSessionId();
+      _saveSession({ roomCode, name: player.name, isGuru: player.isGuru, sessionId });
     });
-    s.on('join-error', (msg) => { setError(msg); setLoading(false); });
 
     // ── Room update ──
     s.on('room-updated', (updatedRoom) => {
@@ -176,6 +176,7 @@ export const SocketProvider = ({ children }) => {
       setSelectedOption(null);
       setTaskError(null);
       setMinigameRetryKey(0);
+      setTaskTimer(task.timer ?? 15);
     };
 
     s.on('next-task-delivery', (task) => {
@@ -209,6 +210,23 @@ export const SocketProvider = ({ children }) => {
     s.on('task-locked', ({ message }) => {
       setTaskLocked(true);
       addLog(`🔒 ${message}`);
+    });
+
+    // ── Task timer countdown (server pushes per-second) ──
+    s.on('task-timer-update', ({ sessionId, timer }) => {
+      setTaskTimer(timer);
+    });
+
+    // ── Task timeout (auto-skip after 15s) ──
+    s.on('task-timeout', ({ sessionId, message }) => {
+      setCurrentTask(null);
+      setCurrentQuestion(null);
+      setFeedback(null);
+      setIsAnswered(false);
+      setSelectedOption(null);
+      setTaskTimer(null);
+      setTaskError(null);
+      addLog(`⏱️ ${message}`);
     });
 
     // ── Sabotase: soal math untuk Provokator (fase 1) ──
@@ -253,7 +271,11 @@ export const SocketProvider = ({ children }) => {
       addLog(`⚔️ DUEL: ${provocateur} vs ${citizen}`);
     });
     s.on('duel-resolved', ({ winner, loser, reason }) => {
-      addLog(`🏁 DUEL SELESAI: ${reason}`);
+      if (winner || loser) {
+        addLog(`🏁 DUEL SELESAI: ${reason}`);
+      } else {
+        addLog(`🏁 ${reason}`);
+      }
     });
     s.on('duel-answer-wrong', ({ message }) => {
       addLog(`❌ ${message}`);
@@ -349,9 +371,9 @@ export const SocketProvider = ({ children }) => {
     return data ? JSON.parse(data) : null;
   };
 
-  const _saveSession = ({ roomCode, name, isGuru }) => {
+  const _saveSession = ({ roomCode, name, isGuru, sessionId }) => {
     if (typeof window === 'undefined') return;
-    sessionStorage.setItem('among_us_room_session', JSON.stringify({ roomCode, name, isGuru }));
+    sessionStorage.setItem('among_us_room_session', JSON.stringify({ roomCode, name, isGuru, sessionId }));
   };
 
   const _clearSession = () => {
@@ -375,15 +397,39 @@ export const SocketProvider = ({ children }) => {
     if (socket) socket.emit('change-skin', { skinId });
   };
 
+  const leaveRoom = () => {
+    if (socket) {
+      socket.emit('leave-room');
+      socket.disconnect();
+    }
+    _clearSession();
+    setRoom(null);
+    setPlayer(null);
+    setRoleInfo({ role: null, isGuru: false });
+    setCurrentTask(null);
+    setCurrentQuestion(null);
+    setFeedback(null);
+    setIsAnswered(false);
+    setSelectedOption(null);
+    setTaskError(null);
+    setSabotageQuiz(null);
+    setSabotageRescue(null);
+    setTaskLocked(false);
+    setDuelCooldownRemaining(0);
+    setPresentationNotif(null);
+    setTopicDebateNotif(null);
+  };
+
   return (
     <SocketContext.Provider value={{
       socket, room, player, roleInfo,
       error, setError, loading, setLoading,
-      logs, joinRoom, startGame,
+      logs, joinRoom, startGame, leaveRoom,
       // soal & task
       currentTask, currentQuestion, feedback, isAnswered, selectedOption,
       setCurrentTask, setSelectedOption, setIsAnswered, setFeedback,
       taskError, setTaskError, minigameRetryKey,
+      taskTimer,
       // sabotase
       sabotageFeedback, setSabotageFeedback,
       sabotageQuiz, setSabotageQuiz,

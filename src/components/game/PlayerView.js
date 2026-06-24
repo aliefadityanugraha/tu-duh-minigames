@@ -16,6 +16,7 @@ export default function PlayerView({
   taskLocked,
   sabotageQuiz, onSubmitSabotageQuiz,
   duelCooldownRemaining,
+  taskTimer,
   onSelectOption, onSubmitQuiz, onMinigameComplete, onNextTask, onClearTaskError, onRetryMinigameSubmit, onRetryQuizSubmit,
   onTriggerSabotage, onTriggerDuel,
 }) {
@@ -119,6 +120,7 @@ export default function PlayerView({
                         minigameRetryKey={minigameRetryKey}
                         isPlayerDead={isPlayerDead}
                         taskLocked={taskLocked}
+                        taskTimer={taskTimer}
                         onSelectOption={onSelectOption}
                         onSubmitQuiz={onSubmitQuiz}
                         onMinigameComplete={onMinigameComplete}
@@ -135,9 +137,23 @@ export default function PlayerView({
                         isPlayerDead={isPlayerDead}
                         duelCooldownRemaining={duelCooldownRemaining}
                         sabotageQuiz={sabotageQuiz}
+                        taskTimer={taskTimer}
                         onTriggerSabotage={onTriggerSabotage}
                         onTriggerDuel={onTriggerDuel}
                         onSubmitSabotageQuiz={onSubmitSabotageQuiz}
+                        currentTask={currentTask}
+                        isAnswered={isAnswered}
+                        selectedOption={selectedOption}
+                        feedback={feedback}
+                        taskError={taskError}
+                        minigameRetryKey={minigameRetryKey}
+                        onSelectOption={onSelectOption}
+                        onSubmitQuiz={onSubmitQuiz}
+                        onMinigameComplete={onMinigameComplete}
+                        onNextTask={onNextTask}
+                        onClearTaskError={onClearTaskError}
+                        onRetryMinigameSubmit={onRetryMinigameSubmit}
+                        onRetryQuizSubmit={onRetryQuizSubmit}
                       />
                     )}
                   </div>

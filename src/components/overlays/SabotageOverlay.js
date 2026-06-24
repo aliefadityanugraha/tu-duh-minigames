@@ -12,8 +12,8 @@ import { Timer } from 'lucide-react';
 export default function SabotageOverlay({ sabotage, role }) {
   if (!sabotage?.active || sabotage.phase !== 'warga_rescue') return null;
 
-  const RESCUE_MAX = 40;
-  const timerPct   = Math.max(0, (sabotage.timer / RESCUE_MAX) * 100);
+  const RESCUE_MAX = sabotage.maxTimer ?? 40;
+  const timerPct   = Math.min(100, Math.max(0, (sabotage.timer / RESCUE_MAX) * 100));
   const isUrgent   = sabotage.timer <= 10;
 
   return (

@@ -119,6 +119,51 @@ function SkinModal({ mySkinId, onSelect, onClose }) {
   );
 }
 
+// ── Slider helper (outside WaitingRoom to prevent re-creation on every render) ──
+function SliderRow({ label, settingKey, value, min, max, step = 1, format = v => v, isGuru, onUpdate }) {
+  return (
+    <div className="flex flex-col gap-1.5 w-full">
+      <div className="flex justify-between items-center">
+        <span className="font-mono text-[#d3c5ab] text-[11px] font-bold uppercase tracking-[1px]">{label}</span>
+        <span className="font-mono text-[#ffc312] text-xs font-bold">{format(value)}</span>
+      </div>
+      <input
+        type="range" min={min} max={max} step={step} value={value}
+        disabled={!isGuru}
+        onChange={e => onUpdate(settingKey, Number(e.target.value))}
+        className={`w-full accent-[#ffc312] h-2 rounded-full cursor-pointer ${!isGuru ? 'opacity-40 cursor-not-allowed' : ''}`}
+      />
+    </div>
+  );
+}
+
+// ── Tombol / Preview skin pemain sendiri (outside WaitingRoom to prevent re-creation) ──
+function MySkinButton({ mySkin, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-4 p-4 bg-[#40009d] rounded-xl border-4 border-black shadow-[6px_6px_0px_#000000] hover:shadow-[3px_3px_0px_#000] hover:translate-x-[3px] hover:translate-y-[3px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all cursor-pointer group"
+    >
+      <div
+        className="w-14 h-14 rounded-xl border-4 border-[#ffc312] flex flex-col items-center justify-center flex-shrink-0 shadow-[3px_3px_0px_#000] group-hover:scale-110 transition-transform"
+        style={{ backgroundColor: mySkin.bg }}
+      >
+        <span className="text-3xl leading-none">{mySkin.emoji}</span>
+      </div>
+      <div className="flex-1 text-left">
+        <p className="font-mono text-[#9c8f78] text-[10px] uppercase tracking-wider">Karakter Saya</p>
+        <p className="font-rubik italic text-[#ffc312] text-lg font-bold leading-tight">{mySkin.name}</p>
+        <p className="font-mono text-[#5ffcc9] text-[10px] mt-0.5 group-hover:text-white transition-colors">
+          🎭 Klik untuk ganti karakter →
+        </p>
+      </div>
+      <div className="w-8 h-8 rounded-lg border-2 border-black bg-[#ffc312] flex items-center justify-center shadow-[2px_2px_0px_#000] flex-shrink-0">
+        <span className="text-[#3f2e00] font-bold text-sm">✎</span>
+      </div>
+    </button>
+  );
+}
+
 // ── Komponen Utama ─────────────────────────────────────────────────────────────
 export default function WaitingRoom({ socket, room: roomProp, player: playerProp, roleInfo }) {
   // Baca player & room dari context agar selalu terupdate setelah room-updated
@@ -152,55 +197,9 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
   const startGame = () => socket?.emit('start-game');
 
   const waitingNavItems = [
-    { label: 'Home', icon: '🏠', href: '/' },
-    { label: 'Lobby', icon: '🛸', active: true },
+    // { label: 'Home', icon: '🏠', href: '/' },
+    // { label: 'Lobby', icon: '🛸', active: true },
   ];
-
-  // ── Slider helper ──
-  const SliderRow = ({ label, settingKey, value, min, max, step = 1, format = v => v }) => (
-    <div className="flex flex-col gap-1.5 w-full">
-      <div className="flex justify-between items-center">
-        <span className="font-mono text-[#d3c5ab] text-[11px] font-bold uppercase tracking-[1px]">{label}</span>
-        <span className="font-mono text-[#ffc312] text-xs font-bold">{format(value)}</span>
-      </div>
-      <input
-        type="range" min={min} max={max} step={step} value={value}
-        disabled={!isGuru}
-        onChange={e => updateSetting(settingKey, Number(e.target.value))}
-        className={`w-full accent-[#ffc312] h-2 rounded-full cursor-pointer ${!isGuru ? 'opacity-40 cursor-not-allowed' : ''}`}
-      />
-    </div>
-  );
-
-  // ── Tombol / Preview skin pemain sendiri ──
-  const MySkinButton = () => (
-    <button
-      onClick={() => setShowSkinModal(true)}
-      className="w-full flex items-center gap-4 p-4 bg-[#40009d] rounded-xl border-4 border-black shadow-[6px_6px_0px_#000000] hover:shadow-[3px_3px_0px_#000] hover:translate-x-[3px] hover:translate-y-[3px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all cursor-pointer group"
-    >
-      {/* Avatar preview */}
-      <div
-        className="w-14 h-14 rounded-xl border-4 border-[#ffc312] flex flex-col items-center justify-center flex-shrink-0 shadow-[3px_3px_0px_#000] group-hover:scale-110 transition-transform"
-        style={{ backgroundColor: mySkin.bg }}
-      >
-        <span className="text-3xl leading-none">{mySkin.emoji}</span>
-      </div>
-
-      {/* Info teks */}
-      <div className="flex-1 text-left">
-        <p className="font-mono text-[#9c8f78] text-[10px] uppercase tracking-wider">Karakter Saya</p>
-        <p className="font-rubik italic text-[#ffc312] text-lg font-bold leading-tight">{mySkin.name}</p>
-        <p className="font-mono text-[#5ffcc9] text-[10px] mt-0.5 group-hover:text-white transition-colors">
-          🎭 Klik untuk ganti karakter →
-        </p>
-      </div>
-
-      {/* Indikator panah */}
-      <div className="w-8 h-8 rounded-lg border-2 border-black bg-[#ffc312] flex items-center justify-center shadow-[2px_2px_0px_#000] flex-shrink-0">
-        <span className="text-[#3f2e00] font-bold text-sm">✎</span>
-      </div>
-    </button>
-  );
 
   return (
     <div className="w-full flex flex-col min-h-screen bg-[#190047] animate-fadeIn">
@@ -236,7 +235,7 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
                 <div className="flex flex-col gap-5 p-5">
 
                   {/* CASE STUDY */}
-                  <div className="flex flex-col gap-2 w-full">
+                  {/* <div className="flex flex-col gap-2 w-full">
                     <span className="font-mono text-[#41e5b3] text-[11px] font-bold tracking-[1.5px] uppercase">Case Study Package</span>
                     <div className="flex items-center p-1 w-full bg-black rounded-lg border-2 border-[#4f4632] gap-1">
                       {[
@@ -252,7 +251,7 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
                         >{item.label}</button>
                       ))}
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* GAME TIMER */}
                   <div className="flex flex-col gap-2 w-full">
@@ -287,17 +286,17 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
                   {/* ADVANCED */}
                   <div className="flex flex-col gap-4">
                     <span className="font-mono text-[#9c8f78] text-[10px] font-bold tracking-[1.5px] uppercase">Pengaturan Lanjutan</span>
-                    <SliderRow label="Tugas per Warga"   settingKey="tasksPerPlayer" value={tasksPerPlayer} min={1}  max={15}          format={v => `${v} soal`} />
-                    <SliderRow label="Timer Sabotase"    settingKey="sabotageTimer"  value={sabotageTimer}  min={15} max={90}  step={5} format={v => `${v}s`} />
-                    <SliderRow label="Timer Duel"        settingKey="duelTimer"      value={duelTimer}      min={10} max={60}  step={5} format={v => `${v}s`} />
-                    <SliderRow label="Timer Musyawarah"  settingKey="debateTimer"    value={debateTimer}    min={30} max={180} step={10} format={v => `${v}s`} />
-                    <SliderRow label="Maks. Pemain"      settingKey="maxPlayers"     value={maxPlayers}     min={3}  max={10}            format={v => `${v} orang`} />
+                    <SliderRow label="Tugas per Warga"   settingKey="tasksPerPlayer" value={tasksPerPlayer} min={1}  max={15}          format={v => `${v} soal`} isGuru={isGuru} onUpdate={updateSetting} />
+                    <SliderRow label="Timer Sabotase"    settingKey="sabotageTimer"  value={sabotageTimer}  min={15} max={90}  step={5} format={v => `${v}s`} isGuru={isGuru} onUpdate={updateSetting} />
+                    <SliderRow label="Timer Duel"        settingKey="duelTimer"      value={duelTimer}      min={10} max={60}  step={5} format={v => `${v}s`} isGuru={isGuru} onUpdate={updateSetting} />
+                    <SliderRow label="Timer Musyawarah"  settingKey="debateTimer"    value={debateTimer}    min={30} max={180} step={10} format={v => `${v}s`} isGuru={isGuru} onUpdate={updateSetting} />
+                    <SliderRow label="Maks. Pemain"      settingKey="maxPlayers"     value={maxPlayers}     min={3}  max={10}            format={v => `${v} orang`} isGuru={isGuru} onUpdate={updateSetting} />
                   </div>
                 </div>
               </div>
 
               {/* Guru: tombol ganti skin */}
-              <MySkinButton />
+              <MySkinButton mySkin={mySkin} onClick={() => setShowSkinModal(true)} />
             </>
           ) : (
             <>
@@ -332,7 +331,7 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
               </div>
 
               {/* Siswa: tombol ganti skin */}
-              <MySkinButton />
+              <MySkinButton mySkin={mySkin} onClick={() => setShowSkinModal(true)} />
             </>
           )}
         </div>

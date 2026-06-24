@@ -6,7 +6,8 @@ export default function CollapsibleScoreboard({ players, selfId }) {
   const [open, setOpen] = useState(false);
 
   const sorted     = [...players].sort((a, b) => b.score - a.score);
-  const selfRank   = sorted.findIndex(p => p.id === selfId) + 1;
+  const selfIdx    = sorted.findIndex(p => p.id === selfId);
+  const selfRank   = selfIdx >= 0 ? selfIdx + 1 : null;
   const selfPlayer = players.find(p => p.id === selfId);
   const medals     = ['🥇', '🥈', '🥉'];
 
@@ -22,7 +23,7 @@ export default function CollapsibleScoreboard({ players, selfId }) {
           {/* Tampilkan posisi diri saat collapsed */}
           {!open && selfPlayer && (
             <span className="ml-1 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-full text-[10px] font-bold text-amber-700 font-mono-tech">
-              #{selfRank} · {selfPlayer.score} pts
+              #{selfRank ?? '—'} · {selfPlayer.score} pts
             </span>
           )}
         </div>

@@ -4,6 +4,9 @@ const { DEFAULT_SETTINGS, EMPTY_GAME_STATS } = require('../data/defaults');
 const { PANCASILA_QUESTIONS } = require('../data/questions');
 const { startRoomTicker, checkWinConditions, tallyVotes } = require('../lib/gameLogic');
 
+// Idle cleanup: hapus room yang sudah tidak ada pemain online selama 10 menit di lobby
+const IDLE_LOBBY_TIMEOUT = 10 * 60 * 1000; // 10 menit
+
 function registerJoinHandlers(socket, io) {
 
   // ── Bergabung / membuat room ──
@@ -27,12 +30,16 @@ function registerJoinHandlers(socket, io) {
         debate:         null,
         showStatsToAll: false,
         gameStats:      EMPTY_GAME_STATS(),
+        lastActivity:   Date.now(), // Track aktivitas terakhir
       };
       console.log(`Room baru: ${code} oleh Guru ${name}`);
     }
 
     const room = rooms[code];
     if (!room) { socket.emit('join-error', 'Room tidak ditemukan!'); return; }
+
+    // Update aktivitas saat ada pemain join
+    room.lastActivity = Date.now();
 
     const existingPlayer = sessionId ? room.players.find(p => p.sessionId === sessionId) : null;
     
@@ -115,6 +122,7 @@ function registerJoinHandlers(socket, io) {
 
     // Jika masih di lobi, hapus dari room
     room.players.splice(idx, 1);
+    room.lastActivity = Date.now();
 
     // Bersihkan suara voting jika sedang debat
     if (room.debate?.active) delete room.debate.votes[socket.id];
@@ -145,4 +153,32 @@ function registerJoinHandlers(socket, io) {
   });
 }
 
-module.exports = { registerJoinHandlers };
+// Setup idle cleanup interval: jalankan setiap 5 menit
+let cleanupInterval = null;
+
+function startIdleCleanup(io) {
+  if (cleanupInterval) return; // Jangan double-start
+
+  cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [code, room] of Object.entries(rooms)) {
+      // Hanya cleanup room yang masih di lobby
+      if (room.state !== 'lobby') continue;
+
+      // Cek apakah ada pemain yang masih online
+      const hasOnlinePlayer = room.players.some(p => p.isOnline);
+      const idleTime = now - (room.lastActivity || 0);
+
+      // Hapus room jika: tidak ada pemain online ATAU sudah idle lebih dari timeout
+      if (!hasOnlinePlayer || idleTime > IDLE_LOBBY_TIMEOUT) {
+        console.log(`[Cleanup] Menghapus room idle ${code} (idle: ${Math.round(idleTime / 60000)} menit, online: ${hasOnlinePlayer})`);
+        if (room.tickerInterval) clearInterval(room.tickerInterval);
+        delete rooms[code];
+      }
+    }
+  }, 5 * 60 * 1000); // Setiap 5 menit
+
+  console.log('[Cleanup] Idle room cleanup dimulai (interval 5 menit)');
+}
+
+module.exports = { registerJoinHandlers, startIdleCleanup };

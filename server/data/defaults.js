@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS = {
   topicDebateTimer:  120,     // Durasi debat topik bebas (60-300 detik)
   gameTimer:         300,     // Batas waktu keseluruhan permainan dalam detik (default 5 menit)
   provokatorCount:   'auto',  // Penentuan otomatis atau manual jumlah provokator
-  maxPlayers:        10,      // Jumlah maksimal pemain dalam satu room (3-10)
+
   caseStudy:         'anti-hoaks', // Paket studi kasus yang digunakan ('anti-hoaks' | 'saring-informasi')
   quizRatio:         0.4,       // Porsi kuis vs mini-game (0 = semua minigame, 1 = semua kuis)
   minigameEnabled:   true,      // Aktifkan mini-game dalam rotasi task

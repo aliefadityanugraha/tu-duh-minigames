@@ -1,3 +1,6 @@
+// Prevent SSR — dev preview page uses Date.now() and useRouter which can't be static-exported
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from 'react';
 import Head from 'next/head';
 import { ArrowLeft, Eye, Layers, Palette } from 'lucide-react';
@@ -41,7 +44,7 @@ const MOCK_SETTINGS = {
   sabotageTimer: 40,
   duelTimer: 20,
   debateTimer: 90,
-  maxPlayers: 10,
+
   quizRatio: 0.6,
   minigameEnabled: true,
   minTaskDuration: 15,

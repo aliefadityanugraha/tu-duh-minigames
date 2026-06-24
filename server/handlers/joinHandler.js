@@ -77,7 +77,7 @@ function registerJoinHandlers(socket, io) {
     const sanitized = (String(name || '')).trim().slice(0, 12);
     if (sanitized.length < 2) { socket.emit('join-error', 'Nama harus antara 2–12 karakter.'); return; }
 
-    if (room.players.length >= (room.settings.maxPlayers || 10)) {
+    if (room.players.length >= 15) {
       socket.emit('join-error', 'Room sudah penuh.'); return;
     }
 

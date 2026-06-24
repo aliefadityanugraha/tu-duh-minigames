@@ -9,24 +9,24 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
   const isPlayerDead = !!player?.isDead;
 
   // Badge Status & Threat Level
-  const statusBadge = (
-    <div className="hidden md:flex items-center gap-2">
-      <div className="bg-[#41e5b3] border-2 border-black shadow-[2px_2px_0px_#000000] px-2 py-1">
-        <span className="font-mono text-[#003829] text-xs font-bold tracking-wider">
-          STATUS: {room?.state === 'playing' ? 'ACTIVE' : 'STANDBY'}
-        </span>
-      </div>
-      <div className={`border-2 border-black shadow-[2px_2px_0px_#000000] px-2 py-1 ${
-        room?.sabotage?.active || room?.duel?.active
-          ? 'bg-[#ffb4ab] text-[#690005]'
-          : 'bg-[#ffc312] text-[#3f2e00]'
-      }`}>
-        <span className="font-mono text-xs font-bold tracking-wider">
-          THREAT: {room?.sabotage?.active ? 'CRITICAL' : room?.duel?.active ? 'HIGH' : 'NORMAL'}
-        </span>
-      </div>
-    </div>
-  );
+  // const statusBadge = (
+  //   <div className="hidden md:flex items-center gap-2">
+  //     <div className="bg-[#41e5b3] border-2 border-black shadow-[2px_2px_0px_#000000] px-2 py-1">
+  //       <span className="font-mono text-[#003829] text-xs font-bold tracking-wider">
+  //         STATUS: {room?.state === 'playing' ? 'ACTIVE' : 'STANDBY'}
+  //       </span>
+  //     </div>
+  //     <div className={`border-2 border-black shadow-[2px_2px_0px_#000000] px-2 py-1 ${
+  //       room?.sabotage?.active || room?.duel?.active
+  //         ? 'bg-[#ffb4ab] text-[#690005]'
+  //         : 'bg-[#ffc312] text-[#3f2e00]'
+  //     }`}>
+  //       <span className="font-mono text-xs font-bold tracking-wider">
+  //         THREAT: {room?.sabotage?.active ? 'CRITICAL' : room?.duel?.active ? 'HIGH' : 'NORMAL'}
+  //       </span>
+  //     </div>
+  //   </div>
+  // );
 
   // Timer Circle (Absolute centered if possible, but we'll put it in rightContent for Navbar flex)
   const timerBadge = room?.state === 'playing' && room.gameTimer != null ? (
@@ -41,7 +41,7 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
 
   const rightContent = (
     <div className="flex items-center gap-3">
-      {statusBadge}
+      {/* {statusBadge} */}
       
       {/* Guru Controls */}
       {roleInfo.isGuru && (room?.state === 'playing' || room?.state === 'ended') && (
@@ -103,14 +103,14 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
     </div>
   );
 
-  const gameNavItems = [
-    { label: 'Game', icon: '🎮', active: true },
-    ...(player?.name ? [{ label: player.name, icon: roleInfo.isGuru ? '🏫' : isPlayerDead ? '👻' : '🧑‍🚀' }] : []),
-  ];
+  // const gameNavItems = [
+  //   { label: 'Game', icon: '🎮', active: true },
+  //   ...(player?.name ? [{ label: player.name, icon: roleInfo.isGuru ? '🏫' : isPlayerDead ? '👻' : '🧑‍🚀' }] : []),
+  // ];
 
   return (
     <Navbar
-      navItems={gameNavItems}
+      // navItems={gameNavItems}
       roomCode={room?.code}
       rightContent={rightContent}
     />

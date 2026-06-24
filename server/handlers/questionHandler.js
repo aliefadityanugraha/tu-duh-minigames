@@ -89,7 +89,7 @@ function registerQuestionHandlers(socket, io) {
     if (newSettings.debateTimer       !== undefined) s.debateTimer       = Math.min(180, Math.max(30,  parseInt(newSettings.debateTimer)       || 90));
     if (newSettings.topicDebateTimer  !== undefined) s.topicDebateTimer  = Math.min(300, Math.max(60,  parseInt(newSettings.topicDebateTimer)  || 120));
     if (newSettings.gameTimer         !== undefined) s.gameTimer         = Math.min(1800,Math.max(60,  parseInt(newSettings.gameTimer)         || 300));
-    if (newSettings.maxPlayers        !== undefined) s.maxPlayers        = Math.min(10,  Math.max(3,   parseInt(newSettings.maxPlayers)        || 10));
+
     if (newSettings.caseStudy         !== undefined) {
       s.caseStudy = ['anti-hoaks', 'saring-informasi'].includes(newSettings.caseStudy) ? newSettings.caseStudy : 'anti-hoaks';
     }

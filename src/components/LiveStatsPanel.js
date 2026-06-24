@@ -25,6 +25,16 @@ function useAnimatedValue(target, duration = 600) {
   return value;
 }
 
+function EventTimestamp({ evtTime }) {
+  const [timeStr, setTimeStr] = useState('');
+  useEffect(() => {
+    const time = new Date(evtTime);
+    setTimeStr(`${time.getHours().toString().padStart(2,'0')}:${time.getMinutes().toString().padStart(2,'0')}:${time.getSeconds().toString().padStart(2,'0')}`);
+  }, [evtTime]);
+  if (!timeStr) return null;
+  return <span className="text-[9px] font-mono text-[#ffc312] flex-shrink-0 font-bold">{timeStr}</span>;
+}
+
 function ProgressRing({ percent, size = 48, stroke = 4, color = '#41e5b3', trackColor = '#13003a' }) {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -372,8 +382,6 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
               ) : (
                 eventLog.map((evt, i) => {
                   const meta = EVENT_META[evt.type] || { icon: '📌', color: '#d3c5ab', bg: '#22005c' };
-                  const time = new Date(evt.time);
-                  const timeStr = `${time.getHours().toString().padStart(2,'0')}:${time.getMinutes().toString().padStart(2,'0')}:${time.getSeconds().toString().padStart(2,'0')}`;
                   return (
                     <div
                       key={i}
@@ -386,7 +394,7 @@ export default function LiveStatsPanel({ room, isCollapsed, onToggle }) {
                       <div className="flex-1 min-w-0">
                         <div className="font-mono text-[10px] font-bold text-[#e9ddff] truncate">{evt.message}</div>
                       </div>
-                      <span className="text-[9px] font-mono text-[#ffc312] flex-shrink-0 font-bold">{timeStr}</span>
+                      <EventTimestamp evtTime={evt.time} />
                     </div>
                   );
                 })

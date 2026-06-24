@@ -260,5 +260,13 @@ A dedicated style-preview page exists at `src/pages/dev.js` that allows navigati
 - Mock data factory (`buildRoom(overrides)`) for consistent state simulation
 - Dev navbar with group-based navigation, dark/light background toggle, info badge
 - No Socket.io connection required — all callbacks are noops
+- `export const dynamic = 'force-dynamic'` — page uses `Date.now()` and can't be statically prerendered
 
 This page is for **style editing only** — it does not simulate server events or game progression.
+
+### 11. Max Players Hardcoded to 15
+`maxPlayers` was removed as a configurable setting and hardcoded to 15 across all files. The Guru settings panel no longer has a "Maks. Pemain" slider. The join guard in `joinHandler.js` uses `room.players.length >= 15` directly (no settings reference). The WaitingRoom roster grid uses 5 columns (`grid-cols-5`) to fit 15 slots (5×3 rows) with tighter spacing (`gap-2`, `p-3`, `text-2xl` emoji, `text-[7px]` skin name).
+
+**Files changed**: `server/handlers/questionHandler.js` (removed validation line), `server/data/defaults.js` (removed `maxPlayers` entry), `server/handlers/joinHandler.js` (hardcoded `>= 15`), `src/components/SettingsPanel.js` (removed slider + default), `src/pages/dev.js` (removed from mock data), `src/components/lobby/WaitingRoom.js` (removed variable, slider, and all `maxPlayers` references — hardcoded `15` everywhere).
+
+**Guard**: `maxPlayers` is no longer a setting key. Don't add it back to `update-settings` handler, defaults, or any settings UI. The roster header always shows `/15` and empty slots always calculate `15 - room.players.length`.

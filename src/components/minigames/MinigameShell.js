@@ -26,9 +26,9 @@ export function MinigameHeader({ compact, icon: Icon, iconBg = 'bg-white', title
 
   return (
     <div className={shell.header}>
-      <div className="flex items-center gap-3 min-w-0">
-        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl border-4 border-black flex justify-center items-center shrink-0 ${iconBg}`}>
-          {Icon && <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-black" />}
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+        <div className={`w-6 h-6 sm:w-11 sm:h-11 rounded-md sm:rounded-xl border-2 sm:border-4 border-black flex justify-center items-center shrink-0 ${iconBg}`}>
+          {Icon && <Icon className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-black" />}
         </div>
         <div className="min-w-0">
           <h1 className={shell.title}>{title}</h1>
@@ -36,7 +36,7 @@ export function MinigameHeader({ compact, icon: Icon, iconBg = 'bg-white', title
         </div>
       </div>
       {statusLabel && (
-        <div className={`neo-badge border-black text-[10px] sm:text-xs py-1 px-2 sm:px-3 shrink-0 ${badgeClass}`}>
+        <div className={`neo-badge border border-black text-[8px] sm:text-xs py-0.5 px-1.5 sm:py-1 sm:px-3 shrink-0 ${badgeClass}`}>
           {statusLabel}
         </div>
       )}
@@ -198,6 +198,7 @@ export function MinigameFooter({ compact, onReset, resetLabel = 'RESET', showRes
 
 /** Konstanta label Sila */
 export const SILA_LABELS = {
+  1: 'SILA 1: KETUHANAN YANG MAHA ESA',
   2: 'SILA 2: KEMANUSIAAN YANG ADIL DAN BERADAB',
   3: 'SILA 3: PERSATUAN INDONESIA',
   4: 'SILA 4: KERAKYATAN YANG DIPIMPIN OLEH HIKMAT KEBIJAKSANAAN',

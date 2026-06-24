@@ -2,11 +2,17 @@ import HubungkanKebaikan from './HubungkanKebaikan';
 import DekripsiPesan from './DekripsiPesan';
 import UrutanMufakat from './UrutanMufakat';
 import TimbanganKeadilan from './TimbanganKeadilan';
+import TebakRumahIbadah from './TebakRumahIbadah';
 
-export { HubungkanKebaikan, DekripsiPesan, UrutanMufakat, TimbanganKeadilan };
+export { HubungkanKebaikan, DekripsiPesan, UrutanMufakat, TimbanganKeadilan, TebakRumahIbadah };
 export * from './MinigameShell';
 
 export const MINIGAME_REGISTRY = {
+  'tebak-ibadah': {
+    component: TebakRumahIbadah,
+    sila: 1,
+    label: 'Tebak Rumah Ibadah',
+  },
   'hubungkan-kebaikan': {
     component: HubungkanKebaikan,
     sila: 2,

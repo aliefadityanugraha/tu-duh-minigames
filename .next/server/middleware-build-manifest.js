@@ -24,10 +24,10 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/game": [
+    "/debug-ibadah": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/game.js"
+      "static/chunks/pages/debug-ibadah.js"
     ]
   },
   "ampFirstPages": []

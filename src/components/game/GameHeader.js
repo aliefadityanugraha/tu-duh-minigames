@@ -16,11 +16,10 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
   //         STATUS: {room?.state === 'playing' ? 'ACTIVE' : 'STANDBY'}
   //       </span>
   //     </div>
-  //     <div className={`border-2 border-black shadow-[2px_2px_0px_#000000] px-2 py-1 ${
-  //       room?.sabotage?.active || room?.duel?.active
+  //     <div className={`border-2 border-black shadow-[2px_2px_0px_#000000] px-2 py-1 ${room?.sabotage?.active || room?.duel?.active
   //         ? 'bg-[#ffb4ab] text-[#690005]'
   //         : 'bg-[#ffc312] text-[#3f2e00]'
-  //     }`}>
+  //       }`}>
   //       <span className="font-mono text-xs font-bold tracking-wider">
   //         THREAT: {room?.sabotage?.active ? 'CRITICAL' : room?.duel?.active ? 'HIGH' : 'NORMAL'}
   //       </span>
@@ -30,9 +29,8 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
 
   // Timer Circle (Absolute centered if possible, but we'll put it in rightContent for Navbar flex)
   const timerBadge = room?.state === 'playing' && room.gameTimer != null ? (
-    <div className={`flex items-center justify-center w-14 h-14 rounded-full border-4 border-black shadow-[4px_4px_0px_#000000] z-50 ${
-      room.gameTimer <= 60 ? 'bg-[#ffb4ab] text-[#690005] animate-pulse' : 'bg-[#ffc312] text-[#6e5200]'
-    }`}>
+    <div className={`flex items-center justify-center w-14 h-14 rounded-full border-4 border-black shadow-[4px_4px_0px_#000000] z-50 ${room.gameTimer <= 60 ? 'bg-[#ffb4ab] text-[#690005] animate-pulse' : 'bg-[#ffc312] text-[#6e5200]'
+      }`}>
       <span className="font-rubik text-base font-black">
         {Math.floor(room.gameTimer / 60)}:{String(room.gameTimer % 60).padStart(2, '0')}
       </span>
@@ -42,17 +40,16 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
   const rightContent = (
     <div className="flex items-center gap-3">
       {/* {statusBadge} */}
-      
+
       {/* Guru Controls */}
       {roleInfo.isGuru && (room?.state === 'playing' || room?.state === 'ended') && (
         <div className="flex gap-2 border-l-4 border-black pl-3 ml-1">
           <button
             onClick={() => socket.emit('toggle-broadcast-stats', { show: !room.showStatsToAll })}
-            className={`p-2 border-2 border-black rounded transition-all shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
-              room.showStatsToAll
+            className={`p-2 border-2 border-black rounded transition-all shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${room.showStatsToAll
                 ? 'bg-[#41e5b3] text-[#003829]'
                 : 'bg-[#270067] text-[#d3c5ab] hover:bg-[#330081]'
-            }`}
+              }`}
             title="Siarkan stats ke semua pemain"
           >
             <Radio size={16} />
@@ -68,9 +65,8 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
           </a>
           <button
             onClick={() => setStatsOpen(p => !p)}
-            className={`p-2 border-2 border-black rounded transition-all shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
-              statsOpen ? 'bg-[#ffc312] text-[#3f2e00]' : 'bg-[#270067] text-[#d3c5ab] hover:bg-[#330081]'
-            }`}
+            className={`p-2 border-2 border-black rounded transition-all shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${statsOpen ? 'bg-[#ffc312] text-[#3f2e00]' : 'bg-[#270067] text-[#d3c5ab] hover:bg-[#330081]'
+              }`}
             title="Statistik game"
           >
             <BarChart3 size={16} />
@@ -103,10 +99,16 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
     </div>
   );
 
-  // const gameNavItems = [
-  //   { label: 'Game', icon: '🎮', active: true },
-  //   ...(player?.name ? [{ label: player.name, icon: roleInfo.isGuru ? '🏫' : isPlayerDead ? '👻' : '🧑‍🚀' }] : []),
-  // ];
+  const gameNavItems = [
+    ...(player?.name ? [{ label: player.name, icon: roleInfo.isGuru ? '🏫' : isPlayerDead ? '👻' : '🧑‍🚀' }] : []),
+    ...(roleInfo.role === 'provokator' && !isPlayerDead ? [{
+      custom: (
+        <div className="flex items-center gap-1.5 bg-[#93000a] border-[3px] border-black px-2.5 py-1 ml-2 shadow-[3px_3px_0px_#000000] rounded-sm transform hover:-translate-y-0.5 transition-transform">
+          <span className="font-rubik italic text-[#ffb4ab] text-xs sm:text-sm font-black tracking-wide">PROVOKATOR</span>
+        </div>
+      )
+    }] : [])
+  ];
 
   return (
     <Navbar

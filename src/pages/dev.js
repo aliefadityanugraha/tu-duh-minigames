@@ -22,7 +22,6 @@ import HubungkanKebaikan from '../components/minigames/HubungkanKebaikan';
 import DekripsiPesan from '../components/minigames/DekripsiPesan';
 import UrutanMufakat from '../components/minigames/UrutanMufakat';
 import TimbanganKeadilan from '../components/minigames/TimbanganKeadilan';
-import TebakRumahIbadah from '../components/minigames/TebakRumahIbadah';
 
 // ─── MOCK DATA ──────────────────────────────────────────────────────
 

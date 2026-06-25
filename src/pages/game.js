@@ -16,7 +16,41 @@ import DebateOverlay from '../components/overlays/DebateOverlay';
 import PresentationOverlay from '../components/overlays/PresentationOverlay';
 
 export default function Game() {
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+
+  // Hooks declared unconditionally at the top level
+  const [muted, setMuted] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [isNextTaskLoading, setIsNextTaskLoading] = useState(false);
+  
+  const socketContext = useSocket();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Pindah ke atas sebelum return null
+  useEffect(() => {
+    if (
+      socketContext?.socket && socketContext?.room && socketContext?.room.state === 'playing' &&
+      (socketContext?.roleInfo.role === 'warga' || socketContext?.roleInfo.role === 'provokator') && 
+      !socketContext?.player?.isDead &&
+      !socketContext?.currentTask && !socketContext?.taskLocked
+    ) {
+      socketContext.socket.emit('get-next-task');
+    }
+  }, [
+    socketContext?.socket, 
+    socketContext?.room?.state, 
+    socketContext?.roleInfo.role, 
+    socketContext?.player?.isDead, 
+    socketContext?.currentTask, 
+    socketContext?.taskLocked
+  ]);
+
+  if (!isMounted || !socketContext) return null;
+
   const {
     socket, room, player, roleInfo, logs,
     currentTask, feedback, isAnswered,
@@ -32,21 +66,7 @@ export default function Game() {
     sendDebateChat,
     leaveRoom,
     taskTimer,
-  } = useSocket();
-
-  const [muted, setMuted]         = useState(false);
-  const [statsOpen, setStatsOpen] = useState(false);
-
-  // Minta task pertama saat game mulai (Warga DAN Provokator)
-  useEffect(() => {
-    if (
-      socket && room && room.state === 'playing' &&
-      (roleInfo.role === 'warga' || roleInfo.role === 'provokator') && !player?.isDead &&
-      !currentTask && !taskLocked
-    ) {
-      socket.emit('get-next-task');
-    }
-  }, [socket, room?.state, roleInfo.role, player?.isDead, currentTask, taskLocked]);
+  } = socketContext;
 
   // ── Koneksi terputus ──
   if (!room) {
@@ -96,12 +116,14 @@ export default function Game() {
   };
 
   const handleNextTask = () => {
+    setIsNextTaskLoading(true);
     setCurrentTask(null);
     setFeedback(null);
     setIsAnswered(false);
     setSelectedOption(null);
     setTaskError(null);
-    // useEffect akan emit get-next-task saat currentTask menjadi null
+    // Timeout reset loading jika server tidak respons
+    setTimeout(() => setIsNextTaskLoading(false), 2000);
   };
 
   const handleClearTaskError = () => setTaskError(null);
@@ -225,6 +247,7 @@ export default function Game() {
           sabotageQuiz={sabotageQuiz}
           duelCooldownRemaining={duelCooldownRemaining}
           taskTimer={taskTimer}
+          isNextTaskLoading={isNextTaskLoading}
           onSelectOption={handleOptionSelect}
           onSubmitQuiz={handleSubmitQuiz}
           onMinigameComplete={handleMinigameComplete}

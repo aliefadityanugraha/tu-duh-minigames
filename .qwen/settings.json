@@ -7,7 +7,8 @@
       "computer_use__launch_app",
       "Bash(npm install *)",
       "Bash(rm *)",
-      "Bash(mkdir *)"
+      "Bash(mkdir *)",
+      "Skill(among-us-bug-debugging)"
     ]
   },
   "$version": 4

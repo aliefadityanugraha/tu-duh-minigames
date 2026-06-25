@@ -175,7 +175,7 @@ export default function TaskContainer({
       )}
 
       {showMinigameSuccess && (
-        <div className="fixed bottom-0 left-0 w-full z-50 p-4 bg-[#190047] border-t-4 border-black animate-fadeIn shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
+        <div className="fixed bottom-0 left-0 w-full z-[100] p-4 bg-[#190047] border-t-4 border-black animate-fadeIn shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
           <div className="flex items-start gap-3 p-3 border-4 border-black bg-[#003829] text-[#41e5b3]">
             <CheckCircle2 size={16} className="flex-shrink-0 mt-0.5" />
             <div>
@@ -188,6 +188,7 @@ export default function TaskContainer({
           <button
             type="button"
             onClick={onNextTask}
+            disabled={isAnswered && !feedback} // Atau kondisi loading di parent
             className="w-full mt-2 py-3 neo-btn neo-btn-secondary text-sm flex items-center justify-center gap-2"
           >
             MISI BERIKUTNYA <ArrowRight size={14} />

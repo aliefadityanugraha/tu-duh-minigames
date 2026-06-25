@@ -456,11 +456,20 @@ function _getGuruRoom(socket, rooms) {
 function _deliverNextTask(socket) {
   const code = socket.roomCode;
   const room = rooms[code];
-  if (!room || room.state !== 'playing') return;
+  console.log(`[DEBUG] get-next-task received for: ${socket.id} in room: ${code}`);
+
+  if (!room || room.state !== 'playing') {
+    console.log(`[DEBUG] Task delivery aborted: room state is ${room?.state}`);
+    return;
+  }
 
   const player = room.players.find(p => p.id === socket.id);
-  if (!player || player.isDead || (player.role !== 'warga' && player.role !== 'provokator')) return;
+  if (!player || player.isDead || (player.role !== 'warga' && player.role !== 'provokator')) {
+    console.log(`[DEBUG] Task delivery aborted: player invalid or dead`);
+    return;
+  }
   if (player?.taskLocked) {
+    console.log(`[DEBUG] Task delivery aborted: player is taskLocked`);
     socket.emit('task-locked', { message: 'Tugas Anda sedang terkunci karena sabotase aktif!' });
     return;
   }
@@ -480,8 +489,8 @@ function _deliverNextTask(socket) {
 
   const s = room.settings || DEFAULT_SETTINGS;
   const minigameOn = s.minigameEnabled !== false;
-  // Provokator selalu dapat quiz saja (bisa menjawab soal untuk mengurangi progress warga)
-  const quizRatio = player.role === 'provokator' ? 1 : (minigameOn ? (s.quizRatio ?? 0.4) : 1);
+  // Provokator sekarang menggunakan quizRatio yang sama dengan Warga
+  const quizRatio = minigameOn ? (s.quizRatio ?? 0.4) : 1;
   const isQuiz = shouldDeliverQuiz(player, quizRatio, minigameOn);
 
   const sessionId = `${socket.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -616,6 +625,7 @@ function _handleSabotageProvokatorAnswer(socket, io, room, player, isCorrect, co
     // Jawaban salah → sabotase batal, kirim soal baru
     const newMath = generateMathQuiz();
     room.sabotage.question = newMath;
+    room.sabotage.timer = 15; // Reset timer ke 15 detik
     socket.emit('sabotage-quiz-wrong', {
       question: newMath,
       timer:    room.sabotage.timer,

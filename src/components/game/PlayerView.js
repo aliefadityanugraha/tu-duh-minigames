@@ -56,6 +56,9 @@ export default function PlayerView({
     ? Math.min(100, Math.round((room.tasksCompleted / room.tasksRequired) * 100))
     : 0;
 
+  // Mendefinisikan isNextTaskLoading yang hilang
+  const isNextTaskLoading = false; 
+
   return (
     <main className={`relative z-10 w-full flex-1 flex flex-col ${isMobileLandscape ? 'landscape-mode' : ''} ${isMobilePortrait ? 'portrait-mode' : ''} ${showRadar ? 'radar-expanded' : 'radar-collapsed'}`}>
       <style dangerouslySetInnerHTML={{
@@ -550,6 +553,7 @@ export default function PlayerView({
                         isPlayerDead={isPlayerDead}
                         taskLocked={taskLocked}
                         taskTimer={taskTimer}
+                        isNextTaskLoading={isNextTaskLoading}
                         onSelectOption={onSelectOption}
                         onSubmitQuiz={onSubmitQuiz}
                         onMinigameComplete={onMinigameComplete}

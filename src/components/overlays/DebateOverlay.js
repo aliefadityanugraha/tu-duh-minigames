@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const snappy = { type: 'spring', stiffness: 500, damping: 30 };
+const punchy = { type: 'spring', stiffness: 600, damping: 20 };
 
 export default function DebateOverlay({ debate, players, selfId, selfRole, isGuru, isPlayerDead, onVote, onSendChat }) {
   const [chatInput, setChatInput] = useState('');
@@ -16,18 +20,17 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
   const eligibleVoters = players.filter(p => !p.isDead && !p.isGuru);
   const votablePlayers = players.filter(p => !p.isGuru);
 
-  // Derive vote state from server data — prevents double-vote on remount
   const hasVoted = selfId && Object.keys(debate.votes || {}).includes(selfId);
   const votedFor = hasVoted ? debate.votes[selfId] : null;
-  
-  // Format MM:SS for timer
+
   const timer = debate.timer ?? 0;
   const minutes = Math.floor(timer / 60);
   const seconds = timer % 60;
   const timeFormatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const isUrgent = timer <= 20;
 
-  const title = debate.reason === 'emergency_meeting' 
-    ? '🚨 EMERGENCY MEETING ROOM' 
+  const titleLabel = debate.reason === 'emergency_meeting'
+    ? '🚨 EMERGENCY MEETING ROOM'
     : '📢 MUSYAWARAH MUFAKAT (GURU PAUSE)';
 
   const handleVote = (targetId) => {
@@ -42,110 +45,175 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
     setChatInput('');
   };
 
-  // Helper to count votes received visually (dots) — only shown after debate ends
   const getDotsForPlayer = (playerId) => {
-    if (debate.active) return false; // hide during active voting
+    if (debate.active) return false;
     const hasThisPlayerVoted = Object.keys(debate.votes || {}).includes(playerId);
     return hasThisPlayerVoted;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-      
-      <div className="flex flex-col items-start gap-4 relative w-full max-w-6xl mt-auto mb-auto">
-        
-        {/* Header Title */}
-        <div className="flex self-stretch w-full flex-col items-start relative flex-[0_0_auto]">
-          <div className="relative flex items-center self-stretch font-rubik font-extrabold text-[#e9ddff] text-[24px] md:text-[32px] tracking-[0] uppercase">
-            {title}
-          </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-50 flex flex-col bg-[#190047] overflow-hidden"
+    >
+      {/* ── HEADER BAR ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...snappy, delay: 0.05 }}
+        className="flex items-center justify-between px-4 md:px-6 py-3 bg-[#330081] border-b-4 border-black shrink-0"
+      >
+        <div className="flex items-center gap-3">
+          <motion.span
+            animate={{ rotate: [0, -8, 8, -4, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="text-xl md:text-2xl"
+          >🚨</motion.span>
+          <span className="font-rubik italic font-extrabold text-[#e9ddff] text-lg md:text-2xl tracking-[0] uppercase">
+            {titleLabel}
+          </span>
         </div>
+        <motion.div
+          animate={isUrgent ? { scale: [1, 1.1, 1] } : {}}
+          transition={isUrgent ? { duration: 0.8, repeat: Infinity } : {}}
+          className={`flex items-center gap-2 px-3 py-1.5 border-4 border-black ${
+            isUrgent ? 'bg-[#93000a]' : 'bg-[#270067]'
+          }`}
+        >
+          <span className="font-mono font-bold text-sm md:text-base leading-6 text-[#ffc312]">TIME LEFT:</span>
+          <span className={`font-mono font-black text-lg md:text-xl leading-6 ${isUrgent ? 'text-[#ffdad6]' : 'text-[#ffc312]'}`}>
+            {timeFormatted}
+          </span>
+        </motion.div>
+      </motion.div>
 
-        {/* Main Grid Container */}
-        <div className="flex flex-col md:grid md:grid-cols-12 w-full min-h-[500px] h-fit bg-[#270067] shadow-[8px_8px_0px_#000000] border-4 border-solid border-black">
-          
-          {/* LEFT: Chat Log Area */}
-          <div className="relative md:col-[1_/_5] w-full h-[300px] md:h-full flex flex-col bg-[#22005c] md:border-r-4 border-b-4 md:border-b-0 border-black">
-            
-            {/* Chat Header */}
-            <div className="flex items-center gap-2 p-4 bg-[#ffb4ab] border-b-4 border-black">
-              <span className="text-xl">💬</span>
-              <div className="font-rubik font-extrabold text-[#690005] text-base leading-6 whitespace-nowrap">
-                CHAT LOG
+      {/* ── MAIN GRID (fills remaining space) ── */}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0">
+        {/* ══ LEFT: CHAT LOG ══ */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ ...snappy, delay: 0.1 }}
+          className="relative md:col-span-4 flex flex-col bg-[#22005c] md:border-r-4 border-black min-h-0"
+        >
+          {/* Chat Header */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="flex items-center gap-2 px-4 py-3 bg-[#ffb4ab] border-b-4 border-black shrink-0"
+          >
+            <motion.span
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="text-xl"
+            >💬</motion.span>
+            <span className="font-rubik font-extrabold text-[#690005] text-base leading-6 uppercase tracking-wider">
+              CHAT LOG
+            </span>
+            {debate.chat?.length > 0 && (
+              <span className="ml-auto font-mono text-[10px] text-[#690005] font-bold opacity-60">
+                {debate.chat.length} pesan
+              </span>
+            )}
+          </motion.div>
+
+          {/* Messages — scrollable */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+            {(!debate.chat || debate.chat.length === 0) && (
+              <div className="text-sm font-mono text-[#e9ddff]/40 w-full text-center mt-8 italic">
+                Belum ada pesan... Mulai diskusi!
               </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex flex-col items-start gap-2 p-4 flex-1 overflow-y-auto">
-              {(!debate.chat || debate.chat.length === 0) && (
-                <div className="text-sm font-mono text-[#e9ddff]/50 w-full text-center mt-4">Belum ada pesan...</div>
-              )}
+            )}
+            <AnimatePresence initial={false}>
               {debate.chat && debate.chat.map((c, idx) => {
                 const isMe = c.senderId === selfId;
                 const isProvokatorMe = isMe && selfRole === 'provokator';
-                
-                // Color coding for chat bubbles
                 const bgClass = isMe ? 'bg-[#00c899]' : 'bg-[#190047]';
                 const nameColor = isMe ? 'text-[#004d39]' : 'text-[#ffb4ab]';
                 const textColor = isMe ? 'text-[#004d39]' : 'text-[#e9ddff]';
                 const nameDisplay = isMe ? 'YOU (ME)' : c.senderName;
 
                 return (
-                  <div key={idx} className={`flex w-full flex-col relative flex-[0_0_auto] ${isMe ? 'items-end' : 'items-start'}`}>
-                    <div className={`${bgClass} inline-flex flex-col max-w-[90%] items-start gap-1 p-2 border-2 border-solid border-black`}>
+                  <motion.div
+                    key={`${c.senderId}-${idx}`}
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ ...snappy }}
+                    className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`${bgClass} inline-flex flex-col max-w-[88%] items-start gap-1 p-2.5 border-2 border-solid border-black`}>
                       <div className={`font-mono font-bold text-xs ${nameColor}`}>
-                        {nameDisplay} {isProvokatorMe && <span className="text-red-900 text-[10px]">(Provokator)</span>}
+                        {nameDisplay}
+                        {isProvokatorMe && <span className="text-red-900 text-[10px] ml-1">(Provokator)</span>}
                       </div>
-                      <p className={`font-hanken text-sm leading-5 ${textColor} break-words whitespace-pre-wrap`}>
+                      <p className={`text-sm leading-5 ${textColor} break-words whitespace-pre-wrap`}>
                         {c.message}
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Chat Input */}
-            <div className="flex-col items-start p-2 bg-black border-t-4 border-black flex relative self-stretch w-full">
-              {isGuru || isPlayerDead ? (
-                <div className="flex items-start justify-center pt-[9px] pb-2.5 px-2 bg-[#270067] border-2 border-[#ffc312] w-full opacity-50 cursor-not-allowed">
-                  <div className="font-mono text-gray-400 text-sm">{isGuru ? "Guru memantau diskusi..." : "Arwah tidak bisa chat..."}</div>
-                </div>
-              ) : (
-                <form onSubmit={handleChatSubmit} className="flex items-start justify-center p-2 bg-[#270067] border-2 border-[#ffc312] w-full focus-within:bg-[#3d00a3]">
-                  <input 
-                    type="text" 
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="TYPE DEFENSE..."
-                    className="bg-transparent border-none outline-none w-full font-mono text-gray-200 text-sm placeholder-gray-500"
-                    maxLength={100}
-                  />
-                  <button type="submit" className="hidden">Send</button>
-                </form>
-              )}
-            </div>
+            </AnimatePresence>
+            <div ref={chatEndRef} />
           </div>
 
-          {/* RIGHT: Voting Area */}
-          <div className="relative md:col-[5_/_13] w-full flex flex-col h-full">
-            
-            {/* Voting Header */}
-            <div className="flex items-center justify-between p-4 bg-[#190047] border-b-4 border-black">
-              <div className="font-rubik font-extrabold text-[#e9ddff] text-sm md:text-base leading-6">
-                WHO IS THE PROVOKATOR?
+          {/* Chat Input */}
+          <div className="shrink-0 p-2 bg-black border-t-4 border-black">
+            {isGuru || isPlayerDead ? (
+              <div className="px-3 py-2.5 bg-[#270067] border-2 border-[#ffc312] text-center font-mono text-sm text-gray-400 opacity-60">
+                {isGuru ? "Guru memantau diskusi..." : "Arwah tidak bisa chat..."}
               </div>
-              <div className="px-4 py-1 bg-[#93000a] border-2 border-solid border-black">
-                <div className={`font-mono font-bold text-[#ffdad6] text-sm md:text-base leading-6 ${timer <= 20 ? 'animate-pulse text-red-300' : ''}`}>
-                  TIME LEFT: {timeFormatted}
-                </div>
-              </div>
-            </div>
+            ) : (
+              <form onSubmit={handleChatSubmit} className="flex items-center gap-2 p-2 bg-[#270067] border-2 border-[#ffc312] focus-within:bg-[#3d00a3] transition-colors">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="TYPE DEFENSE..."
+                  maxLength={100}
+                  className="flex-1 bg-transparent border-none outline-none font-mono text-gray-200 text-sm placeholder-gray-500"
+                />
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-1 bg-[#ffc312] text-[#3f2e00] border-2 border-black font-mono font-bold text-[10px] uppercase tracking-wider"
+                >
+                  Kirim
+                </motion.button>
+              </form>
+            )}
+          </div>
+        </motion.div>
 
-            {/* Voting Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 p-4 md:p-6 overflow-y-auto max-h-[400px]">
-              {votablePlayers.map(p => {
+        {/* ══ RIGHT: VOTING AREA ══ */}
+        <div className="relative md:col-span-8 flex flex-col bg-[#190047] min-h-0">
+          {/* Voting Header */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="flex items-center justify-between px-4 md:px-6 py-3 bg-[#190047] border-b-4 border-black shrink-0"
+          >
+            <div className="font-rubik font-extrabold text-[#e9ddff] text-sm md:text-lg uppercase tracking-wider">
+              WHO IS THE PROVOKATOR?
+            </div>
+            <div className="flex items-center gap-2 font-mono text-[10px] text-[#9c8f78] uppercase tracking-wider">
+              <span>{eligibleVoters.length} pemilih</span>
+              {Object.keys(debate.votes || {}).length > 0 && (
+                <span className="text-[#5ffcc9]">· {Object.keys(debate.votes).length} suara masuk</span>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Voting Grid — fills remaining space */}
+          <div className="flex-1 overflow-y-auto p-3 md:p-5 custom-scrollbar">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+              {votablePlayers.map((p, i) => {
                 const isSelf = p.id === selfId;
                 const isDead = p.isDead;
                 const iVotedForThis = votedFor === p.id;
@@ -153,86 +221,124 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                 const hasVotedStatus = getDotsForPlayer(p.id);
 
                 return (
-                  <div key={p.id} className={`pt-2 pb-6 px-2 flex flex-col items-center border-4 border-black transition-all ${
-                    isDead ? 'bg-[#190047] opacity-50 grayscale' : 
-                    isSelf ? 'bg-gradient-to-t from-[#00c899] to-white opacity-90' : 
-                    'bg-[#40009d]'
-                  }`}>
+                  <motion.div
+                    key={p.id}
+                    initial={{ opacity: 0, scale: 0.7, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ ...snappy, delay: 0.2 + i * 0.04 }}
+                    whileHover={!isDead ? { scale: 1.04 } : {}}
+                    className={`pt-3 pb-4 px-2 flex flex-col items-center border-4 border-black ${
+                      isDead ? 'bg-[#190047] opacity-50 grayscale' :
+                      isSelf ? 'bg-gradient-to-b from-[#00c899] to-[#190047]' :
+                      'bg-[#40009d]'
+                    }`}
+                  >
                     {/* Avatar Box */}
-                    <div className="flex flex-col w-12 h-12 md:w-16 md:h-16 items-start justify-center mb-2 bg-[#ffb4ab] border-4 border-black">
-                       <span className="w-full text-center text-xl md:text-3xl">{isDead ? '💀' : '🧑‍🚀'}</span>
-                    </div>
+                    <motion.div
+                      animate={isDead ? {} : { scale: [1, 1.03, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      className="flex flex-col w-12 h-12 md:w-16 md:h-16 items-center justify-center mb-2 bg-[#ffb4ab] border-4 border-black"
+                    >
+                      <span className="text-xl md:text-3xl">{isDead ? '💀' : '🧑‍🚀'}</span>
+                    </motion.div>
 
                     {/* Name */}
-                    <div className="font-mono text-[#e9ddff] text-xs md:text-sm tracking-[0.70px] leading-[14px] text-center mb-2 truncate w-full px-1">
+                    <div className="font-mono text-[#e9ddff] text-[11px] md:text-sm text-center mb-2 truncate w-full px-1">
                       {p.name}
-                      {isSelf && <div className="text-[10px] text-black bg-white/50 px-1 mt-1 rounded inline-block">YOU (ME)</div>}
-                      {isDead && <div className="text-[10px] text-red-300 mt-1">ELIMINATED</div>}
                     </div>
 
-                    {/* Voting Dot Indicator (shows if this player has submitted their vote) */}
-                    <div className="flex gap-1 h-3 mb-4">
-                      {hasVotedStatus && !isDead && (
-                        <div className="w-2 h-2 bg-[#5ffcc9] rounded-full" title="Pemain ini sudah memberikan suara" />
+                    {/* Status badges */}
+                    <div className="flex flex-col items-center gap-1 mb-3 min-h-[20px]">
+                      {isSelf && (
+                        <div className="text-[9px] text-black bg-white border border-black px-1.5 py-0.5 font-bold">
+                          YOU (ME)
+                        </div>
+                      )}
+                      {isDead && (
+                        <div className="text-[9px] text-red-300 font-bold font-mono">☠ ELIMINATED</div>
+                      )}
+                      {hasVotedStatus && !isDead && !isSelf && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="flex items-center gap-1 text-[9px] text-[#5ffcc9] font-bold font-mono"
+                        >
+                          <div className="w-2 h-2 bg-[#5ffcc9] rounded-full" />
+                          SUDAH VOTE
+                        </motion.div>
                       )}
                     </div>
 
                     {/* Vote Button */}
                     {!isDead && !isSelf && (
-                      <button 
+                      <motion.button
                         onClick={() => handleVote(p.id)}
                         disabled={disabled}
-                        className={`w-full flex items-center justify-center gap-1 p-2 border-2 border-black shadow-[4px_4px_0px_#000000] transition-transform active:translate-y-1 active:shadow-none ${
-                          iVotedForThis ? 'bg-[#ffc312] text-black font-black' :
-                          disabled ? 'bg-gray-600 text-gray-400 cursor-not-allowed' :
-                          'bg-[#ffb4ab] text-[#690005] hover:bg-[#ff8f82]'
+                        whileHover={!disabled ? { scale: 1.05 } : {}}
+                        whileTap={!disabled ? { scale: 0.93 } : {}}
+                        transition={punchy}
+                        className={`w-full flex items-center justify-center gap-1 p-2.5 border-4 border-black shadow-[4px_4px_0px_#000000] ${
+                          iVotedForThis
+                            ? 'bg-[#ffc312] text-[#3f2e00] font-black'
+                            : disabled
+                            ? 'bg-[#4f4632] text-gray-400 cursor-not-allowed'
+                            : 'bg-[#ffb4ab] text-[#690005] hover:bg-[#ff8f82] cursor-pointer'
                         }`}
                       >
-                        <span className="font-mono text-sm md:text-base font-bold leading-6">
-                          {iVotedForThis ? 'VOTED' : 'VOTE'}
+                        <span className="font-mono text-sm font-bold leading-6">
+                          {iVotedForThis ? '🗳 VOTED' : 'VOTE ⚡'}
                         </span>
-                      </button>
+                      </motion.button>
                     )}
                     {!isDead && isSelf && (
-                      <div className="w-full flex items-center justify-center gap-1 p-2 border-2 border-black bg-[#4f4632] text-gray-400 font-mono text-xs font-bold">
-                        CANNOT VOTE SELF
+                      <div className="w-full flex items-center justify-center gap-1 p-2.5 border-4 border-black bg-[#4f4632] text-gray-400 font-mono text-[10px] font-bold text-center">
+                        🚫 CANNOT VOTE SELF
                       </div>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
-
-            {/* Footer / Skip Vote */}
-            <div className="mt-auto p-4 bg-[#330081] border-t-4 border-black">
-              {isPlayerDead ? (
-                <div className="w-full bg-[#190047] border-4 border-black p-3 text-center text-[#ffb4ab] font-mono text-sm font-bold shadow-[4px_4px_0px_#000000]">
-                  GHOSTS CANNOT VOTE
-                </div>
-              ) : isGuru ? (
-                <div className="w-full bg-[#190047] border-4 border-black p-3 text-center text-[#5ffcc9] font-mono text-sm font-bold shadow-[4px_4px_0px_#000000]">
-                  GURU MEMANTAU PROSES MUSYAWARAH
-                </div>
-              ) : (
-                <button 
-                  onClick={() => handleVote('skip')}
-                  disabled={hasVoted}
-                  className={`w-full flex items-center justify-center gap-2 p-3 border-4 border-black shadow-[6px_6px_0px_#000000] transition-transform active:translate-y-1 active:shadow-none ${
-                    votedFor === 'skip' ? 'bg-[#ffc312] text-black' :
-                    hasVoted ? 'bg-[#4f4632] text-gray-400 cursor-not-allowed' :
-                    'bg-[#4f4632] text-[#e9ddff] hover:bg-[#685c42]'
-                  }`}
-                >
-                  <span className="font-rubik font-extrabold text-sm md:text-base uppercase tracking-wider">
-                    {votedFor === 'skip' ? 'SKIPPED VOTE' : 'SKIP VOTE'}
-                  </span>
-                  <span className="text-xl">⏭️</span>
-                </button>
-              )}
-            </div>
           </div>
+
+          {/* Footer / Skip Vote */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="shrink-0 px-4 md:px-6 py-3 bg-[#330081] border-t-4 border-black"
+          >
+            {isPlayerDead ? (
+              <div className="w-full bg-[#190047] border-4 border-black py-3 text-center text-[#ffb4ab] font-mono text-sm font-bold">
+                💀 GHOSTS CANNOT VOTE
+              </div>
+            ) : isGuru ? (
+              <div className="w-full bg-[#190047] border-4 border-black py-3 text-center text-[#5ffcc9] font-mono text-sm font-bold">
+                🛡️ GURU MEMANTAU PROSES MUSYAWARAH
+              </div>
+            ) : (
+              <motion.button
+                onClick={() => handleVote('skip')}
+                disabled={hasVoted}
+                whileHover={!hasVoted ? { scale: 1.02 } : {}}
+                whileTap={!hasVoted ? { scale: 0.96 } : {}}
+                transition={punchy}
+                className={`w-full flex items-center justify-center gap-2 py-3 border-4 border-black shadow-[6px_6px_0px_#000000] ${
+                  votedFor === 'skip'
+                    ? 'bg-[#ffc312] text-[#3f2e00]'
+                    : hasVoted
+                    ? 'bg-[#3d2a00] text-gray-400 cursor-not-allowed'
+                    : 'bg-[#4f4632] text-[#e9ddff] hover:bg-[#685c42] cursor-pointer'
+                }`}
+              >
+                <span className="font-rubik font-extrabold text-sm md:text-base uppercase tracking-wider">
+                  {votedFor === 'skip' ? '✅ SKIPPED VOTE' : '⏭️ SKIP VOTE'}
+                </span>
+              </motion.button>
+            )}
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

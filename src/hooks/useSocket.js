@@ -35,6 +35,10 @@ export const SocketProvider = ({ children }) => {
   // State presentasi (notifikasi ke pemain terpilih)
   const [presentationNotif, setPresentationNotif] = useState(null);
 
+  // State audio
+  const [audio, setAudio] = useState(null);
+  const [isMuted, setIsMuted] = useState(false);
+
   // State debat topik
   const [topicDebateNotif, setTopicDebateNotif] = useState(null);
 
@@ -163,6 +167,14 @@ export const SocketProvider = ({ children }) => {
       setTaskError(null); setMinigameRetryKey(0);
       setSabotageQuiz(null); setSabotageRescue(null);
       setTaskLocked(false);
+
+      // Play backsound on game start
+      const newAudio = new Audio('/sounds/bg-game.mp3');
+      newAudio.loop = true;
+      newAudio.muted = isMuted;
+      newAudio.play().catch(e => console.log('Autoplay blocked:', e));
+      setAudio(newAudio);
+
       router.push('/game');
     });
 
@@ -321,6 +333,10 @@ export const SocketProvider = ({ children }) => {
     });
     s.on('game-restarted', () => {
       addLog('🔄 Game di-restart ke lobi.');
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
       // Jangan reset roleInfo di sini — biarkan room-updated yang sync
       setCurrentTask(null); setCurrentQuestion(null); setFeedback(null);
       setIsAnswered(false); setSelectedOption(null);
@@ -430,6 +446,11 @@ export const SocketProvider = ({ children }) => {
       setCurrentTask, setSelectedOption, setIsAnswered, setFeedback,
       taskError, setTaskError, minigameRetryKey,
       taskTimer,
+      // audio
+      isMuted, toggleMute: () => {
+        if (audio) audio.muted = !audio.muted;
+        setIsMuted(prev => !prev);
+      },
       // sabotase
       sabotageFeedback, setSabotageFeedback,
       sabotageQuiz, setSabotageQuiz,

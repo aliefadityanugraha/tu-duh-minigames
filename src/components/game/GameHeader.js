@@ -112,7 +112,7 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
 
   return (
     <Navbar
-      navItems={gameNavItems}
+      // navItems={gameNavItems}
       roomCode={room?.code}
       rightContent={rightContent}
     />

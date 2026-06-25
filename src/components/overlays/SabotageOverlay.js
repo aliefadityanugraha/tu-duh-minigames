@@ -1,5 +1,8 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Timer } from 'lucide-react';
+
+const snappy = { type: 'spring', stiffness: 500, damping: 30 };
 
 /**
  * Overlay sabotase untuk:
@@ -17,83 +20,145 @@ export default function SabotageOverlay({ sabotage, role }) {
   const isUrgent   = sabotage.timer <= 10;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-red-900/20 backdrop-blur-sm">
-      <div className="absolute inset-0 border-4 border-red-400/30 animate-pulse pointer-events-none" />
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+      />
 
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-flat-lg border-2 border-red-300 overflow-hidden">
-        {/* Timer bar */}
-        <div className="w-full h-2 bg-red-100">
-          <div
-            className="h-full bg-red-500 transition-all duration-1000 ease-linear"
-            style={{ width: `${timerPct}%` }}
-          />
-        </div>
+      {/* Pulsing border frame */}
+      <motion.div
+        animate={{ borderColor: ['rgba(147,0,10,0.4)', 'rgba(147,0,10,0.8)', 'rgba(147,0,10,0.4)'] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        className="fixed inset-0 z-40 border-4 pointer-events-none"
+      />
 
-        <div className="p-6 space-y-4">
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0, y: 30 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.85, opacity: 0, y: 30 }}
+          transition={snappy}
+          className="relative w-full max-w-lg bg-[#190047] border-4 border-black rounded-2xl shadow-[12px_12px_0px_#000000] overflow-hidden"
+        >
+          {/* Timer bar */}
+          <div className="w-full h-2 bg-[#270067]">
+            <motion.div
+              animate={{ width: `${timerPct}%` }}
+              transition={{ duration: 1, ease: 'linear' }}
+              className={`h-full ${isUrgent ? 'bg-[#93000a]' : 'bg-[#ff897d]'}`}
+            />
+          </div>
+
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <motion.div
+            initial={{ x: -40, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ ...snappy, delay: 0.1 }}
+            className="flex items-center justify-between px-5 py-3 bg-[#93000a] border-b-4 border-black"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-red-100 border border-red-300 flex items-center justify-center text-2xl">🚨</div>
+              <motion.span
+                animate={{ rotate: [0, -12, 12, -6, 0] }}
+                transition={{ delay: 0.2, duration: 0.5, ease: 'easeInOut' }}
+                className="text-2xl"
+              >🚨</motion.span>
               <div>
-                <h2 className="text-xl font-extrabold text-red-700 uppercase font-mono-tech">Sabotase Aktif!</h2>
-                <p className="text-red-500 text-xs mt-0.5 font-medium">
+                <span className="font-rubik italic text-[#ffdad6] text-xl font-bold leading-none">SABOTASE AKTIF!</span>
+                <p className="font-mono text-[#ffb4ab] text-[10px] mt-0.5">
                   {sabotage.targetWargaName
                     ? `${sabotage.targetWargaName} sedang menyelamatkan situasi...`
                     : 'Warga terpilih sedang menjawab soal penyelamatan'}
                 </p>
               </div>
             </div>
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${
-              isUrgent ? 'border-red-400 bg-red-50 animate-pulse' : 'border-red-200 bg-red-50'
-            }`}>
-              <Timer size={15} className="text-red-500" />
-              <span className="text-2xl font-bold font-mono-tech text-red-700">{sabotage.timer}s</span>
-            </div>
+            <motion.div
+              animate={isUrgent ? { scale: [1, 1.15, 1] } : {}}
+              transition={isUrgent ? { duration: 0.6, repeat: Infinity } : {}}
+              className={`flex items-center gap-2 px-3 py-2 border-4 border-black ${
+                isUrgent ? 'bg-[#ffdad6]' : 'bg-[#270067]'
+              }`}
+            >
+              <Timer size={15} className={isUrgent ? 'text-[#93000a]' : 'text-[#ffc312]'} />
+              <span className={`font-mono text-lg font-bold ${isUrgent ? 'text-[#93000a]' : 'text-[#ffc312]'}`}>
+                {sabotage.timer}s
+              </span>
+            </motion.div>
+          </motion.div>
+
+          {/* Content per role */}
+          <div className="p-5">
+            {role === 'provokator' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={snappy}
+                className="py-5 bg-[#270067] border-4 border-black text-center space-y-3 p-4"
+              >
+                <motion.span
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="text-4xl block"
+                >😈</motion.span>
+                <span className="font-rubik italic text-[#ffb4ab] text-lg font-bold">SABOTASE BERJALAN!</span>
+                <p className="font-mono text-[#d3c5ab] text-sm max-w-sm mx-auto leading-relaxed">
+                  {sabotage.targetWargaName
+                    ? `${sabotage.targetWargaName} sedang berjuang menjawab soal penyelamatan.`
+                    : 'Warga terpilih sedang berjuang menyelamatkan situasi.'}
+                  {' '}Jika gagal sebelum waktu habis, Provokator menang!
+                </p>
+                <span className="inline-block px-3 py-1.5 bg-[#93000a] border-2 border-black text-xs text-[#ffdad6] font-bold font-mono">
+                  SISA WAKTU: {sabotage.timer} DETIK
+                </span>
+              </motion.div>
+            )}
+
+            {role === 'warga' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={snappy}
+                className="py-5 bg-[#270067] border-4 border-[#4f4632] text-center space-y-3 p-4"
+              >
+                <motion.span
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="text-4xl block"
+                >🔒</motion.span>
+                <span className="font-rubik italic text-[#e9ddff] text-lg font-bold">TUGAS ANDA TERKUNCI</span>
+                <p className="font-mono text-[#d3c5ab] text-sm max-w-sm mx-auto leading-relaxed">
+                  {sabotage.targetWargaName
+                    ? <><strong className="text-[#41e5b3]">{sabotage.targetWargaName}</strong> sedang menyelamatkan kelas. Tunggu hingga sabotase diatasi!</>
+                    : 'Seorang Warga sedang menyelamatkan kelas. Tunggu hingga sabotase diatasi!'
+                  }
+                </p>
+              </motion.div>
+            )}
+
+            {role === 'guru' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={snappy}
+                className="py-5 bg-[#270067] border-4 border-[#4f4632] text-center space-y-3 p-4"
+              >
+                <span className="font-rubik italic text-[#41e5b3] text-lg font-bold">🛡️ GURU MEMANTAU SABOTASE</span>
+                <p className="font-mono text-[#d3c5ab] text-sm max-w-md mx-auto leading-relaxed">
+                  {sabotage.targetWargaName
+                    ? <><strong className="text-[#ffc312]">{sabotage.targetWargaName}</strong> sedang menjawab soal penyelamatan.</>
+                    : 'Warga terpilih sedang menjawab soal penyelamatan.'
+                  }
+                </p>
+              </motion.div>
+            )}
           </div>
-
-          {/* Konten per role */}
-          {role === 'provokator' && (
-            <div className="py-5 bg-red-50 border border-red-200 rounded-xl text-center space-y-3">
-              <div className="text-4xl">😈</div>
-              <h3 className="text-lg font-bold text-red-700">Sabotase Berjalan!</h3>
-              <p className="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-                {sabotage.targetWargaName
-                  ? `${sabotage.targetWargaName} sedang berjuang menjawab soal penyelamatan.`
-                  : 'Warga terpilih sedang berjuang menyelamatkan situasi.'}
-                {' '}Jika gagal sebelum waktu habis, Provokator menang!
-              </p>
-              <div className="inline-block px-3 py-1.5 bg-red-100 border border-red-300 rounded-lg text-xs text-red-700 font-semibold">
-                Sisa Waktu: {sabotage.timer} detik
-              </div>
-            </div>
-          )}
-
-          {role === 'warga' && (
-            <div className="py-5 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-3">
-              <div className="text-4xl">🔒</div>
-              <h3 className="text-lg font-bold text-slate-700">Tugas Anda Terkunci</h3>
-              <p className="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-                {sabotage.targetWargaName
-                  ? <><strong className="text-slate-700">{sabotage.targetWargaName}</strong> sedang menyelamatkan kelas. Tunggu hingga sabotase diatasi!</>
-                  : 'Seorang Warga sedang menyelamatkan kelas. Tunggu hingga sabotase diatasi!'
-                }
-              </p>
-            </div>
-          )}
-
-          {role === 'guru' && (
-            <div className="py-5 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-3">
-              <h3 className="text-lg font-bold text-slate-700">🛡️ Guru Memantau Sabotase</h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-                {sabotage.targetWargaName
-                  ? <><strong>{sabotage.targetWargaName}</strong> sedang menjawab soal penyelamatan.</>
-                  : 'Warga terpilih sedang menjawab soal penyelamatan.'
-                }
-              </p>
-            </div>
-          )}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </>
   );
 }

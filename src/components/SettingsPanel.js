@@ -14,7 +14,7 @@ export default function SettingsPanel({ socket, currentSettings = {}, playerCoun
     topicDebateTimer: 120,
     gameTimer:        300,
     provokatorCount:  'auto',
-    maxPlayers:       10,
+
     quizRatio:        0.4,
     minigameEnabled:  true,
     minTaskDuration:  8,
@@ -187,16 +187,6 @@ export default function SettingsPanel({ socket, currentSettings = {}, playerCoun
               ))}
             </div>
           </div>
-
-          <SettingSlider
-            icon={<Users size={15} className="text-blue-600" />}
-            label="Kapasitas Room"
-            description="Jumlah maksimal pemain"
-            value={settings.maxPlayers}
-            min={3} max={10} step={1} unit="pemain"
-            accentColor="#2563EB"
-            onChange={v => handleChange('maxPlayers', v)}
-          />
 
           {/* Info note */}
           <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl">

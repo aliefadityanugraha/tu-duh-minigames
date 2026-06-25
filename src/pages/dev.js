@@ -17,6 +17,7 @@ import LoginForm from '../components/lobby/LoginForm';
 import WaitingRoom from '../components/lobby/WaitingRoom';
 import TaskContainer from '../components/panels/TaskContainer';
 import { MINIGAME_REGISTRY } from '../components/minigames';
+import TebakRumahIbadah from '../components/minigames/TebakRumahIbadah';
 import HubungkanKebaikan from '../components/minigames/HubungkanKebaikan';
 import DekripsiPesan from '../components/minigames/DekripsiPesan';
 import UrutanMufakat from '../components/minigames/UrutanMufakat';
@@ -42,7 +43,7 @@ const MOCK_SETTINGS = {
   sabotageTimer: 40,
   duelTimer: 20,
   debateTimer: 90,
-  maxPlayers: 10,
+
   quizRatio: 0.6,
   minigameEnabled: true,
   minTaskDuration: 15,
@@ -117,10 +118,13 @@ const SCREENS = [
   { id: 'quiz-answered',  group: 'Task',    label: 'Quiz — Correct Feedback' },
   { id: 'quiz-wrong',     group: 'Task',    label: 'Quiz — Wrong Feedback' },
   { id: 'quiz-timer-3s',  group: 'Task',    label: 'Quiz — Timer 3s' },
-  { id: 'minigame-kebaikan', group: 'Task', label: 'Minigame — Hubungkan Kebaikan' },
+  { id: 'minigame-ibadah',   group: 'Task',     label: 'Minigame — Tebak Rumah Ibadah' },
+  { id: 'minigame-kebaikan', group: 'Task',     label: 'Minigame — Hubungkan Kebaikan' },
   { id: 'minigame-dekripsi', group: 'Task', label: 'Minigame — Dekripsi Pesan' },
   { id: 'minigame-urutan',   group: 'Task', label: 'Minigame — Urutan Mufakat' },
   { id: 'minigame-timbangan', group: 'Task', label: 'Minigame — Timbangan Keadilan' },
+  { id: 'mg-ibadah-full',     group: 'Minigame', label: '🕌 Tebak Rumah Ibadah — Full' },
+  { id: 'mg-ibadah-compact',  group: 'Minigame', label: '🕌 Tebak Rumah Ibadah — Compact' },
   { id: 'mg-kebaikan-full',   group: 'Minigame', label: '🧩 Hubungkan Kebaikan — Full' },
   { id: 'mg-kebaikan-compact', group: 'Minigame', label: '🧩 Hubungkan Kebaikan — Compact' },
   { id: 'mg-dekripsi-full',  group: 'Minigame', label: '📝 Dekripsi Pesan — Full' },
@@ -306,6 +310,12 @@ export default function DevMode() {
     case 'quiz-timer-3s':
       currentTask = { type: 'quiz', sessionId: 'dev-q1', timer: 3, data: MOCK_QUIZ_DATA };
       feedback = null; isAnswered = false; selectedOption = null; taskError = null; taskTimer = 3;
+      room = buildRoom(); player = MOCK_PLAYERS[0]; roleInfo = { role: 'warga', isGuru: false };
+      break;
+
+    case 'minigame-ibadah':
+      currentTask = { type: 'tebak-ibadah', sessionId: 'dev-mg0', timer: 15, data: { sila: 1, label: 'Tebak Rumah Ibadah' } };
+      feedback = null; isAnswered = false; selectedOption = null; taskError = null; taskTimer = 15;
       room = buildRoom(); player = MOCK_PLAYERS[0]; roleInfo = { role: 'warga', isGuru: false };
       break;
 
@@ -552,6 +562,10 @@ export default function DevMode() {
         );
 
       // ── Standalone Minigames ──
+      case 'mg-ibadah-full':
+        return <MinigameStandalone component={TebakRumahIbadah} compact={false} label="Tebak Rumah Ibadah (Sila #1)" />;
+      case 'mg-ibadah-compact':
+        return <MinigameStandalone component={TebakRumahIbadah} compact={true} label="Tebak Rumah Ibadah (Sila #1)" />;
       case 'mg-kebaikan-full':
         return <MinigameStandalone component={HubungkanKebaikan} compact={false} label="Hubungkan Kebaikan (Sila #2)" />;
       case 'mg-kebaikan-compact':

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { AlertTriangle, Timer } from 'lucide-react';
+
+const snappy = { type: 'spring', stiffness: 500, damping: 30 };
+const punchy = { type: 'spring', stiffness: 600, damping: 20 };
 
 /**
  * Overlay khusus untuk Warga yang terpilih sebagai target rescue sabotase.
@@ -9,7 +13,6 @@ export default function SabotageRescueOverlay({ sabotageRescue, maxTimer = 40, o
   const [selected, setSelected]     = useState(null);
   const [submitted, setSubmitted]   = useState(false);
 
-  // Reset saat soal berubah
   useEffect(() => {
     setSelected(null);
     setSubmitted(false);
@@ -29,82 +32,140 @@ export default function SabotageRescueOverlay({ sabotageRescue, maxTimer = 40, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-red-900/30 backdrop-blur-sm">
-      <div className="absolute inset-0 border-4 border-red-400/40 animate-pulse pointer-events-none" />
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+      />
 
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-flat-lg border-2 border-red-300 overflow-hidden animate-pulse-glow-red">
-        {/* Timer bar */}
-        <div className="w-full h-2 bg-red-100">
-          <div
-            className="h-full bg-red-500 transition-all duration-1000 ease-linear"
-            style={{ width: `${timerPct}%` }}
-          />
-        </div>
+      {/* Pulsing danger border */}
+      <motion.div
+        animate={{ borderColor: ['rgba(147,0,10,0.4)', 'rgba(147,0,10,0.8)', 'rgba(147,0,10,0.4)'] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        className="fixed inset-0 z-41 border-4 pointer-events-none"
+      />
 
-        <div className="p-6 space-y-5">
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0, y: 30 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.85, opacity: 0, y: 30 }}
+          transition={snappy}
+          className="relative w-full max-w-xl bg-[#190047] border-4 border-black rounded-2xl shadow-[12px_12px_0px_#000000] overflow-hidden"
+        >
+          {/* Timer bar */}
+          <div className="w-full h-2 bg-[#270067]">
+            <motion.div
+              animate={{ width: `${timerPct}%` }}
+              transition={{ duration: 1, ease: 'linear' }}
+              className={`h-full ${isUrgent ? 'bg-[#93000a]' : 'bg-[#ff897d]'}`}
+            />
+          </div>
+
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-red-100 pb-4">
+          <motion.div
+            initial={{ x: -40, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ ...snappy, delay: 0.1 }}
+            className="flex items-center justify-between px-5 py-3 bg-[#93000a] border-b-4 border-black"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-red-100 border border-red-300 flex items-center justify-center text-2xl">🆘</div>
+              <motion.span
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                className="text-2xl"
+              >🆘</motion.span>
               <div>
-                <h2 className="text-xl font-extrabold text-red-700 uppercase font-mono-tech">Kamu Dipilih!</h2>
-                <p className="text-red-500 text-xs mt-0.5 font-medium">
+                <span className="font-rubik italic text-[#ffdad6] text-xl font-bold leading-none">KAMU DIPILIH!</span>
+                <p className="font-mono text-[#ffb4ab] text-[10px] mt-0.5">
                   Selamatkan kelas dari sabotase Provokator!
                 </p>
               </div>
             </div>
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${
-              isUrgent ? 'border-red-400 bg-red-50 animate-pulse' : 'border-red-200 bg-red-50'
-            }`}>
-              <Timer size={15} className="text-red-500" />
-              <span className="text-2xl font-bold font-mono-tech text-red-700">{timer}s</span>
+            <motion.div
+              animate={isUrgent ? { scale: [1, 1.15, 1] } : {}}
+              transition={isUrgent ? { duration: 0.6, repeat: Infinity } : {}}
+              className={`flex items-center gap-2 px-3 py-2 border-4 border-black ${
+                isUrgent ? 'bg-[#ffdad6]' : 'bg-[#270067]'
+              }`}
+            >
+              <Timer size={15} className={isUrgent ? 'text-[#93000a]' : 'text-[#ff897d]'} />
+              <span className={`font-mono text-lg font-bold ${isUrgent ? 'text-[#93000a]' : 'text-[#ff897d]'}`}>
+                {timer}s
+              </span>
+            </motion.div>
+          </motion.div>
+
+          {/* Body */}
+          <div className="p-5 space-y-4">
+            {/* Question */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...snappy, delay: 0.15 }}
+              className="p-4 bg-[#270067] border-4 border-black"
+            >
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#93000a] text-[#ffdad6] border-2 border-black text-[10px] font-bold tracking-wider uppercase mb-2">
+                <AlertTriangle size={10} /> SOAL PENYELAMATAN
+              </span>
+              <h3 className="text-base font-semibold leading-relaxed text-[#e9ddff] mt-1">{question.question}</h3>
+            </motion.div>
+
+            {/* Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              {question.options.map((opt, idx) => (
+                <motion.button
+                  key={idx}
+                  onClick={() => !submitted && setSelected(idx)}
+                  disabled={submitted}
+                  whileHover={!submitted ? { scale: 1.03 } : {}}
+                  whileTap={!submitted ? { scale: 0.96 } : {}}
+                  transition={punchy}
+                  className={`p-3.5 border-4 text-left text-sm flex items-start gap-3 ${
+                    selected === idx
+                      ? 'bg-[#93000a] border-[#ffdad6] text-[#ffdad6] font-semibold shadow-[4px_4px_0px_#000]'
+                      : submitted
+                      ? 'bg-[#13003a] border-[#4f4632] text-[#9c8f78] cursor-not-allowed'
+                      : 'bg-[#270067] border-black text-[#e9ddff] hover:bg-[#330081] shadow-[3px_3px_0px_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]'
+                  }`}
+                >
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-[#190047] border-2 border-black text-xs font-semibold font-mono flex-shrink-0"
+                    style={{ color: selected === idx ? '#ffc312' : '#d3c5ab' }}
+                  >
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <span className="flex-1">{opt}</span>
+                </motion.button>
+              ))}
             </div>
-          </div>
 
-          {/* Soal */}
-          <div className="p-4 bg-red-50 rounded-xl border border-red-200">
-            <span className="inline-block px-2.5 py-0.5 bg-red-100 text-red-700 rounded-md text-[10px] font-bold tracking-wider uppercase mb-2 border border-red-300">
-              🆘 Soal Penyelamatan
-            </span>
-            <h3 className="text-base font-semibold leading-relaxed text-slate-800">{question.question}</h3>
+            {/* Submit */}
+            <motion.button
+              onClick={handleSubmit}
+              disabled={selected === null || submitted}
+              whileHover={selected !== null && !submitted ? { scale: 1.02 } : {}}
+              whileTap={selected !== null && !submitted ? { scale: 0.96 } : {}}
+              transition={punchy}
+              className={`w-full py-3.5 border-4 font-bold text-sm flex items-center justify-center gap-2 ${
+                selected !== null && !submitted
+                  ? 'bg-[#ffc312] text-[#3f2e00] border-black shadow-[4px_4px_0px_#000] cursor-pointer'
+                  : 'bg-[#13003a] text-[#9c8f78] border-[#4f4632] cursor-not-allowed'
+              }`}
+            >
+              {submitted ? (
+                <><div className="w-4 h-4 border-2 border-[#ffc312] border-t-transparent rounded-full animate-spin" /> Mengirim...</>
+              ) : (
+                '🆘 KIRIM JAWABAN PENYELAMATAN!'
+              )}
+            </motion.button>
           </div>
-
-          {/* Opsi */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-            {question.options.map((opt, idx) => (
-              <button
-                key={idx}
-                onClick={() => !submitted && setSelected(idx)}
-                disabled={submitted}
-                className={`p-3.5 rounded-xl border text-left text-sm transition-all active:scale-[0.98] ${
-                  selected === idx
-                    ? 'bg-red-50 border-red-400 text-red-800 font-semibold'
-                    : submitted
-                    ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-                    : 'bg-white border-slate-200 text-slate-700 hover:border-red-300 hover:bg-red-50'
-                }`}
-              >
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-slate-100 text-xs mr-3 font-semibold font-mono border border-slate-200">
-                  {String.fromCharCode(65 + idx)}
-                </span>
-                {opt}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={selected === null || submitted}
-            className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all ${
-              selected !== null && !submitted
-                ? 'bg-red-600 text-white hover:bg-red-700 active:scale-[0.99]'
-                : 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
-            }`}
-          >
-            {submitted ? '⏳ Mengirim...' : 'Kirim Jawaban Penyelamatan!'}
-          </button>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </>
   );
 }

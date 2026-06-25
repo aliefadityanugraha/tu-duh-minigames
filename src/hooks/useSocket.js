@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { io } from 'socket.io-client';
+import { INITIAL_SKINS } from '../components/lobby/WaitingRoom';
 
 const SocketContext = createContext(null);
 
@@ -35,9 +36,29 @@ export const SocketProvider = ({ children }) => {
   // State presentasi (notifikasi ke pemain terpilih)
   const [presentationNotif, setPresentationNotif] = useState(null);
 
+  const [skinList, setSkinList] = useState(INITIAL_SKINS);
+  
+  // Sinkronisasi skin list dari server
+  useEffect(() => {
+    if (socket) {
+      socket.on('skin-list-updated', (newList) => {
+        setSkinList(newList);
+      });
+      // Ambil initial list jika perlu
+      socket.emit('get-skin-list');
+    }
+  }, [socket]);
+
   // State audio
   const [audio, setAudio] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef(null);
+  const isMutedRef = useRef(false);
+
+  // Keep isMutedRef in sync with isMuted state
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
 
   // State debat topik
   const [topicDebateNotif, setTopicDebateNotif] = useState(null);
@@ -171,8 +192,9 @@ export const SocketProvider = ({ children }) => {
       // Play backsound on game start
       const newAudio = new Audio('/sounds/bg-game.mp3');
       newAudio.loop = true;
-      newAudio.muted = isMuted;
+      newAudio.muted = isMutedRef.current;
       newAudio.play().catch(e => console.log('Autoplay blocked:', e));
+      audioRef.current = newAudio;
       setAudio(newAudio);
 
       router.push('/game');
@@ -333,10 +355,12 @@ export const SocketProvider = ({ children }) => {
     });
     s.on('game-restarted', () => {
       addLog('🔄 Game di-restart ke lobi.');
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
       }
+      setAudio(null);
       // Jangan reset roleInfo di sini — biarkan room-updated yang sync
       setCurrentTask(null); setCurrentQuestion(null); setFeedback(null);
       setIsAnswered(false); setSelectedOption(null);
@@ -351,7 +375,14 @@ export const SocketProvider = ({ children }) => {
 
     s.on('player-left', ({ name }) => addLog(`🚪 ${name} terputus dari room.`));
 
-    return () => s.disconnect();
+    return () => {
+      s.disconnect();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   // Countdown cooldown duel di sisi client (sinkronisasi dengan server)
@@ -413,11 +444,21 @@ export const SocketProvider = ({ children }) => {
     if (socket) socket.emit('change-skin', { skinId });
   };
 
+  const uploadCustomSkin = (skinUrl) => {
+    if (socket) socket.emit('add-custom-skin', { skinUrl });
+  };
+
   const leaveRoom = () => {
     if (socket) {
       socket.emit('leave-room');
       socket.disconnect();
     }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    setAudio(null);
     _clearSession();
     setRoom(null);
     setPlayer(null);
@@ -448,7 +489,9 @@ export const SocketProvider = ({ children }) => {
       taskTimer,
       // audio
       isMuted, toggleMute: () => {
-        if (audio) audio.muted = !audio.muted;
+        if (audioRef.current) {
+          audioRef.current.muted = !audioRef.current.muted;
+        }
         setIsMuted(prev => !prev);
       },
       // sabotase
@@ -465,6 +508,8 @@ export const SocketProvider = ({ children }) => {
       sendDebateChat,
       // skin
       changeSkin,
+      uploadCustomSkin,
+      skinList,
     }}>
       {children}
     </SocketContext.Provider>

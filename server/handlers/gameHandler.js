@@ -13,12 +13,13 @@
  *  - toggle-broadcast-stats
  */
 const { rooms, getSanitizedRoom } = require('../lib/roomHelpers');
-const { DEFAULT_SETTINGS, EMPTY_GAME_STATS } = require('../data/defaults');
+const { DEFAULT_SETTINGS, DEFAULT_SKINS, EMPTY_GAME_STATS } = require('../data/defaults');
 const { checkWinConditions, tallyVotes } = require('../lib/gameLogic');
 const { generateMathQuiz } = require('../lib/mathQuiz');
 const { pickVariedMinigame, pickVariedQuestion, shouldDeliverQuiz, isMinigameType } = require('../data/minigames');
 
 const DUEL_COOLDOWN_MS = 30_000; // 30 detik cooldown setelah duel
+const SABOTAGE_COOLDOWN_MS = 30_000; // 30 detik cooldown sabotase
 const DUEL_WRONG_ANSWER_COOLDOWN_MS = 10_000; // 10 detik cooldown provokator salah jawab di duel
 
 function registerGameHandlers(socket, io) {
@@ -202,6 +203,20 @@ function registerGameHandlers(socket, io) {
     const player = room.players.find(p => p.id === socket.id);
     if (!player || player.role !== 'provokator' || player.isDead) return;
 
+    // Cek ada Warga hidup & online yang bisa disabotase
+    const availableWarga = room.players.filter(p => !p.isGuru && !p.isDead && p.role === 'warga' && p.isOnline !== false);
+    if (availableWarga.length === 0) {
+      socket.emit('game-error', 'Tidak ada Warga hidup untuk disabotase!');
+      return;
+    }
+
+    // Cek cooldown sabotase
+    if (player.sabotageCooldownEndsAt && Date.now() < player.sabotageCooldownEndsAt) {
+      const remaining = Math.ceil((player.sabotageCooldownEndsAt - Date.now()) / 1000);
+      socket.emit('sabotage-cooldown', { remaining, message: `Cooldown sabotase: ${remaining} detik lagi.` });
+      return;
+    }
+
     const mathQ = generateMathQuiz();
     const s     = room.settings || DEFAULT_SETTINGS;
 
@@ -324,7 +339,15 @@ function registerGameHandlers(socket, io) {
 
     const chosen = eligible[Math.floor(Math.random() * eligible.length)];
 
-    room.presentation = { active: true, playerId: chosen.id, playerName: chosen.name };
+    const s = room.settings || DEFAULT_SETTINGS;
+    const presentationDuration = s.presentationTimer ?? 120;
+    room.presentation = {
+      active:    true,
+      playerId:  chosen.id,
+      playerName: chosen.name,
+      timer:     presentationDuration,
+      maxTimer:  presentationDuration,
+    };
     room.gameStats.presentationsHeld = (room.gameStats.presentationsHeld || 0) + 1;
     room.gameStats.eventLog.push({ time: Date.now(), type: 'presentation', message: `${chosen.name} dipilih untuk presentasi!` });
 
@@ -377,7 +400,7 @@ function registerGameHandlers(socket, io) {
       room.debate.votes[voter.id] = targetPlayerId;
     }
 
-    const living = room.players.filter(p => !p.isDead && !p.isGuru);
+    const living = room.players.filter(p => !p.isDead && !p.isGuru && p.isOnline !== false);
     if (Object.keys(room.debate.votes).length >= living.length) {
       tallyVotes(code, io);
     } else {
@@ -396,6 +419,14 @@ function registerGameHandlers(socket, io) {
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
 
+    // Rate limit: max 1 pesan per detik
+    const now = Date.now();
+    if (player.lastChatAt && (now - player.lastChatAt) < 1000) {
+      socket.emit('game-error', 'Terlalu cepat! Tunggu sebentar sebelum kirim pesan lagi.');
+      return;
+    }
+    player.lastChatAt = now;
+
     // Sanitize & limit message length
     const sanitized = (String(message || '')).trim().slice(0, 200);
     if (!sanitized) return;
@@ -411,6 +442,41 @@ function registerGameHandlers(socket, io) {
     io.to(code).emit('room-updated', getSanitizedRoom(code));
   });
 
+  // GET SKIN LIST
+  socket.on('get-skin-list', () => {
+    const code = socket.roomCode;
+    const room = rooms[code];
+    if (!room) return;
+    socket.emit('skin-list-updated', room.skins || DEFAULT_SKINS);
+  });
+
+  // ADD CUSTOM SKIN
+  socket.on('add-custom-skin', ({ skinUrl }) => {
+    const code = socket.roomCode;
+    const room = rooms[code];
+    if (!room) return;
+
+    if (!room.skins) room.skins = [...DEFAULT_SKINS];
+    const newSkinId = room.skins.length;
+    const newSkin = {
+      id: newSkinId,
+      name: 'Kustom',
+      img: skinUrl,
+      bg: '#ffffff',
+      text: '#000000',
+      border: '#000000'
+    };
+    room.skins.push(newSkin);
+    io.to(code).emit('skin-list-updated', room.skins);
+
+    // Otomatis ganti skin pemain ke skin yang baru diunggah
+    const player = room.players.find(p => p.id === socket.id);
+    if (player && room.state === 'lobby') {
+      player.skinId = newSkinId;
+      io.to(code).emit('room-updated', getSanitizedRoom(code));
+    }
+  });
+
   // ────────────────────────────────────────────
   // GANTI SKIN (hanya di lobby)
   // ────────────────────────────────────────────
@@ -423,7 +489,8 @@ function registerGameHandlers(socket, io) {
     if (!player) return;
 
     const id = Number(skinId);
-    if (isNaN(id) || id < 0 || id > 7) return; // validasi range
+    const maxSkinId = (room.skins || DEFAULT_SKINS).length - 1;
+    if (isNaN(id) || id < 0 || id > maxSkinId) return; // validasi range
 
     player.skinId = id;
     io.to(code).emit('room-updated', getSanitizedRoom(code));
@@ -734,6 +801,7 @@ function _handleDuelAnswer(socket, io, room, player, questionId, isCorrect, code
   // Provokator salah jawab → cooldown 10 detik untuk duel berikutnya
   if (isProv) {
     player.duelCooldownEndsAt = Date.now() + DUEL_WRONG_ANSWER_COOLDOWN_MS;
+    player.sabotageCooldownEndsAt = Date.now() + SABOTAGE_COOLDOWN_MS;
   }
 
   socket.emit('duel-answer-wrong', { message: 'Jawaban salah! Waktu duel berkurang 5 detik. Soal diganti...' });
@@ -765,7 +833,10 @@ function _resolveDuel(io, room, code, winnerId, loserId, reason) {
 
   // Set cooldown pada Provokator (siapapun yang menang/kalah)
   const provPlayer = room.players.find(p => p.id === provId);
-  if (provPlayer) provPlayer.duelCooldownEndsAt = Date.now() + DUEL_COOLDOWN_MS;
+  if (provPlayer) {
+    provPlayer.duelCooldownEndsAt = Date.now() + DUEL_COOLDOWN_MS;
+    provPlayer.sabotageCooldownEndsAt = Date.now() + SABOTAGE_COOLDOWN_MS;
+  }
 
   room.duel = null;
 
@@ -778,23 +849,23 @@ function _resolveDuel(io, room, code, winnerId, loserId, reason) {
   io.to(provId).emit('duel-resolved', resolvedPayload);
   io.to(citId).emit('duel-resolved', resolvedPayload);
 
-  checkWinConditions(code, io);
-
-  // Jika game masih lanjut dan yang kalah adalah Warga, picu Emergency Meeting
+  // Jika game masih lanjut dan yang kalah adalah Warga, picu Emergency Meeting DULU
+  // sebelum checkWinConditions agar state tidak menjadi 'ended' + 'debate' aktif secara bersamaan
   if (room.state === 'playing' && loser && loser.role === 'warga') {
     const s = room.settings || DEFAULT_SETTINGS;
-    room.debate = { 
-      active: true, 
-      timer: s.debateTimer ?? 90, 
-      reason: 'emergency_meeting', 
-      votes: {}, 
-      votedOut: null, 
-      chat: [] 
+    room.debate = {
+      active: true,
+      timer: s.debateTimer ?? 90,
+      reason: 'emergency_meeting',
+      votes: {}, votedOut: null, chat: []
     };
     room.gameStats.debatesHeld++;
     room.gameStats.eventLog.push({ time: Date.now(), type: 'debate', message: `Emergency Meeting dipicu karena ${loser.name} tereliminasi!` });
     io.to(code).emit('debate-triggered', { reason: `EMERGENCY MEETING! Warga ${loser.name} telah tereliminasi. Segera diskusikan pelakunya!` });
   }
+
+  // Cek kondisi menang SETELAH emergency meeting dibuat agar state room konsisten
+  checkWinConditions(code, io);
 
   io.to(code).emit('room-updated', getSanitizedRoom(code));
 }

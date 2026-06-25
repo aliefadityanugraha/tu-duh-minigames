@@ -1,11 +1,14 @@
 // Handler: join-room, join-as-spectator, disconnect
 const { rooms, generateRoomCode, getSanitizedRoom } = require('../lib/roomHelpers');
-const { DEFAULT_SETTINGS, EMPTY_GAME_STATS } = require('../data/defaults');
+const { DEFAULT_SETTINGS, DEFAULT_SKINS, EMPTY_GAME_STATS } = require('../data/defaults');
 const { PANCASILA_QUESTIONS } = require('../data/questions');
 const { startRoomTicker, checkWinConditions, tallyVotes } = require('../lib/gameLogic');
 
 // Idle cleanup: hapus room yang sudah tidak ada pemain online selama 10 menit di lobby
 const IDLE_LOBBY_TIMEOUT = 10 * 60 * 1000; // 10 menit
+
+// Map untuk melacak timeout reconnect pemain yang disconnect saat game berlangsung
+const reconnectTimeouts = new Map();
 
 function registerJoinHandlers(socket, io) {
 
@@ -44,8 +47,14 @@ function registerJoinHandlers(socket, io) {
     const existingPlayer = sessionId ? room.players.find(p => p.sessionId === sessionId) : null;
     
     if (existingPlayer) {
-      // Reconnect — pindahkan session task ke socket id baru
+      // Reconnect — batalkan timeout zombie jika ada
       const oldId = existingPlayer.id;
+      if (reconnectTimeouts.has(oldId)) {
+        clearTimeout(reconnectTimeouts.get(oldId));
+        reconnectTimeouts.delete(oldId);
+      }
+
+      // Pindahkan session task ke socket id baru
       if (oldId !== socket.id && room.activeTaskSessions?.[oldId]) {
         room.activeTaskSessions[socket.id] = room.activeTaskSessions[oldId];
         delete room.activeTaskSessions[oldId];
@@ -58,6 +67,7 @@ function registerJoinHandlers(socket, io) {
       socket.join(code);
       socket.roomCode = code;
       
+      socket.emit('skin-list-updated', room.skins || DEFAULT_SKINS);
       io.to(code).emit('room-updated', getSanitizedRoom(code));
       socket.emit('join-success', { roomCode: code, player: existingPlayer });
       
@@ -87,6 +97,7 @@ function registerJoinHandlers(socket, io) {
     socket.roomCode = code;
 
     startRoomTicker(code, io);
+    socket.emit('skin-list-updated', room.skins || DEFAULT_SKINS);
     io.to(code).emit('room-updated', getSanitizedRoom(code));
     socket.emit('join-success', { roomCode: code, player: newPlayer });
   });
@@ -116,6 +127,12 @@ function registerJoinHandlers(socket, io) {
     // Selalu hapus pemain dari room (baik lobby maupun playing)
     room.players.splice(idx, 1);
     room.lastActivity = Date.now();
+
+    // Update tasksRequired jika Warga yang keluar saat game berlangsung
+    if (room.state === 'playing' && leaving.role === 'warga') {
+      const s = room.settings || DEFAULT_SETTINGS;
+      room.tasksRequired = Math.max(room.tasksCompleted, room.tasksRequired - (s.tasksPerPlayer ?? DEFAULT_SETTINGS.tasksPerPlayer));
+    }
 
     if (room.activeTaskSessions?.[socket.id]) {
       delete room.activeTaskSessions[socket.id];
@@ -169,6 +186,33 @@ function registerJoinHandlers(socket, io) {
       if (room.activeTaskSessions?.[socket.id]) {
         delete room.activeTaskSessions[socket.id];
       }
+
+      // Beri waktu 5 menit untuk reconnect; setelahnya hapus otomatis (zombie cleanup)
+      const RECONNECT_TIMEOUT_MS = 5 * 60 * 1000;
+      const timeoutId = setTimeout(() => {
+        const r = rooms[code];
+        if (!r) { reconnectTimeouts.delete(socket.id); return; }
+        const pidx = r.players.findIndex(p => p.id === socket.id && !p.isOnline);
+        if (pidx === -1) { reconnectTimeouts.delete(socket.id); return; }
+
+        const zombie = r.players[pidx];
+        r.players.splice(pidx, 1);
+
+        // Kurangi tasksRequired jika zombie adalah Warga
+        if (r.state === 'playing' && zombie.role === 'warga') {
+          const s = r.settings || DEFAULT_SETTINGS;
+          r.tasksRequired = Math.max(r.tasksCompleted, r.tasksRequired - (s.tasksPerPlayer ?? DEFAULT_SETTINGS.tasksPerPlayer));
+        }
+
+        checkWinConditions(code, io);
+        io.to(code).emit('room-updated', getSanitizedRoom(code));
+        io.to(code).emit('player-left', { name: zombie.name, isOffline: true, reason: 'timeout' });
+        reconnectTimeouts.delete(socket.id);
+        console.log(`[Reconnect] ${zombie.name} tidak reconnect dalam 5 menit, dihapus dari room ${code}.`);
+      }, RECONNECT_TIMEOUT_MS);
+
+      reconnectTimeouts.set(socket.id, timeoutId);
+
       io.to(code).emit('room-updated', getSanitizedRoom(code));
       io.to(code).emit('player-left', { name: leaving.name, isOffline: true });
       return; // Berhenti di sini, jangan di-splice!

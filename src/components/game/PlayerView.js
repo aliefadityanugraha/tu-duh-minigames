@@ -5,13 +5,13 @@ import ProvokateurPanel from '../panels/ProvokateurPanel';
 import GameEndedCard from './GameEndedCard';
 import LiveStatsPanel from '../LiveStatsPanel';
 import TopicDebateBanner from '../overlays/TopicDebateOverlay';
-import { SKINS } from '../lobby/WaitingRoom';
+import { useSocket } from '../../hooks/useSocket';
 
 /**
  * Layout in-game: Mission Book (+ optional Radar Monitor).
  */
 export default function PlayerView({
-  room, player, roleInfo,
+  room, player, roleInfo, skinList,
   currentTask, isAnswered, selectedOption, feedback,
   taskError, minigameRetryKey,
   taskLocked,
@@ -371,7 +371,7 @@ export default function PlayerView({
                     <div className="flex flex-col border-t-4 border-black bg-[#22005c] h-64">
                       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 scrollbar-thin">
                         {studentPlayers.map((p, idx) => {
-                          const skin = SKINS.find(s => s.id === p.skinId) || SKINS[0];
+                          const skin = skinList.find(s => s.id === p.skinId) || skinList[0];
                           const color = skin.bg;
                           const isMe = p.id === player?.id;
                           return (
@@ -389,7 +389,7 @@ export default function PlayerView({
                                   className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-black flex-shrink-0 flex items-center justify-center text-sm ${p.isDead ? 'opacity-40 grayscale' : ''}`}
                                   style={{ backgroundColor: color }}
                                 >
-                                  {skin.emoji}
+                                  <img src={skin.img} alt={skin.name} className="w-full h-full object-contain" />
                                 </div>
                                 <span className="font-bold truncate max-w-[80px] sm:max-w-[100px]">
                                   {p.name} {isMe && '(Anda)'}
@@ -448,7 +448,7 @@ export default function PlayerView({
                       <div className={`flex-1 overflow-y-auto flex flex-col scrollbar-thin ${isMobileLandscape ? 'p-1.5 gap-1.5' : 'p-3 gap-3'
                         }`}>
                         {studentPlayers.map((p, idx) => {
-                          const skin = SKINS.find(s => s.id === p.skinId) || SKINS[0];
+                          const skin = skinList.find(s => s.id === p.skinId) || skinList[0];
                           const color = skin.bg;
                           const isMe = p.id === player?.id;
                           return (
@@ -464,11 +464,11 @@ export default function PlayerView({
                             >
                               <div className="flex items-center gap-1.5 min-w-0">
                                 <div
-                                  className={`rounded-full border border-black flex-shrink-0 flex items-center justify-center text-[10px] sm:text-xs ${isMobileLandscape ? 'w-5 h-5' : 'w-7 h-7 sm:w-8 sm:h-8'
+                                  className={`rounded-full border border-black flex-shrink-0 flex items-center justify-center overflow-hidden text-[10px] sm:text-xs ${isMobileLandscape ? 'w-5 h-5' : 'w-7 h-7 sm:w-8 sm:h-8'
                                     } ${p.isDead ? 'opacity-40 grayscale' : ''}`}
                                   style={{ backgroundColor: color }}
                                 >
-                                  {skin.emoji}
+                                  <img src={skin.img} alt={skin.name} className="w-full h-full object-contain" />
                                 </div>
                                 <span className="font-bold truncate max-w-[75px] sm:max-w-[100px]">
                                   {p.name} {isMe && '(Anda)'}

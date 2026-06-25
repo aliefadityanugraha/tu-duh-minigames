@@ -4,6 +4,16 @@ const http     = require('http');
 const socketIO = require('socket.io');
 const next     = require('next');
 
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Konfigurasi Multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'public/images/characters/custom/'),
+  filename: (req, file, cb) => cb(null, `skin-${Date.now()}${path.extname(file.originalname)}`)
+});
+const upload = multer({ storage });
 const { registerJoinHandlers, startIdleCleanup } = require('./server/handlers/joinHandler');
 const { registerGameHandlers }     = require('./server/handlers/gameHandler');
 const { registerQuestionHandlers } = require('./server/handlers/questionHandler');
@@ -31,6 +41,12 @@ nextApp.prepare().then(() => {
 
     // Izinkan semua origin untuk development
     cors: { origin: '*' },
+  });
+
+  // API Upload Skin Custom
+  app.post('/api/upload-skin', upload.single('skin'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'Tidak ada file diunggah' });
+    res.json({ skinUrl: `/images/characters/custom/${req.file.filename}` });
   });
 
   // Semua request HTTP dilayani oleh Next.js

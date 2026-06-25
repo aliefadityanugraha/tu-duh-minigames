@@ -8,7 +8,9 @@
       "Bash(npm install *)",
       "Bash(rm *)",
       "Bash(mkdir *)",
-      "Skill(among-us-bug-debugging)"
+      "Skill(among-us-bug-debugging)",
+      "Skill(custom-character-skin-sync)",
+      "Bash(file *)"
     ]
   },
   "$version": 4

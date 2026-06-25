@@ -3,14 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, LogOut, Settings, Timer, X } from 'lucide-react';
 import Navbar from '../Navbar';
 import { useSocket } from '../../hooks/useSocket';
+import { CustomSkinUploader } from './CustomSkinUploader';
 
 // ── Spring configs for neo-brutalist style ───────────────────────────────────
 const snappy = { type: 'spring', stiffness: 500, damping: 30 };
 const punchy = { type: 'spring', stiffness: 600, damping: 20 };
 const gentle  = { type: 'spring', stiffness: 120, damping: 14 };
 
-// ── Definisi 8 Skin Karakter ──────────────────────────────────────────────────
-export const SKINS = [
+export const INITIAL_SKINS = [
   { id: 0, name: 'Astronot',  img: '/images/characters/astronot.png', bg: '#ffb4ab', text: '#690005', border: '#ff897d' },
   { id: 1, name: 'Pelajar',   img: '/images/characters/pelajar.png',   bg: '#8fb2ff', text: '#002d70', border: '#5988f8' },
   { id: 2, name: 'Seniman',   img: '/images/characters/seniman.png',   bg: '#cda4ff', text: '#2c005b', border: '#a87aff' },
@@ -21,10 +21,13 @@ export const SKINS = [
   { id: 7, name: 'Guru',      img: '/images/characters/guru.png',      bg: '#ffc312', text: '#3f2e00', border: '#e6aa00' },
 ];
 
+export let SKINS = [...INITIAL_SKINS];
+
 // ── Modal Pilih Skin ──────────────────────────────────────────────────────────
 function SkinModal({ mySkinId, onSelect, onClose }) {
+  const { skinList, uploadCustomSkin } = useSocket();
   const [hoveredId, setHoveredId] = useState(null);
-  const activeSkin = SKINS[mySkinId] ?? SKINS[0];
+  const activeSkin = skinList[mySkinId] ?? skinList[0];
 
   return (
     <>
@@ -105,7 +108,7 @@ function SkinModal({ mySkinId, onSelect, onClose }) {
 
           {/* Grid 4×2 */}
           <div className="grid grid-cols-4 gap-3 p-5">
-            {SKINS.map((skin, i) => {
+            {skinList.map((skin, i) => {
               const isActive  = mySkinId === skin.id;
               const isHovered = hoveredId === skin.id;
               return (
@@ -136,12 +139,6 @@ function SkinModal({ mySkinId, onSelect, onClose }) {
                   className="flex flex-col items-center justify-center gap-1 aspect-square rounded-xl border-4 cursor-pointer select-none overflow-hidden"
                 >
                   <img src={skin.img} alt={skin.name} className="w-full h-full object-contain" />
-                  {/* <span
-                    className="text-[9px] font-mono font-bold leading-none truncate w-full text-center px-0.5"
-                    style={{ color: skin.text }}
-                  >
-                    {skin.name}
-                  </span> */}
                   {isActive && (
                     <motion.span
                       initial={{ opacity: 0, scale: 0.5 }}
@@ -156,6 +153,10 @@ function SkinModal({ mySkinId, onSelect, onClose }) {
                 </motion.button>
               );
             })}
+            <CustomSkinUploader onUpload={(skinUrl) => {
+              uploadCustomSkin(skinUrl);
+              onClose();
+            }} />
           </div>
 
           {/* Footer */}
@@ -227,7 +228,7 @@ function MySkinButton({ mySkin, onClick }) {
 
 // ── Komponen Utama ─────────────────────────────────────────────────────────────
 export default function WaitingRoom({ socket, room: roomProp, player: playerProp, roleInfo }) {
-  const { changeSkin, player: ctxPlayer, room: ctxRoom } = useSocket();
+  const { skinList, changeSkin, player: ctxPlayer, room: ctxRoom } = useSocket();
   const [showSkinModal, setShowSkinModal] = useState(false);
 
   const player = ctxPlayer ?? playerProp;
@@ -236,7 +237,7 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
   const isGuru   = player?.isGuru ?? roleInfo?.isGuru ?? false;
   const isSelf   = (p) => p.id === player?.id;
   const mySkinId = player?.skinId ?? 0;
-  const mySkin   = SKINS[mySkinId] ?? SKINS[0];
+  const mySkin   = skinList[mySkinId] ?? skinList[0];
 
   const currentSettings = room?.settings || {};
   const caseStudy       = currentSettings.caseStudy       || 'anti-hoaks';
@@ -468,7 +469,7 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
           <div className="grid grid-cols-5 gap-2 p-3 overflow-y-auto flex-1">
             {(ctxRoom ?? roomProp).players.map((p, i) => {
               const defaultSkinId = p.isGuru ? 7 : 0;
-              const skin = SKINS[p.skinId ?? defaultSkinId] ?? SKINS[defaultSkinId];
+              const skin = skinList[p.skinId ?? defaultSkinId] ?? skinList[defaultSkinId];
               const self = isSelf(p);
               return (
                 <motion.div

@@ -14,7 +14,7 @@ Pemain bergabung ke dalam sebuah *Room* (Lobi) yang dikontrol oleh seorang **Gur
   - Jumlah Warga tersisa **≤** jumlah Provokator (kondisi parity), **atau**
   - Waktu permainan habis sebelum misi selesai, **atau**
   - Sabotase gagal diatasi tepat waktu.
-- **Guru (Moderator):** *Game Master* dengan akses ke Control Panel — mengawasi pemain, mengatur timer, memicu debat, presentasi acak, dan mengelola bank soal.
+- **Guru (Moderator):** *Game Master* dengan akses ke Control Panel — mengawasi pemain, mengatur timer, memicu debat, presentasi acak, dan mengelola bank soal. Pemain dibatasi maksimal **15 orang** per sesi.
 
 ---
 
@@ -22,7 +22,7 @@ Pemain bergabung ke dalam sebuah *Room* (Lobi) yang dikontrol oleh seorang **Gur
 
 ### 1. 📖 Mission Book (Tugas Warga)
 
-Setiap Warga memiliki *Mission Book* interaktif. Misi bisa berupa:
+Setiap Warga memiliki *Mission Book* interaktif dengan batas waktu **15 detik per misi**. Misi bisa berupa:
 
 | Tipe | Deskripsi |
 |---|---|
@@ -51,10 +51,10 @@ Provokator memicu sabotase dalam **2 fase**:
 
 Provokator menantang satu Warga hidup. Keduanya berebut menjawab soal Pancasila:
 
-- Siapa yang **pertama menjawab benar** memenangkan duel; lawan **tereliminasi**.
+- Siapa yang **pertama menjawab benar** memenangkan duel. Jika Provokator menang, Warga target tereliminasi dan *Emergency Meeting* dipicu. Jika Warga menang, Provokator TIDAK tereliminasi (hanya bisa melalui voting).
 - Jawaban **salah** → waktu duel **berkurang 5 detik** dan soal diganti.
 - Timer habis → duel seri, tidak ada eliminasi.
-- Cooldown 30 detik setelah duel untuk Provokator.
+- Cooldown **15 detik** setelah duel untuk Provokator.
 
 ### 4. 📢 Musyawarah Kelas (Voting)
 

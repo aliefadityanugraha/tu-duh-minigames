@@ -71,8 +71,17 @@ function getSanitizedRoom(roomCode) {
         message:    c.message,
         timestamp:  c.timestamp,
       })),
-      // Hanya kirim daftar ID pemain yang sudah voting (merahasiakan pilihan mereka)
-      votes:              Object.keys(room.debate.votes || {}).reduce((acc, voterId) => { acc[voterId] = true; return acc; }, {}),
+      // voterIds: siapa yang sudah vote (untuk badge "SUDAH VOTE", tidak reveal pilihan)
+      // voteCounts: berapa vote diterima tiap target (untuk badge angka, tetap anonim)
+      votes: (() => {
+        const raw = room.debate.votes || {};
+        const voteCounts = {};
+        const voterIds = Object.keys(raw);
+        Object.values(raw).forEach(targetId => {
+          if (targetId !== 'skip') voteCounts[targetId] = (voteCounts[targetId] || 0) + 1;
+        });
+        return { voterIds, voteCounts };
+      })(),
     } : null,
 
     // Debat topik bebas (terpisah dari voting debate)
@@ -87,6 +96,8 @@ function getSanitizedRoom(roomCode) {
       active:     room.presentation.active,
       playerName: room.presentation.playerName,
       playerId:   room.presentation.playerId,
+      timer:      room.presentation.timer    ?? null,
+      maxTimer:   room.presentation.maxTimer ?? null,
     } : null,
 
     gameStats: room.gameStats || null,

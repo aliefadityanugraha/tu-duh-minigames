@@ -11,14 +11,14 @@ const gentle  = { type: 'spring', stiffness: 120, damping: 14 };
 
 // ── Definisi 8 Skin Karakter ──────────────────────────────────────────────────
 export const SKINS = [
-  { id: 0, name: 'Astronot',  emoji: '🧑‍🚀', bg: '#ffb4ab', text: '#690005', border: '#ff897d' },
-  { id: 1, name: 'Pelajar',   emoji: '📚',   bg: '#8fb2ff', text: '#002d70', border: '#5988f8' },
-  { id: 2, name: 'Seniman',   emoji: '🎨',   bg: '#cda4ff', text: '#2c005b', border: '#a87aff' },
-  { id: 3, name: 'Petani',    emoji: '🌾',   bg: '#5ffcc9', text: '#003829', border: '#00d9a2' },
-  { id: 4, name: 'Dokter',    emoji: '🩺',   bg: '#8ffff3', text: '#003833', border: '#3ae9d8' },
-  { id: 5, name: 'Polisi',    emoji: '👮',   bg: '#ffdf9c', text: '#251a00', border: '#ffc312' },
-  { id: 6, name: 'Musisi',    emoji: '🎵',   bg: '#ffb7d7', text: '#5b002c', border: '#ff6eb4' },
-  { id: 7, name: 'Guru',      emoji: '🏫',   bg: '#ffc312', text: '#3f2e00', border: '#e6aa00' },
+  { id: 0, name: 'Astronot',  img: '/images/characters/astronot.png', bg: '#ffb4ab', text: '#690005', border: '#ff897d' },
+  { id: 1, name: 'Pelajar',   img: '/images/characters/pelajar.png',   bg: '#8fb2ff', text: '#002d70', border: '#5988f8' },
+  { id: 2, name: 'Seniman',   img: '/images/characters/seniman.png',   bg: '#cda4ff', text: '#2c005b', border: '#a87aff' },
+  { id: 3, name: 'Petani',    img: '/images/characters/petani.png',    bg: '#5ffcc9', text: '#003829', border: '#00d9a2' },
+  { id: 4, name: 'Dokter',    img: '/images/characters/dokter.png',    bg: '#8ffff3', text: '#003833', border: '#3ae9d8' },
+  { id: 5, name: 'Polisi',    img: '/images/characters/polisi.png',    bg: '#ffdf9c', text: '#251a00', border: '#ffc312' },
+  { id: 6, name: 'Musisi',    img: '/images/characters/musisi.png',    bg: '#ffb7d7', text: '#5b002c', border: '#ff6eb4' },
+  { id: 7, name: 'Guru',      img: '/images/characters/guru.png',      bg: '#ffc312', text: '#3f2e00', border: '#e6aa00' },
 ];
 
 // ── Modal Pilih Skin ──────────────────────────────────────────────────────────
@@ -85,10 +85,10 @@ function SkinModal({ mySkinId, onSelect, onClose }) {
             <motion.div
               layout
               transition={snappy}
-              className="w-16 h-16 rounded-xl border-4 border-[#ffc312] flex flex-col items-center justify-center shadow-[4px_4px_0px_#000] flex-shrink-0"
+              className="w-16 h-16 rounded-xl border-4 border-[#ffc312] flex flex-col items-center justify-center shadow-[4px_4px_0px_#000] flex-shrink-0 overflow-hidden"
               style={{ backgroundColor: activeSkin.bg }}
             >
-              <span className="text-3xl leading-none">{activeSkin.emoji}</span>
+              <img src={activeSkin.img} alt={activeSkin.name} className="w-full h-full object-contain" />
             </motion.div>
             <div>
               <p className="font-mono text-[#9c8f78] text-[10px] uppercase tracking-wider">Karakter Saat Ini</p>
@@ -133,15 +133,15 @@ function SkinModal({ mySkinId, onSelect, onClose }) {
                         ? '0 0 0 2px ' + skin.border + ', 4px 4px 0px #000'
                         : '3px 3px 0px #000',
                   }}
-                  className="flex flex-col items-center justify-center gap-1 aspect-square rounded-xl border-4 cursor-pointer select-none"
+                  className="flex flex-col items-center justify-center gap-1 aspect-square rounded-xl border-4 cursor-pointer select-none overflow-hidden"
                 >
-                  <span className="text-3xl leading-none">{skin.emoji}</span>
-                  <span
+                  <img src={skin.img} alt={skin.name} className="w-full h-full object-contain" />
+                  {/* <span
                     className="text-[9px] font-mono font-bold leading-none truncate w-full text-center px-0.5"
                     style={{ color: skin.text }}
                   >
                     {skin.name}
-                  </span>
+                  </span> */}
                   {isActive && (
                     <motion.span
                       initial={{ opacity: 0, scale: 0.5 }}
@@ -206,10 +206,10 @@ function MySkinButton({ mySkin, onClick }) {
       <motion.div
         whileHover={{ scale: 1.12 }}
         transition={snappy}
-        className="w-14 h-14 rounded-xl border-4 border-[#ffc312] flex flex-col items-center justify-center flex-shrink-0 shadow-[3px_3px_0px_#000]"
+        className="w-14 h-14 rounded-lg border-4 border-[#ffc312] flex flex-col items-center justify-center flex-shrink-0 shadow-[3px_3px_0px_#000] overflow-hidden"
         style={{ backgroundColor: mySkin.bg }}
       >
-        <span className="text-3xl leading-none">{mySkin.emoji}</span>
+        <img src={mySkin.img} alt={mySkin.name} className="w-full h-full object-contain" />
       </motion.div>
       <div className="flex-1 text-left">
         <p className="font-mono text-[#9c8f78] text-[10px] uppercase tracking-wider">Karakter Saya</p>
@@ -480,7 +480,7 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
                   className="flex flex-col items-center gap-1"
                 >
                   <div
-                    className="aspect-square w-full rounded-xl border-4 flex flex-col items-center justify-center gap-0.5 p-1"
+                    className="aspect-square w-full rounded-xl border-4 flex flex-col items-center justify-center gap-0.5 p-1 overflow-hidden"
                     style={{
                       backgroundColor: skin.bg,
                       color: skin.text,
@@ -488,10 +488,10 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
                       boxShadow: self ? '0 0 0 3px #ffc312, 4px 4px 0px #000' : '4px 4px 0px #000',
                     }}
                   >
-                    <span className="text-2xl leading-none select-none">{skin.emoji}</span>
-                    <span className="text-[7px] font-mono font-bold leading-none mt-0.5 truncate w-full text-center" style={{ color: skin.text, opacity: 0.8 }}>
+                    <img src={skin.img} alt={skin.name} className="w-full transform scale-110 h-full object-contain" />
+                    {/* <span className="text-[7px] font-mono font-bold leading-none mt-0.5 truncate w-full text-center" style={{ color: skin.text, opacity: 0.8 }}>
                       {skin.name}
-                    </span>
+                    </span> */}
                   </div>
                   <div
                     className="text-[9px] font-mono rounded border px-1 py-0.5 text-center truncate w-full"

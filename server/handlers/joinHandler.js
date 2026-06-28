@@ -80,12 +80,12 @@ function registerJoinHandlers(socket, io) {
 
     if (room.state !== 'lobby') { socket.emit('join-error', 'Game sudah dimulai!'); return; }
 
-    const isDuplicate = room.players.some(p => p.name.toLowerCase() === name.toLowerCase());
-    if (isDuplicate) { socket.emit('join-error', `Nama "${name}" sudah terpakai.`); return; }
-
-    // Server-side name validation
+    // Server-side name validation — lakukan trim DULU sebelum cek duplikat
     const sanitized = (String(name || '')).trim().slice(0, 12);
     if (sanitized.length < 2) { socket.emit('join-error', 'Nama harus antara 2–12 karakter.'); return; }
+
+    const isDuplicate = room.players.some(p => p.name.toLowerCase() === sanitized.toLowerCase());
+    if (isDuplicate) { socket.emit('join-error', `Nama "${sanitized}" sudah terpakai.`); return; }
 
     if (room.players.length >= 15) {
       socket.emit('join-error', 'Room sudah penuh.'); return;

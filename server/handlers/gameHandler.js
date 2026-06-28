@@ -16,6 +16,7 @@ const { rooms, getSanitizedRoom } = require('../lib/roomHelpers');
 const { DEFAULT_SETTINGS, DEFAULT_SKINS, EMPTY_GAME_STATS } = require('../data/defaults');
 const { checkWinConditions, tallyVotes } = require('../lib/gameLogic');
 const { generateMathQuiz } = require('../lib/mathQuiz');
+const { shuffleArray } = require('../lib/roomHelpers');
 const { pickVariedMinigame, pickVariedQuestion, shouldDeliverQuiz, isMinigameType } = require('../data/minigames');
 
 const DUEL_COOLDOWN_MS = 30_000; // 30 detik cooldown setelah duel
@@ -58,8 +59,8 @@ function registerGameHandlers(socket, io) {
     });
     room.gameStats.eventLog.push({ time: Date.now(), type: 'game_start', message: 'Permainan dimulai!' });
 
-    // Acak peran
-    const shuffled = [...Array(nonGurus.length).keys()].sort(() => Math.random() - 0.5);
+    // Acak peran (Fisher-Yates)
+    const shuffled = shuffleArray([...Array(nonGurus.length).keys()]);
     nonGurus.forEach((p, idx) => {
       p.isDead              = false;
       p.score               = 0;
@@ -274,7 +275,8 @@ function registerGameHandlers(socket, io) {
       question:    q,
       timer:       duelDuration,
       maxTimer:    duelDuration,
-      answered:    {},
+      round:       0,
+      _processed:  {},
     };
 
     room.gameStats.duelsTriggered++;
@@ -456,12 +458,24 @@ function registerGameHandlers(socket, io) {
     const room = rooms[code];
     if (!room) return;
 
+    // Validasi URL — hanya izinkan http/https dan gambar
+    const url = (String(skinUrl || '')).trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      socket.emit('game-error', 'URL skin tidak valid. Gunakan URL http/https.');
+      return;
+    }
+    // Cegah URL yang terlalu panjang (abuse)
+    if (url.length > 2048) {
+      socket.emit('game-error', 'URL skin terlalu panjang (maks 2048 karakter).');
+      return;
+    }
+
     if (!room.skins) room.skins = [...DEFAULT_SKINS];
     const newSkinId = room.skins.length;
     const newSkin = {
       id: newSkinId,
       name: 'Kustom',
-      img: skinUrl,
+      img: url,
       bg: '#ffffff',
       text: '#000000',
       border: '#000000'
@@ -774,17 +788,17 @@ function _handleSabotageRescue(socket, io, room, player, questionId, isCorrect, 
 }
 
 function _handleDuelAnswer(socket, io, room, player, questionId, isCorrect, code) {
+  if (!room.duel) return;
   const isProv    = player.id === room.duel.provocateur;
   const isCitizen = player.id === room.duel.citizen;
   if (!isProv && !isCitizen) return;
 
-  // Tandai bahwa pemain ini sudah menjawab
-  if (room.duel.answered[player.id] !== undefined) return; // sudah jawab
-  room.duel.answered[player.id] = { isCorrect, timestamp: Date.now() };
-
-  // Cek apakah kedua pemain sudah menjawab
-  const provAnswered    = room.duel.answered[room.duel.provocateur];
-  const citizenAnswered = room.duel.answered[room.duel.citizen];
+  // Cegah double-process dalam round yang sama (race condition)
+  const round = room.duel.round ?? 0;
+  const answerKey = `${player.id}_${round}`;
+  if (room.duel._processed?.[answerKey]) return;
+  if (!room.duel._processed) room.duel._processed = {};
+  room.duel._processed[answerKey] = true;
 
   // Jika salah satu menjawab benar → langsung selesaikan duel
   if (isCorrect) {
@@ -796,7 +810,7 @@ function _handleDuelAnswer(socket, io, room, player, questionId, isCorrect, code
   const newQ = room.questions[Math.floor(Math.random() * room.questions.length)];
   room.duel.question = newQ;
   room.duel.timer = Math.max(0, (room.duel.timer ?? 0) - 5);
-  room.duel.answered = {};
+  room.duel.round = round + 1; // naikkan round agar jawaban pemain lain di round lama tidak diproses ulang
 
   // Provokator salah jawab → cooldown 10 detik untuk duel berikutnya
   if (isProv) {

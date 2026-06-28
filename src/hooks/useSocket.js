@@ -18,7 +18,6 @@ export const SocketProvider = ({ children }) => {
 
   // State task (kuis atau mini-game) & feedback
   const [currentTask, setCurrentTask]         = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState(null); // legacy alias
   const [feedback, setFeedback]                 = useState(null);
   const [isAnswered, setIsAnswered]             = useState(false);
   const [selectedOption, setSelectedOption]     = useState(null);
@@ -88,6 +87,18 @@ export const SocketProvider = ({ children }) => {
     // ── Koneksi / reconnect ──
     s.on('connect', () => {
       console.log('[Socket] Terhubung:', s.id);
+      // Auto re-join setelah reconnect (socket.id baru)
+      if (typeof window === 'undefined') return;
+      const saved = _loadSession();
+      if (saved?.roomCode && saved?.name && saved?.sessionId) {
+        console.log('[Socket] Auto re-join room:', saved.roomCode);
+        s.emit('join-room', {
+          roomCode:  saved.roomCode,
+          name:      saved.name,
+          isGuru:    saved.isGuru ?? false,
+          sessionId: saved.sessionId,
+        });
+      }
     });
 
     s.on('disconnect', (reason) => {
@@ -113,25 +124,6 @@ export const SocketProvider = ({ children }) => {
 
     s.on('reconnect_attempt', () => {
       console.log('[Socket] Mencoba reconnect...');
-    });
-
-    // ── Auto re-join setelah reconnect ──
-    // Saat koneksi putus lalu terhubung lagi, socket.id berubah.
-    // Kita perlu kirim join-room lagi dengan sessionId agar server bisa
-    // mengenali pemain lama dan menyambung kembali ke room yang sama.
-    s.on('connect', () => {
-      // Baca data dari sessionStorage (persisten meski koneksi putus)
-      if (typeof window === 'undefined') return;
-      const saved = _loadSession();
-      if (saved?.roomCode && saved?.name && saved?.sessionId) {
-        console.log('[Socket] Auto re-join room:', saved.roomCode);
-        s.emit('join-room', {
-          roomCode:  saved.roomCode,
-          name:      saved.name,
-          isGuru:    saved.isGuru ?? false,
-          sessionId: saved.sessionId,
-        });
-      }
     });
 
     // Handle jika room sudah dihapus server saat idle / error join
@@ -183,7 +175,7 @@ export const SocketProvider = ({ children }) => {
     // ── Peran ditetapkan ──
     s.on('role-assigned', ({ role, isGuru }) => {
       setRoleInfo({ role, isGuru });
-      setCurrentTask(null); setCurrentQuestion(null);
+      setCurrentTask(null);
       setFeedback(null); setIsAnswered(false); setSelectedOption(null);
       setTaskError(null); setMinigameRetryKey(0);
       setSabotageQuiz(null); setSabotageRescue(null);
@@ -203,8 +195,6 @@ export const SocketProvider = ({ children }) => {
     // ── Task delivery (kuis atau mini-game) ──
     const _applyTaskDelivery = (task) => {
       setCurrentTask(task);
-      if (task.type === 'quiz') setCurrentQuestion(task.data);
-      else setCurrentQuestion(null);
       setFeedback(null);
       setIsAnswered(false);
       setSelectedOption(null);
@@ -254,7 +244,6 @@ export const SocketProvider = ({ children }) => {
     // ── Task timeout (auto-skip after 15s) ──
     s.on('task-timeout', ({ sessionId, message }) => {
       setCurrentTask(null);
-      setCurrentQuestion(null);
       setFeedback(null);
       setIsAnswered(false);
       setSelectedOption(null);
@@ -362,7 +351,7 @@ export const SocketProvider = ({ children }) => {
       }
       setAudio(null);
       // Jangan reset roleInfo di sini — biarkan room-updated yang sync
-      setCurrentTask(null); setCurrentQuestion(null); setFeedback(null);
+      setCurrentTask(null); setFeedback(null);
       setIsAnswered(false); setSelectedOption(null);
       setTaskError(null); setMinigameRetryKey(0);
       setSabotageQuiz(null); setSabotageRescue(null);
@@ -464,7 +453,6 @@ export const SocketProvider = ({ children }) => {
     setPlayer(null);
     setRoleInfo({ role: null, isGuru: false });
     setCurrentTask(null);
-    setCurrentQuestion(null);
     setFeedback(null);
     setIsAnswered(false);
     setSelectedOption(null);
@@ -483,7 +471,7 @@ export const SocketProvider = ({ children }) => {
       error, setError, loading, setLoading,
       logs, joinRoom, startGame, leaveRoom,
       // soal & task
-      currentTask, currentQuestion, feedback, isAnswered, selectedOption,
+      currentTask, feedback, isAnswered, selectedOption,
       setCurrentTask, setSelectedOption, setIsAnswered, setFeedback,
       taskError, setTaskError, minigameRetryKey,
       taskTimer,

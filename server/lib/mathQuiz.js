@@ -4,6 +4,15 @@
  * Soal ini terpisah dari bank soal Pancasila.
  */
 
+function _shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 const OPS = ['+', '-', '*', '/'];
 
 /**
@@ -45,9 +54,8 @@ function generateMathQuiz() {
     if (wrong !== correct && wrong > 0) wrongSet.add(wrong);
   }
 
-  // Acak posisi jawaban benar di antara 4 opsi
-  const allOptions = [correct, ...wrongSet];
-  allOptions.sort(() => Math.random() - 0.5);
+  // Acak posisi jawaban benar di antara 4 opsi (Fisher-Yates)
+  const allOptions = _shuffle([correct, ...wrongSet]);
   const answerIndex = allOptions.indexOf(correct);
 
   return {

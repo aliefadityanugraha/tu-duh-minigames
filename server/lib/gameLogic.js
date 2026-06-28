@@ -37,6 +37,7 @@ function checkWinConditions(roomCode, io) {
 function _endGame(roomCode, io, winner, reason) {
   const room = rooms[roomCode];
   if (!room || room.state === 'ended') return;
+  if (room.tickerInterval) clearInterval(room.tickerInterval);
   room.state      = 'ended';
   room.winner     = winner;
   room.winReason  = reason;   // simpan alasan kemenangan
@@ -159,7 +160,7 @@ function startRoomTicker(roomCode, io) {
           io.to(roomCode).emit('sabotage-cancelled', { reason: 'Provokator gagal menyelesaikan soal kilat! Sabotase dibatalkan.' });
         } else {
           // Fase rescue: Warga gagal → Provokator menang
-          r.sabotage.active = false;
+          r.sabotage = null;
           r.gameStats.sabotagesFailed++;
           r.gameStats.eventLog.push({ time: Date.now(), type: 'sabotage_failed', message: 'Sabotase gagal diatasi! Provokator menang!' });
           _endGame(roomCode, io, 'provokator', 'Sabotase Pancasila gagal diatasi tepat waktu!');

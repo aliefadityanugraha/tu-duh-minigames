@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldAlert, Swords, Clock, Lock } from 'lucide-react';
-import { SKINS, PLAYER_COLORS } from '../lobby/WaitingRoom';
+import { useSocket } from '../../hooks/useSocket';
+import { PLAYER_COLORS } from '../lobby/WaitingRoom';
 
 export default function SabotaseDuelPanel({
   room, selfId, duelCooldownRemaining,
@@ -8,6 +9,7 @@ export default function SabotaseDuelPanel({
   sabotageBlocked, duelBlocked, hasCooldown, livingCitizens,
   duelTargetId, setDuelTargetId
 }) {
+  const { skinList } = useSocket();
   return (
     <div className="px-4 pb-6 flex flex-col gap-5">
       {/* --- BAGIAN SABOTASE --- */}
@@ -81,7 +83,7 @@ export default function SabotaseDuelPanel({
           <div className="flex flex-col gap-2 bg-[#13003a] border-4 border-black p-2 sm:p-3 shadow-[4px_4px_0px_#000000]">
             <p className="font-mono text-[#41e5b3] text-[9px] sm:text-[10px] uppercase tracking-widest font-bold mb-1 px-1">Pilih Target Warga:</p>
             {livingCitizens.map(target => {
-              const skin = SKINS.find(s => s.id === target.skinId) || SKINS[0];
+              const skin = skinList.find(s => s.id === target.skinId) || skinList[0];
               const color = PLAYER_COLORS[target.colorId ?? 0];
 
               return (

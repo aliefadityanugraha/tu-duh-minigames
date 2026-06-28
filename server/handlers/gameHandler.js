@@ -492,10 +492,10 @@ function registerGameHandlers(socket, io) {
     const room = rooms[code];
     if (!room) return;
 
-    // Validasi URL — hanya izinkan http/https dan gambar
+    // Validasi URL — izinkan http/https atau path relatif lokal
     const url = (String(skinUrl || '')).trim();
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      socket.emit('game-error', 'URL skin tidak valid. Gunakan URL http/https.');
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+      socket.emit('game-error', 'URL skin tidak valid. Gunakan URL http/https atau path relatif.');
       return;
     }
     // Cegah URL yang terlalu panjang (abuse)

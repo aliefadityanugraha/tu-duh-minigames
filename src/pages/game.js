@@ -332,6 +332,8 @@ export default function Game() {
           role={roleInfo.role}
           isGuru={roleInfo.isGuru}
           player={player}
+          room={room}
+          teammates={roleInfo.teammates}
           skinList={skinList}
           onComplete={() => setShowRoleReveal(false)}
         />

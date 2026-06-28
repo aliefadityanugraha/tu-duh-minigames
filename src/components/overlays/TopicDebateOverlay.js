@@ -1,8 +1,10 @@
 import React from 'react';
 import { MessageSquare, Timer, ArrowRightLeft, Brain, Zap } from 'lucide-react';
-import { SKINS, PLAYER_COLORS } from '../lobby/WaitingRoom';
+import { useSocket } from '../../hooks/useSocket';
+import { PLAYER_COLORS } from '../lobby/WaitingRoom';
 
 export default function TopicDebateBanner({ topicDebate, players }) {
+  const { skinList } = useSocket();
   if (!topicDebate?.active) return null;
 
   const { phase, phaseTimer, totalTimer, topic, proPlayerId, kontraPlayerId } = topicDebate;
@@ -11,7 +13,7 @@ export default function TopicDebateBanner({ topicDebate, players }) {
   const kontraPlayer = players?.find(p => p.id === kontraPlayerId);
 
   // Helper to get skin img
-  const getSkin = (skinId) => SKINS.find(s => s.id === skinId)?.img || SKINS[0].img;
+  const getSkin = (skinId) => skinList.find(s => s.id === skinId)?.img || skinList[0]?.img;
 
   let accentColor = 'border-[#41e5b3] text-[#41e5b3] bg-[#003829]'; 
   let bgColor = 'bg-[#004d40]'; // Dark teal for thinking

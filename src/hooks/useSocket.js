@@ -18,6 +18,7 @@ export const SocketProvider = ({ children }) => {
 
   // State task (kuis atau mini-game) & feedback
   const [currentTask, setCurrentTask]         = useState(null);
+  const [currentQuestion, setCurrentQuestion] = useState(null); 
   const [feedback, setFeedback]                 = useState(null);
   const [isAnswered, setIsAnswered]             = useState(false);
   const [selectedOption, setSelectedOption]     = useState(null);
@@ -139,13 +140,14 @@ export const SocketProvider = ({ children }) => {
     });
 
     // ── Join ──
-    s.on('join-success', ({ roomCode, player }) => {
+    s.on('join-success', ({ roomCode, player, sessionId: serverSessionId }) => {
       setPlayer(player);
       setRoleInfo({ role: player.role, isGuru: player.isGuru, teammates: player.teammates || [] });
       setLoading(false);
       addLog(`Bergabung ke Room ${roomCode}.`);
       // Simpan session untuk auto re-join jika koneksi terputus
-      const sessionId = getSessionId();
+      // Prioritaskan sessionId dari server (lebih aman), fallback ke client-generated
+      const sessionId = serverSessionId || getSessionId();
       _saveSession({ roomCode, name: player.name, isGuru: player.isGuru, sessionId });
     });
 
@@ -189,12 +191,16 @@ export const SocketProvider = ({ children }) => {
       audioRef.current = newAudio;
       setAudio(newAudio);
 
-      router.push('/game');
+      if (router.pathname !== '/game') {
+        router.push('/game');
+      }
     });
 
     // ── Task delivery (kuis atau mini-game) ──
     const _applyTaskDelivery = (task) => {
       setCurrentTask(task);
+      if (task.type === 'quiz') setCurrentQuestion(task.data);
+      else setCurrentQuestion(null);
       setFeedback(null);
       setIsAnswered(false);
       setSelectedOption(null);
@@ -252,6 +258,7 @@ export const SocketProvider = ({ children }) => {
     // ── Task timeout (auto-skip after 15s) ──
     s.on('task-timeout', ({ sessionId, message }) => {
       setCurrentTask(null);
+      setCurrentQuestion(null);
       setFeedback(null);
       setIsAnswered(false);
       setSelectedOption(null);
@@ -360,6 +367,7 @@ export const SocketProvider = ({ children }) => {
       setAudio(null);
       // Jangan reset roleInfo di sini — biarkan room-updated yang sync
       setCurrentTask(null); setFeedback(null);
+      setCurrentQuestion(null);
       setIsAnswered(false); setSelectedOption(null);
       setTaskError(null); setMinigameRetryKey(0);
       setSabotageQuiz(null); setSabotageRescue(null);
@@ -461,6 +469,7 @@ export const SocketProvider = ({ children }) => {
     setPlayer(null);
     setRoleInfo({ role: null, isGuru: false, teammates: [] });
     setCurrentTask(null);
+    setCurrentQuestion(null);
     setFeedback(null);
     setIsAnswered(false);
     setSelectedOption(null);

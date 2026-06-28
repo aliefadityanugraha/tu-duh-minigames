@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, WifiOff } from 'lucide-react';
+import { Shield, WifiOff, Users } from 'lucide-react';
+import { PLAYER_COLORS } from '../lobby/WaitingRoom';
 
-export default function RoleRevealOverlay({ role, isGuru, player, skinList, onComplete }) {
-  const [timeLeft, setTimeLeft] = useState(5);
+export default function RoleRevealOverlay({ role, isGuru, player, room, teammates, skinList, onComplete }) {
+  const [timeLeft, setTimeLeft] = useState(3);
 
   useEffect(() => {
     if (isGuru) {
@@ -29,7 +30,7 @@ export default function RoleRevealOverlay({ role, isGuru, player, skinList, onCo
   const isProvokator = role === 'provokator';
 
   const characterInfo = skinList?.find((s) => s.id === player?.skinId) || skinList?.[0];
-  const charImage = characterInfo?.image || '/images/characters/default.png';
+  const charImage = characterInfo?.img || '/images/characters/default.png';
 
   return (
     <AnimatePresence>
@@ -121,6 +122,47 @@ export default function RoleRevealOverlay({ role, isGuru, player, skinList, onCo
                 <div className="text-red-800 text-lg md:text-xl font-extrabold font-sans leading-relaxed mt-2 bg-red-300/90 px-5 py-3 rounded-lg border-2 border-black">
                   Lakukan sabotase, kunci tugas mereka, eliminasi<br/>warga dalam duel!
                 </div>
+
+                {/* ─── Provokator Teammates ─── */}
+                {room && teammates && teammates.length > 0 && (
+                  <motion.div
+                    className="mt-4 flex flex-col items-center gap-3"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, type: 'spring' }}
+                  >
+                    <div className="flex items-center gap-2 text-red-300 text-sm font-mono font-bold uppercase tracking-wider">
+                      <Users size={16} /> TEAM PROVOKATOR
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-4">
+                      {room.players
+                        .filter(p => p.id === player?.id || (teammates || []).includes(p.id))
+                        .map(p => {
+                          const skin = skinList?.find(s => s.id === p.skinId) || skinList?.[0];
+                          const color = PLAYER_COLORS[p.colorId ?? 0];
+                          const isMe = p.id === player?.id;
+                          return (
+                            <div key={p.id} className="flex flex-col items-center gap-1">
+                              <div
+                                className="w-14 h-14 md:w-20 md:h-20 rounded-full border-2 border-black flex items-center justify-center overflow-hidden shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                                style={{ backgroundColor: color }}
+                              >
+                                {skin?.img && <img src={skin.img} alt={skin.name} className="w-full h-full object-cover" />}
+                              </div>
+                              <span className="text-red-200 text-xs md:text-sm font-mono font-bold drop-shadow-[1px_1px_0px_rgba(0,0,0,1)]">
+                                {p.name} {isMe && '(Kamu)'}
+                              </span>
+                              {isMe && (
+                                <span className="text-[#ff4d4d] text-[10px] font-mono font-bold bg-black px-1.5 py-0.5 border border-black">
+                                  PROVOKATOR
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
               
               <div className="absolute inset-0 opacity-30 bg-gradient-to-b from-black/0 from-50% to-black/10 to-50% pointer-events-none"></div>
@@ -135,7 +177,7 @@ export default function RoleRevealOverlay({ role, isGuru, player, skinList, onCo
           </div>
           <div className="p-2 bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1.00)] outline outline-4 outline-offset-[-4px] outline-black flex flex-col justify-start items-start">
             <div className="text-yellow-900 text-xs md:text-sm font-bold font-mono uppercase leading-4 tracking-wide">
-              MATCH STARTING IN: 0{timeLeft}S
+              MATCH STARTING IN: {timeLeft}S
             </div>
           </div>
         </div>

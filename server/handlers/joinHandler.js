@@ -1,4 +1,5 @@
 // Handler: join-room, join-as-spectator, disconnect
+const crypto = require('crypto');
 const { rooms, generateRoomCode, getSanitizedRoom } = require('../lib/roomHelpers');
 const { DEFAULT_SETTINGS, DEFAULT_SKINS, EMPTY_GAME_STATS } = require('../data/defaults');
 const { PANCASILA_QUESTIONS } = require('../data/questions');
@@ -26,6 +27,7 @@ function registerJoinHandlers(socket, io) {
         tasksCompleted: 0,
         tasksRequired:  0,
         settings:       { ...DEFAULT_SETTINGS },
+        skins:          [...DEFAULT_SKINS],
         questions:      JSON.parse(JSON.stringify(PANCASILA_QUESTIONS)),
         players:        [],
         sabotage:       null,
@@ -69,7 +71,7 @@ function registerJoinHandlers(socket, io) {
       
       socket.emit('skin-list-updated', room.skins || DEFAULT_SKINS);
       io.to(code).emit('room-updated', getSanitizedRoom(code));
-      socket.emit('join-success', { roomCode: code, player: existingPlayer });
+      socket.emit('join-success', { roomCode: code, player: existingPlayer, sessionId: existingPlayer.sessionId });
       
       if (room.state === 'playing') {
         let teammates = [];
@@ -105,8 +107,16 @@ function registerJoinHandlers(socket, io) {
         break;
       }
     }
+    // Fallback jika 14 warna habis (max 15 pemain)
+    if (usedColors.has(colorId)) {
+      const colorCounts = Array(14).fill(0);
+      room.players.forEach(p => { if (p.colorId !== undefined) colorCounts[p.colorId]++; });
+      colorId = colorCounts.indexOf(Math.min(...colorCounts));
+    }
 
     const newPlayer = { id: socket.id, sessionId, name: sanitized, isGuru: !!isGuru, role: isGuru ? 'guru' : null, isDead: false, score: 0, answerHistory: [], isOnline: true, skinId: 0, colorId };
+    // Generate server-side session ID untuk keamanan & uniqueness
+    newPlayer.sessionId = crypto.randomUUID();
     room.players.push(newPlayer);
     socket.join(code);
     socket.roomCode = code;
@@ -114,7 +124,7 @@ function registerJoinHandlers(socket, io) {
     startRoomTicker(code, io);
     socket.emit('skin-list-updated', room.skins || DEFAULT_SKINS);
     io.to(code).emit('room-updated', getSanitizedRoom(code));
-    socket.emit('join-success', { roomCode: code, player: newPlayer });
+    socket.emit('join-success', { roomCode: code, player: newPlayer, sessionId: newPlayer.sessionId });
   });
 
   // ── Spectator (layar proyektor) ──
@@ -302,8 +312,20 @@ function startIdleCleanup(io) {
   cleanupInterval = setInterval(() => {
     const now = Date.now();
     for (const [code, room] of Object.entries(rooms)) {
-      // Hanya cleanup room yang masih di lobby
-      if (room.state !== 'lobby') continue;
+      // Hanya cleanup room yang masih di lobby atau playing yang mati
+      if (room.state !== 'lobby') {
+        // Clean up playing rooms with no online players idle > 30 menit
+        if (room.state === 'playing') {
+          const hasOnlinePlayer = room.players.some(p => p.isOnline);
+          const idleTime = now - (room.lastActivity || 0);
+          if (!hasOnlinePlayer && idleTime > 30 * 60 * 1000) {
+            console.log(`[Cleanup] Menghapus room playing mati ${code} (idle: ${Math.round(idleTime / 60000)} menit)`);
+            if (room.tickerInterval) clearInterval(room.tickerInterval);
+            delete rooms[code];
+          }
+        }
+        continue;
+      }
 
       // Cek apakah ada pemain yang masih online
       const hasOnlinePlayer = room.players.some(p => p.isOnline);

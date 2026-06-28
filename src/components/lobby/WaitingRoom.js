@@ -19,18 +19,18 @@ export const INITIAL_SKINS = [
   { id: 7, name: 'Guru',      img: '/images/characters/guru.png',      bg: '#ffc312', text: '#3f2e00', border: '#e6aa00' },
 ];
 
-export let SKINS = [...INITIAL_SKINS];
+export const PLAYER_COLORS = [
+  '#ffb4ab', '#8fb2ff', '#5ffcc9', '#ffdf9c', '#ffb7d7', '#cda4ff', '#8ffff3',
+  '#ffc8a1', '#d6ffb4', '#ffb4e5', '#a3c2ff', '#c4ffcb', '#ffd3b4', '#e2b4ff'
+];
 
 // ── Modal Pilih Skin ──────────────────────────────────────────────────────────
-function SkinModal({ mySkinId, onSelect, onClose }) {
-  const { skinList, uploadCustomSkin } = useSocket();
-  const [hoveredId, setHoveredId] = useState(null);
-  const activeSkin = skinList[mySkinId] ?? skinList[0];
-
 export const OPERATOR_SKIN = { id: 'operator', name: 'Operator', img: '/images/characters/operator.png', bg: '#e5e7eb', text: '#111827', border: '#9ca3af' };
 
 function SkinModal({ mySkinId, mySlotColor, onSelect, onClose }) {
-  const activeSkin = SKINS[mySkinId] ?? SKINS[0];
+  const { skinList, uploadCustomSkin } = useSocket();
+  const [hoveredId, setHoveredId] = useState(null);
+  const activeSkin = skinList[mySkinId] ?? skinList[0];
   return (
     <>
       <motion.div
@@ -61,7 +61,7 @@ function SkinModal({ mySkinId, mySlotColor, onSelect, onClose }) {
               <p className="font-mono text-[#9c8f78] text-xs uppercase">Saat Ini</p>
               <p className="font-rubik italic text-[#ffc312] text-xl font-bold leading-tight">{activeSkin.name}</p>
             </div>
-          </motion.div>
+          </div>
 
           {/* Grid 4×2 */}
           <div className="grid grid-cols-4 gap-3 p-5">
@@ -143,7 +143,7 @@ function MySkinButton({ mySkin, onClick, playerName, isGuru, bgColor }) {
 }
 
 export default function WaitingRoom({ socket, room: roomProp, player: playerProp, roleInfo }) {
-  const { changeSkin, player: ctxPlayer, room: ctxRoom, leaveRoom } = useSocket();
+  const { changeSkin, player: ctxPlayer, room: ctxRoom, skinList, leaveRoom } = useSocket();
   const [showSkinModal, setShowSkinModal] = useState(false);
 
   const player = ctxPlayer ?? playerProp;
@@ -153,7 +153,7 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
 
   // Update default skin for Guru to Operator, and others to Astronot
   const mySkinId = player?.skinId ?? 0;
-  const mySkin = isGuru ? OPERATOR_SKIN : (SKINS[mySkinId] ?? SKINS[0]);
+  const mySkin = isGuru ? OPERATOR_SKIN : (skinList[mySkinId] ?? skinList[0]);
 
   const currentSettings = room?.settings || {};
   const caseStudy = currentSettings.caseStudy || 'anti-hoaks';
@@ -243,7 +243,7 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 p-3 overflow-y-auto flex-1 custom-scrollbar content-start">
             <AnimatePresence>
               {sortedPlayers.map((p, i) => {
-                const skin = p.isGuru ? OPERATOR_SKIN : (SKINS[p.skinId ?? 0] ?? SKINS[0]);
+                const skin = p.isGuru ? OPERATOR_SKIN : (skinList[p.skinId ?? 0] ?? skinList[0]);
                 const self = isSelf(p);
                 const slotColor = p.isGuru ? '#e5e7eb' : PLAYER_COLORS[p.colorId ?? 0];
                 return (

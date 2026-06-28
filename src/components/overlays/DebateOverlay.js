@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SKINS, PLAYER_COLORS } from '../lobby/WaitingRoom';
 
 const snappy = { type: 'spring', stiffness: 500, damping: 30 };
 const punchy = { type: 'spring', stiffness: 600, damping: 20 };
@@ -220,6 +221,9 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                 const disabled = hasVoted || isPlayerDead || isGuru || isDead || isSelf;
                 const hasVotedStatus = getDotsForPlayer(p.id);
 
+                const skin = SKINS.find(s => s.id === p.skinId) || SKINS[0];
+                const color = PLAYER_COLORS[p.colorId ?? 0];
+
                 return (
                   <motion.div
                     key={p.id}
@@ -237,9 +241,10 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                     <motion.div
                       animate={isDead ? {} : { scale: [1, 1.03, 1] }}
                       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                      className="flex flex-col w-12 h-12 md:w-16 md:h-16 items-center justify-center mb-2 bg-[#ffb4ab] border-4 border-black"
+                      className="flex flex-col w-12 h-12 md:w-16 md:h-16 items-center justify-center mb-2 border-4 border-black overflow-hidden"
+                      style={{ backgroundColor: color }}
                     >
-                      <span className="text-xl md:text-3xl">{isDead ? '💀' : '🧑‍🚀'}</span>
+                      {isDead ? <span className="text-xl md:text-3xl">💀</span> : (skin.img ? <img src={skin.img} alt={skin.name} className="w-[125%] h-[125%] object-cover mt-2" /> : <span className="text-xl md:text-3xl">🧑‍🚀</span>)}
                     </motion.div>
 
                     {/* Name */}

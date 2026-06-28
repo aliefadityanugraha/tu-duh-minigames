@@ -75,11 +75,15 @@ function getSanitizedRoom(roomCode) {
       votes:              Object.keys(room.debate.votes || {}).reduce((acc, voterId) => { acc[voterId] = true; return acc; }, {}),
     } : null,
 
-    // Debat topik bebas (terpisah dari voting debate)
+    // Sesi Debat Topik Terstruktur
     topicDebate: room.topicDebate ? {
-      active: room.topicDebate.active,
-      timer:  room.topicDebate.timer,
-      topic:  room.topicDebate.topic,
+      active:         room.topicDebate.active,
+      topic:          room.topicDebate.topic,
+      totalTimer:     room.topicDebate.totalTimer,
+      phase:          room.topicDebate.phase,
+      phaseTimer:     room.topicDebate.phaseTimer,
+      proPlayerId:    room.topicDebate.proPlayerId,
+      kontraPlayerId: room.topicDebate.kontraPlayerId,
     } : null,
 
     // Presentasi random
@@ -99,6 +103,7 @@ function getSanitizedRoom(roomCode) {
       score:              p.score,
       isOnline:           p.isOnline,
       skinId:             p.skinId ?? 0,
+      colorId:            p.colorId ?? 0,
       duelCooldownEndsAt: p.duelCooldownEndsAt ?? null,
       // Ungkap peran hanya setelah permainan selesai
       ...(room.state === 'ended' && !p.isGuru ? { role: p.role } : {}),

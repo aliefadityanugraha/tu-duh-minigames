@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { ArrowLeft, Eye, Layers, Palette } from 'lucide-react';
+import { ArrowLeft, Eye, Layers, Palette, LayoutDashboard, ChevronRight, ChevronDown, CheckCircle, Terminal } from 'lucide-react';
 
 import GameHeader from '../components/game/GameHeader';
 import PlayerView from '../components/game/PlayerView';
@@ -106,13 +106,13 @@ const MOCK_RESUCE_QUESTION = {
 const SCREENS = [
   { id: 'login',          group: 'Lobby',   label: 'Login Form' },
   { id: 'waiting',        group: 'Lobby',   label: 'Waiting Room' },
-  { id: 'warga-playing',  group: 'Game',    label: 'Warga — Playing' },
-  { id: 'warga-locked',   group: 'Game',    label: 'Warga — Sabotage Locked' },
-  { id: 'warga-dead',     group: 'Game',    label: 'Warga — Dead' },
-  { id: 'prov-playing',   group: 'Game',    label: 'Provokateur — Playing' },
-  { id: 'prov-dead',      group: 'Game',    label: 'Provokateur — Dead' },
-  { id: 'prov-sab-quiz',  group: 'Game',    label: 'Provokateur — Sabotage Quiz' },
-  { id: 'guru-playing',   group: 'Game',    label: 'Guru — Admin View' },
+  { id: 'guru-playing',   group: 'Guru / Admin',    label: 'Admin View' },
+  { id: 'warga-playing',  group: 'Warga',    label: 'Playing' },
+  { id: 'warga-locked',   group: 'Warga',    label: 'Sabotage Locked' },
+  { id: 'warga-dead',     group: 'Warga',    label: 'Dead' },
+  { id: 'prov-playing',   group: 'Provokator',    label: 'Playing' },
+  { id: 'prov-dead',      group: 'Provokator',    label: 'Dead' },
+  { id: 'prov-sab-quiz',  group: 'Provokator',    label: 'Sabotage Quiz' },
   { id: 'quiz-task',      group: 'Task',    label: 'Quiz Task' },
   { id: 'quiz-answered',  group: 'Task',    label: 'Quiz — Correct Feedback' },
   { id: 'quiz-wrong',     group: 'Task',    label: 'Quiz — Wrong Feedback' },
@@ -122,18 +122,7 @@ const SCREENS = [
   { id: 'minigame-dekripsi', group: 'Task', label: 'Minigame — Dekripsi Pesan' },
   { id: 'minigame-urutan',   group: 'Task', label: 'Minigame — Urutan Mufakat' },
   { id: 'minigame-timbangan', group: 'Task', label: 'Minigame — Timbangan Keadilan' },
-  { id: 'mg-ibadah-full',     group: 'Minigame', label: '🕌 Tebak Rumah Ibadah — Full' },
-  { id: 'mg-ibadah-compact',  group: 'Minigame', label: '🕌 Tebak Rumah Ibadah — Compact' },
-  { id: 'mg-kebaikan-full',   group: 'Minigame', label: '🧩 Hubungkan Kebaikan — Full' },
-  { id: 'mg-kebaikan-compact', group: 'Minigame', label: '🧩 Hubungkan Kebaikan — Compact' },
-  { id: 'mg-dekripsi-full',  group: 'Minigame', label: '📝 Dekripsi Pesan — Full' },
-  { id: 'mg-dekripsi-compact', group: 'Minigame', label: '📝 Dekripsi Pesan — Compact' },
-  { id: 'mg-urutan-full',    group: 'Minigame', label: '🔢 Urutan Mufakat — Full' },
-  { id: 'mg-urutan-compact', group: 'Minigame', label: '🔢 Urutan Mufakat — Compact' },
-  { id: 'mg-timbangan-full', group: 'Minigame', label: '⚖️ Timbangan Keadilan — Full' },
-  { id: 'mg-timbangan-compact', group: 'Minigame', label: '⚖️ Timbangan Keadilan — Compact' },
-  { id: 'mg-ibadah-full',    group: 'Minigame', label: '🕌 Tebak Rumah Ibadah — Full' },
-  { id: 'mg-ibadah-compact', group: 'Minigame', label: '🕌 Tebak Rumah Ibadah — Compact' },
+  { id: 'mg-tester', group: 'Minigame', label: '🎮 Minigame Tester' },
   { id: 'sabotage-overlay',  group: 'Overlay', label: 'Sabotage Overlay (Warga view)' },
   { id: 'sabotage-overlay-prov', group: 'Overlay', label: 'Sabotage Overlay (Prov view)' },
   { id: 'sabotage-rescue', group: 'Overlay', label: 'Sabotage Rescue Overlay' },
@@ -143,11 +132,9 @@ const SCREENS = [
   { id: 'topic-debate',   group: 'Overlay', label: 'Topic Debate Banner' },
   { id: 'game-ended-warga', group: 'End',  label: 'Game Ended — Warga Wins' },
   { id: 'game-ended-prov',  group: 'End',  label: 'Game Ended — Provokator Wins' },
-  { id: 'live-stats',      group: 'Stats',  label: 'Live Stats Panel' },
-  { id: 'game-header',     group: 'UI',     label: 'Game Header' },
 ];
 
-const GROUP_ORDER = ['Lobby', 'Game', 'Task', 'Minigame', 'Overlay', 'End', 'Stats', 'UI'];
+const GROUP_ORDER = ['Lobby', 'Guru / Admin', 'Warga', 'Provokator', 'Task', 'Minigame', 'Overlay', 'End'];
 
 // ─── MOCK ROOM FACTORY ───────────────────────────────────────────────
 
@@ -161,7 +148,7 @@ function buildRoom(overrides = {}) {
     gameTimer: 180,
     gameStats: MOCK_GAME_STATS,
     settings: MOCK_SETTINGS,
-    showStatsToAll: true,
+    showStatsToAll: false,
     winner: null,
     winReason: '',
     sabotage: null,
@@ -180,6 +167,8 @@ export default function DevMode() {
   const [activeScreen, setActiveScreen] = useState('warga-playing');
   const [mockIsAnswered, setMockIsAnswered] = useState(false);
   const [mockFeedback, setMockFeedback] = useState(null);
+  const [darkMode, setDarkMode] = useState(true);
+  const [guruStatsOpen, setGuruStatsOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -189,8 +178,6 @@ export default function DevMode() {
     setMockIsAnswered(false);
     setMockFeedback(null);
   }, [activeScreen]);
-  
-  const [darkMode, setDarkMode] = useState(true);
 
   const noop = () => {};
   const noopWithArg = () => {};
@@ -207,12 +194,11 @@ export default function DevMode() {
     // ── LOBBY ──
     case 'login':
       return (
-        <div className={`min-h-screen ${darkMode ? 'bg-[#13003a]' : 'bg-white'}`}>
-          <DevNavbar activeScreen={activeScreen} setActiveScreen={setActiveScreen} darkMode={darkMode} setDarkMode={setDarkMode} />
-          <div className="flex-1 flex items-center justify-center p-4">
+        <DevLayout activeScreen={activeScreen} setActiveScreen={setActiveScreen} darkMode={darkMode} setDarkMode={setDarkMode}>
+          <div className="flex-1 flex items-center justify-center p-4 min-h-full">
             <LoginForm onSubmit={(d) => console.log('Login submit:', d)} error={null} loading={false} />
           </div>
-        </div>
+        </DevLayout>
       );
 
     case 'waiting':
@@ -220,12 +206,11 @@ export default function DevMode() {
       player = MOCK_PLAYERS[0];
       roleInfo = { role: null, isGuru: false };
       return (
-        <div className={`min-h-screen ${darkMode ? 'bg-[#13003a]' : 'bg-white'}`}>
-          <DevNavbar activeScreen={activeScreen} setActiveScreen={setActiveScreen} darkMode={darkMode} setDarkMode={setDarkMode} />
-          <div className="p-4">
+        <DevLayout activeScreen={activeScreen} setActiveScreen={setActiveScreen} darkMode={darkMode} setDarkMode={setDarkMode}>
+          <div className="p-4 min-h-full">
             <WaitingRoom socket={{ emit: noop, on: noop, off: noop, id: 'p1' }} room={room} player={player} roleInfo={roleInfo} />
           </div>
-        </div>
+        </DevLayout>
       );
 
     // ── GAME — WARGA ──
@@ -343,14 +328,7 @@ export default function DevMode() {
       break;
 
     // ── STANDALONE MINIGAMES ──
-    case 'mg-kebaikan-full':
-    case 'mg-kebaikan-compact':
-    case 'mg-dekripsi-full':
-    case 'mg-dekripsi-compact':
-    case 'mg-urutan-full':
-    case 'mg-urutan-compact':
-    case 'mg-timbangan-full':
-    case 'mg-timbangan-compact':
+    case 'mg-tester':
       // No room/player needed — rendered standalone below
       room = null; player = null; roleInfo = null;
       currentTask = null; feedback = null; isAnswered = false; selectedOption = null; taskError = null; taskTimer = null;
@@ -421,17 +399,6 @@ export default function DevMode() {
       player = MOCK_PLAYERS[0]; roleInfo = { role: 'warga', isGuru: false };
       break;
 
-    // ── STATS / UI ──
-    case 'live-stats':
-      room = buildRoom();
-      player = MOCK_PLAYERS[0]; roleInfo = { role: 'warga', isGuru: false };
-      break;
-
-    case 'game-header':
-      room = buildRoom();
-      player = MOCK_PLAYERS[0]; roleInfo = { role: 'warga', isGuru: false };
-      break;
-
     default:
       room = buildRoom(); player = MOCK_PLAYERS[0]; roleInfo = { role: 'warga', isGuru: false };
       currentTask = null; feedback = null; isAnswered = false; selectedOption = null; taskError = null; taskTimer = null;
@@ -453,55 +420,23 @@ export default function DevMode() {
       // ── Overlays (standalone) ──
       case 'sabotage-overlay':
       case 'sabotage-overlay-prov':
-        return (
-          <SabotageOverlay
-            sabotage={room.sabotage}
-            role={roleInfo.role}
-          />
-        );
+        return <SabotageOverlay sabotage={room.sabotage} role={roleInfo.role} />;
 
       case 'sabotage-rescue':
-        return (
-          <SabotageRescueOverlay
-            sabotageRescue={{ question: MOCK_RESUCE_QUESTION, timer: 30 }}
-            maxTimer={40}
-            onSubmitAnswer={noopWithArg}
-          />
-        );
+        return <SabotageRescueOverlay sabotageRescue={{ question: MOCK_RESUCE_QUESTION, timer: 30 }} maxTimer={40} onSubmitAnswer={noopWithArg} />;
 
       case 'duel-overlay':
-        return (
-          <DuelOverlay
-            duel={room.duel}
-            selfName={player.name}
-            onSubmitAnswer={noopWithArg}
-          />
-        );
+        return <DuelOverlay duel={room.duel} selfName={player.name} onSubmitAnswer={noopWithArg} />;
 
       case 'debate-overlay':
-        return (
-          <DebateOverlay
-            debate={room.debate}
-            players={room.players}
-            selfId={selfId}
-            selfRole={roleInfo.role}
-            isGuru={false}
-            isPlayerDead={false}
-            onVote={noopWithArg}
-            onSendChat={noopWithArg}
-          />
-        );
+        return <DebateOverlay debate={room.debate} players={room.players} selfId={selfId} selfRole={roleInfo.role} isGuru={false} isPlayerDead={false} onVote={noopWithArg} onSendChat={noopWithArg} />;
 
       case 'presentation-overlay':
-        return (
-          <PresentationOverlay
-            message="🎤 Giliran Presentasi! Budi diminta mempresentasikan pemahaman Sila #3 di depan kelas."
-          />
-        );
+        return <PresentationOverlay message="🎤 Giliran Presentasi! Budi diminta mempresentasikan pemahaman Sila #3 di depan kelas." />;
 
       case 'topic-debate':
         return (
-          <div className="flex flex-col h-[calc(100vh-120px)]">
+          <div className="flex flex-col h-full">
             <TopicDebateOverlay topicDebate={room.topicDebate} />
             <p className="p-4 font-mono text-[#9c8f78] text-xs italic text-center">↑ Banner di atas adalah TopicDebateOverlay — ditampilkan inline dalam PlayerView</p>
           </div>
@@ -510,81 +445,14 @@ export default function DevMode() {
       // ── End screens ──
       case 'game-ended-warga':
       case 'game-ended-prov':
-        return (
-          <div className="p-4">
-            <GameEndedCard room={room} roleInfo={roleInfo} selfId={selfId} onRestart={noop} />
-          </div>
-        );
-
-      // ── Stats ──
-      case 'live-stats':
-        return (
-          <div className="p-4 max-w-3xl">
-            <LiveStatsPanel room={room} isCollapsed={false} onToggle={noop} />
-          </div>
-        );
-
-      // ── Game Header ──
-      case 'game-header':
-        return (
-          <GameHeader
-            room={room}
-            player={player}
-            roleInfo={roleInfo}
-            socket={{ emit: noop, on: noop, off: noop, id: selfId }}
-            muted={false}
-            setMuted={noop}
-            statsOpen={false}
-            setStatsOpen={noop}
-            onLeaveRoom={noop}
-          />
-        );
+        return <div className="p-4 h-full"><GameEndedCard room={room} roleInfo={roleInfo} selfId={selfId} onRestart={noop} /></div>;
 
       // ── Guru Admin ──
       case 'guru-playing':
-        return (
-          <AdminView
-            room={room}
-            player={player}
-            roleInfo={roleInfo}
-            logs={['[DEV] Game started', '[DEV] Andi answered correctly']}
-            socket={{ emit: noop, on: noop, off: noop, id: 'guru' }}
-            statsOpen={false}
-            onToggleStats={noop}
-            onPauseDebat={noop}
-            onResetGame={noop}
-            onRestart={noop}
-            onTriggerTopicDebate={noopWithArg}
-            onTriggerPresentation={noopWithArg}
-            onEndPresentation={noop}
-          />
-        );
+        return <AdminView room={room} player={player} roleInfo={roleInfo} logs={['[DEV] Game started', '[DEV] Andi answered correctly']} socket={{ emit: noop, on: noop, off: noop, id: 'guru' }} statsOpen={guruStatsOpen} onToggleStats={() => setGuruStatsOpen(v => !v)} onPauseDebat={noop} onResetGame={noop} onRestart={noop} onTriggerTopicDebate={noopWithArg} onTriggerPresentation={noopWithArg} onEndPresentation={noop} />;
 
       // ── Standalone Minigames ──
-      case 'mg-ibadah-full':
-        return <MinigameStandalone component={TebakRumahIbadah} compact={false} label="Tebak Rumah Ibadah (Sila #1)" />;
-      case 'mg-ibadah-compact':
-        return <MinigameStandalone component={TebakRumahIbadah} compact={true} label="Tebak Rumah Ibadah (Sila #1)" />;
-      case 'mg-kebaikan-full':
-        return <MinigameStandalone component={HubungkanKebaikan} compact={false} label="Hubungkan Kebaikan (Sila #2)" />;
-      case 'mg-kebaikan-compact':
-        return <MinigameStandalone component={HubungkanKebaikan} compact={true} label="Hubungkan Kebaikan (Sila #2)" />;
-      case 'mg-dekripsi-full':
-        return <MinigameStandalone component={DekripsiPesan} compact={false} label="Dekripsi Pesan / Susun Kata (Sila #3)" />;
-      case 'mg-dekripsi-compact':
-        return <MinigameStandalone component={DekripsiPesan} compact={true} label="Dekripsi Pesan / Susun Kata (Sila #3)" />;
-      case 'mg-urutan-full':
-        return <MinigameStandalone component={UrutanMufakat} compact={false} label="Urutan Mufakat (Sila #4)" />;
-      case 'mg-urutan-compact':
-        return <MinigameStandalone component={UrutanMufakat} compact={true} label="Urutan Mufakat (Sila #4)" />;
-      case 'mg-timbangan-full':
-        return <MinigameStandalone component={TimbanganKeadilan} compact={false} label="Timbangan Keadilan (Sila #5)" />;
-      case 'mg-timbangan-compact':
-        return <MinigameStandalone component={TimbanganKeadilan} compact={true} label="Timbangan Keadilan (Sila #5)" />;
-      case 'mg-ibadah-full':
-        return <MinigameStandalone component={TebakRumahIbadah} compact={false} label="Tebak Rumah Ibadah (Sila #1)" />;
-      case 'mg-ibadah-compact':
-        return <MinigameStandalone component={TebakRumahIbadah} compact={true} label="Tebak Rumah Ibadah (Sila #1)" />;
+      case 'mg-tester': return <MinigameTester />;
 
       // ── All PlayerView-based screens ──
       default:
@@ -599,7 +467,7 @@ export default function DevMode() {
             feedback={feedback}
             taskError={taskError}
             minigameRetryKey={0}
-            taskLocked={activeScreen === 'warga-locked' ? true : false}
+            taskLocked={activeScreen === 'warga-locked'}
             sabotageQuiz={activeScreen === 'prov-sab-quiz' ? { question: MOCK_SABOTAGE_QUESTION, timer: 10 } : null}
             onSubmitSabotageQuiz={noopWithArg}
             duelCooldownRemaining={0}
@@ -610,7 +478,6 @@ export default function DevMode() {
               setMockFeedback({ correct: true, explanation: "Jawaban simulasi diterima." });
             }}
             onMinigameComplete={() => {
-              // Simulasi jeda server yang sangat cepat (300ms)
               setTimeout(() => {
                 setMockIsAnswered(true);
                 setMockFeedback({ correct: true, explanation: "Mini-game simulasi berhasil!" });
@@ -627,49 +494,52 @@ export default function DevMode() {
     }
   };
 
-  // ── Determine which overlays to also show ──
   const showSabotageOverlay = activeScreen === 'warga-locked';
-  const showDuelOverlay = false; // duel is its own screen
-  const showDebateOverlay = false; // debate is its own screen
+
+  const screensWithHeader = [
+    'warga-playing', 'warga-locked', 'warga-dead',
+    'prov-playing', 'prov-sab-quiz', 'prov-dead',
+    'guru-playing', 'game-ended-warga', 'game-ended-prov'
+  ];
+  const isInGameScreen = screensWithHeader.includes(activeScreen);
 
   return (
     <>
       <Head>
-        <title>DEV Mode — TU-DUH! Pancasila</title>
+        <title>DEV Dashboard — TU-DUH! Pancasila</title>
       </Head>
-      <div className={`min-h-screen flex flex-col ${darkMode ? 'bg-[#13003a]' : 'bg-gray-100'}`}>
-
-        {/* ── Dev Navbar ── */}
-        <DevNavbar activeScreen={activeScreen} setActiveScreen={setActiveScreen} darkMode={darkMode} setDarkMode={setDarkMode} />
-
-        {/* ── Screen info badge ── */}
-        <div className="shrink-0 px-4 py-2 bg-[#ffc312] border-b-4 border-black flex items-center gap-3">
-          <Eye size={14} className="text-[#3f2e00]" />
-          <span className="font-mono text-[#3f2e00] text-xs font-bold uppercase tracking-wider">
-            Preview: {screen?.group} → {screen?.label}
-          </span>
-          <span className="font-mono text-[#3f2e00] text-[10px]">
-            (role: {roleInfo?.isGuru ? 'Guru' : roleInfo?.role || 'n/a'} | player: {player?.name || 'standalone'} | dead: {isPlayerDead ? 'Yes' : 'No'})
-          </span>
-        </div>
-
-        {/* ── Main content ── */}
-        <div className="flex-1 overflow-hidden relative" style={{ minHeight: 'calc(100vh - 100px)' }}>
-          {renderContent()}
-
-          {/* ── Overlay stacking for combined views ── */}
-          {showSabotageOverlay && (
-            <SabotageOverlay sabotage={room.sabotage} role={roleInfo.role} />
-          )}
-        </div>
-      </div>
+      <DevLayout activeScreen={activeScreen} setActiveScreen={setActiveScreen} darkMode={darkMode} setDarkMode={setDarkMode}>
+        {isInGameScreen ? (
+          <div className="flex flex-col min-h-full w-full bg-transparent">
+            <GameHeader 
+              room={room} 
+              player={player} 
+              roleInfo={roleInfo} 
+              socket={{ emit: noop, on: noop, off: noop, id: selfId }} 
+              muted={false} 
+              setMuted={noop} 
+              statsOpen={guruStatsOpen} 
+              setStatsOpen={setGuruStatsOpen} 
+              onLeaveRoom={noop} 
+            />
+            <div className="flex-1 relative flex flex-col">
+              {renderContent()}
+            </div>
+          </div>
+        ) : (
+          renderContent()
+        )}
+        {showSabotageOverlay && (
+          <SabotageOverlay sabotage={room.sabotage} role={roleInfo.role} />
+        )}
+      </DevLayout>
     </>
   );
 }
 
-// ── DEV NAVBAR ────────────────────────────────────────────────────────
+// ── DEV LAYOUT & SIDEBAR ────────────────────────────────────────────────────────
 
-function DevNavbar({ activeScreen, setActiveScreen, darkMode, setDarkMode }) {
+function DevLayout({ children, activeScreen, setActiveScreen, darkMode, setDarkMode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const grouped = {};
@@ -678,91 +548,242 @@ function DevNavbar({ activeScreen, setActiveScreen, darkMode, setDarkMode }) {
     grouped[s.group].push(s);
   });
 
+  const [expandedGroup, setExpandedGroup] = useState(() => SCREENS.find(s => s.id === activeScreen)?.group || GROUP_ORDER[0]);
+
+  // Update expanded group if screen is changed externally
+  useEffect(() => {
+    const currentGroup = SCREENS.find(s => s.id === activeScreen)?.group;
+    if (currentGroup && currentGroup !== expandedGroup) {
+      setExpandedGroup(currentGroup);
+    }
+  }, [activeScreen]);
+
   return (
-    <div className="shrink-0 sticky top-0 z-[999]">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#93000a] border-b-4 border-black">
-        <div className="flex items-center gap-3">
-          <Layers size={18} className="text-[#ffdad6]" />
-          <span className="font-rubik italic text-[#ffdad6] text-lg font-bold">DEV MODE</span>
-          <span className="neo-badge bg-[#ffc312] text-[#3f2e00] border-black text-[10px] py-0.5 px-2">STYLE PREVIEW</span>
+    <div className={`h-screen w-full flex overflow-hidden transition-colors duration-300 ${darkMode ? 'bg-black' : 'bg-slate-50'}`}>
+      {/* ── Sidebar ── */}
+      <div className={`flex flex-col h-screen shrink-0 transition-all duration-300 z-50 shadow-2xl overflow-hidden ${sidebarOpen ? 'w-64 border-r-2 border-[#4f4632] bg-[#190047]' : 'w-0'}`}>
+        <div className="p-4 flex items-center justify-between border-b-2 border-[#4f4632] bg-[#93000a] text-[#ffdad6] shrink-0 w-64">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <LayoutDashboard size={20} className="shrink-0" />
+            <span className="font-rubik italic font-bold truncate">DEV MODE</span>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-[#b00010] rounded text-[#ffdad6]">
+            <ArrowLeft size={16} />
+          </button>
         </div>
-        <div className="flex items-center gap-2">
+        
+        <div className="flex-1 overflow-y-auto custom-scrollbar w-64">
+          <div className="p-3 space-y-2">
+            {GROUP_ORDER.map(group => {
+              if (!grouped[group]) return null;
+              const isExpanded = expandedGroup === group;
+              return (
+                <div key={group} className="border border-[#4f4632] rounded-md overflow-hidden bg-[#22005c]">
+                  <button
+                    onClick={() => setExpandedGroup(isExpanded ? null : group)}
+                    className="w-full flex items-center justify-between px-3 py-2 bg-[#270067] hover:bg-[#330081] transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Layers size={14} className="text-[#9c8f78]" />
+                      <span className="font-mono text-[#9c8f78] text-xs font-bold uppercase tracking-wider">{group}</span>
+                    </div>
+                    <ChevronDown size={14} className={`text-[#9c8f78] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {isExpanded && (
+                    <div className="p-2 space-y-1 bg-[#190047]">
+                      {grouped[group].map(s => {
+                        const isActive = activeScreen === s.id;
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => setActiveScreen(s.id)}
+                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-left font-mono text-xs font-medium transition-all duration-200 ${
+                              isActive 
+                                ? 'bg-[#ffc312] text-[#3f2e00] shadow-md transform scale-[1.02]' 
+                                : 'text-[#e9ddff] hover:bg-[#330081] hover:text-white'
+                            }`}
+                          >
+                            {isActive && <ChevronRight size={14} className="shrink-0" />}
+                            <span className="truncate">{s.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sidebar Footer */}
+        <div className="p-3 border-t-2 border-[#4f4632] shrink-0 space-y-2 w-64 bg-[#13003a]">
           <button
-            onClick={() => setSidebarOpen(v => !v)}
-            className="px-3 py-1.5 bg-[#270067] text-[#d3c5ab] border-2 border-black font-mono text-xs font-bold hover:bg-[#330081]"
+            onClick={() => setDarkMode(!darkMode)}
+            className={`w-full flex justify-center items-center gap-2 px-3 py-2 border border-[#4f4632] rounded-md font-mono text-xs font-bold transition-colors ${darkMode ? 'bg-[#270067] text-[#ffc312] hover:bg-[#330081]' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
           >
-            {sidebarOpen ? '◀ Hide Nav' : '▶ Show Nav'}
+            <Palette size={14} /> {darkMode ? 'Light Theme' : 'Dark Theme'}
           </button>
-          <button
-            onClick={() => setDarkMode(v => !v)}
-            className="px-3 py-1.5 bg-[#270067] text-[#d3c5ab] border-2 border-black font-mono text-xs font-bold hover:bg-[#330081] flex items-center gap-1"
-          >
-            <Palette size={12} /> {darkMode ? 'Light BG' : 'Dark BG'}
-          </button>
-          <a href="/" className="px-3 py-1.5 bg-[#190047] text-[#9c8f78] border-2 border-black font-mono text-xs font-bold hover:bg-[#270067] flex items-center gap-1">
-            <ArrowLeft size={12} /> Home
+          <a href="/" className={`w-full flex justify-center items-center gap-2 px-3 py-2 rounded-md font-mono text-xs font-bold transition-colors ${darkMode ? 'bg-[#ffc312] text-[#3f2e00] hover:bg-[#e0ab00]' : 'bg-[#93000a] text-white hover:bg-[#b00010]'}`}>
+            <ArrowLeft size={14} /> Exit Dev Mode
           </a>
         </div>
       </div>
 
-      {/* Sidebar navigation */}
-      {sidebarOpen && (
-        <div className="flex gap-1 px-3 py-2 bg-[#190047] border-b-2 border-[#4f4632] overflow-x-auto">
-          {GROUP_ORDER.map(group => (
-            <div key={group} className="flex items-center gap-1 shrink-0">
-              <span className="font-mono text-[#9c8f78] text-[10px] uppercase tracking-wider mr-1">{group}</span>
-              {grouped[group]?.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => setActiveScreen(s.id)}
-                  className={`px-2 py-1 border-2 border-solid font-mono text-[10px] font-bold transition-all whitespace-nowrap ${
-                    activeScreen === s.id
-                      ? 'bg-[#ffc312] border-[#ffc312] text-[#3f2e00]'
-                      : 'bg-[#22005c] border-[#4f4632] text-[#e9ddff] hover:border-[#ffc312] hover:text-white'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-              <span className="text-[#4f4632] mx-1">|</span>
-            </div>
-          ))}
+      {/* ── Main Content Area ── */}
+      <div className={`flex-1 h-screen relative overflow-hidden ${darkMode ? 'bg-black' : 'bg-gray-800'}`}>
+        {/* Toggle Button */}
+        {!sidebarOpen && (
+          <button 
+            onClick={() => setSidebarOpen(true)}
+            className="absolute top-4 left-4 z-50 p-2 bg-[#93000a] text-[#ffc312] rounded-md shadow-lg hover:bg-[#b00010] transition-colors border-2 border-[#4f4632]"
+            title="Open Sidebar"
+          >
+            <LayoutDashboard size={20} />
+          </button>
+        )}
+        
+        {/* Absolute full width and height container. 'transform translate-x-0' traps position: fixed overlays (like Sabotage) inside this container only. 'overflow-y-auto' allows scrolling if the game content overflows. */}
+        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden transform translate-x-0">
+          {children}
         </div>
-      )}
+      </div>
+      
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #4f4632;
+          border-radius: 10px;
+        }
+      `}</style>
     </div>
   );
 }
 
-// ── STANDALONE MINIGAME WRAPPER ──────────────────────────────────────
+// ── MINIGAME TESTER ────────────────────────────────────────────────────────
 
-function MinigameStandalone({ component, compact, label }) {
-  const noop = () => {};
-  const C = component;
+const MINIGAME_LIST = [
+  { id: 'ibadah', label: '🕌 Tebak Rumah Ibadah (Sila #1)', component: TebakRumahIbadah },
+  { id: 'kebaikan', label: '🧩 Hubungkan Kebaikan (Sila #2)', component: HubungkanKebaikan },
+  { id: 'dekripsi', label: '📝 Dekripsi Pesan (Sila #3)', component: DekripsiPesan },
+  { id: 'urutan', label: '🔢 Urutan Mufakat (Sila #4)', component: UrutanMufakat },
+  { id: 'timbangan', label: '⚖️ Timbangan Keadilan (Sila #5)', component: TimbanganKeadilan },
+];
+
+function MinigameTester() {
+  const [selectedMg, setSelectedMg] = useState(MINIGAME_LIST[0].id);
+  const [deviceMode, setDeviceMode] = useState('desktop'); // 'desktop' | 'mobile'
+  const [logs, setLogs] = useState([]);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [key, setKey] = useState(0);
+
+  const currentMg = MINIGAME_LIST.find(m => m.id === selectedMg) || MINIGAME_LIST[0];
+  const C = currentMg.component;
+
+  const addLog = (msg) => {
+    setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  };
+
+  const handleComplete = () => {
+    addLog('onComplete() triggered!');
+  };
+
+  const handleGameComplete = () => {
+    addLog('onGameComplete() triggered!');
+    setIsCompleted(true);
+  };
+
+  const resetState = () => {
+    setIsCompleted(false);
+    setLogs([]);
+    setKey(k => k + 1);
+  };
+
+  const containerClasses = deviceMode === 'mobile' 
+    ? "w-full max-w-[375px] h-full max-h-[667px]" 
+    : "w-full h-full max-w-4xl max-h-[800px]";
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="shrink-0 px-4 py-3 bg-[#270067] border-b-4 border-black flex items-center justify-between">
+    <div className="flex flex-col h-full bg-[#13003a] relative">
+      <div className="shrink-0 px-3 py-2 sm:px-4 sm:py-3 bg-[#270067] border-b-4 border-black flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div>
-          <div className="font-rubik italic text-[#41e5b3] text-xl font-bold leading-none">MINIGAME DEV</div>
-          <div className="font-mono text-[#d3c5ab] text-[10px] tracking-[1px] uppercase mt-0.5">{label}</div>
+          <div className="font-rubik italic text-[#41e5b3] text-lg sm:text-xl font-bold leading-none">MINIGAME TESTER</div>
+          <div className="font-mono text-[#d3c5ab] text-[8px] sm:text-[10px] tracking-[1px] uppercase mt-0.5">DEV TOOLS</div>
         </div>
-        <span className={`neo-badge text-[10px] py-0.5 px-2 border-black ${
-          compact ? 'bg-[#ffc312] text-[#3f2e00]' : 'bg-[#41e5b3] text-[#003829]'
-        }`}>
-          {compact ? 'COMPACT MODE' : 'FULL MODE'}
-        </span>
+        
+        <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+          <select 
+            className="bg-[#190047] text-white border border-[#4f4632] px-2 py-1 text-[10px] sm:text-xs rounded outline-none"
+            value={selectedMg}
+            onChange={e => {
+              setSelectedMg(e.target.value);
+              resetState();
+            }}
+          >
+            {MINIGAME_LIST.map(mg => (
+              <option key={mg.id} value={mg.id}>{mg.label}</option>
+            ))}
+          </select>
+
+          <div className="flex bg-[#190047] rounded border border-[#4f4632] overflow-hidden">
+            <button 
+              className={`px-2 py-1 sm:px-3 text-[10px] sm:text-xs font-bold transition-colors ${deviceMode === 'desktop' ? 'bg-[#ff8a00] text-black' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setDeviceMode('desktop')}
+            >
+              DESKTOP
+            </button>
+            <button 
+              className={`px-2 py-1 sm:px-3 text-[10px] sm:text-xs font-bold transition-colors ${deviceMode === 'mobile' ? 'bg-[#ff8a00] text-black' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setDeviceMode('mobile')}
+            >
+              MOBILE
+            </button>
+          </div>
+
+          <button onClick={resetState} className="px-2 py-1 sm:px-3 text-[10px] sm:text-xs bg-red-600 text-white font-bold rounded hover:bg-red-500 border border-black shadow">
+            RESET
+          </button>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto bg-[#190047] p-4">
-        <C
-          compact={compact}
-          onComplete={noop}
-          onGameComplete={noop}
-        />
+
+      <div className="flex-1 overflow-auto bg-[#0a0020] p-4 flex justify-center items-center">
+        <div className={`relative border border-[#4f4632] bg-[#190047] shadow-2xl overflow-hidden transition-all duration-300 ${containerClasses}`}>
+          {deviceMode === 'mobile' && (
+            <div className="absolute top-0 left-0 w-full h-6 bg-black flex justify-between items-center px-4 z-50 text-[10px] text-gray-400 pointer-events-none">
+              <span>9:41</span>
+              <div className="flex gap-1">
+                <span>📶</span>
+                <span>🔋</span>
+              </div>
+            </div>
+          )}
+          <div className={`w-full h-full ${deviceMode === 'mobile' ? 'pt-6' : ''}`}>
+            <C
+              key={key}
+              onComplete={handleComplete}
+              onGameComplete={handleGameComplete}
+            />
+          </div>
+        </div>
       </div>
-      <div className="shrink-0 px-4 py-2 bg-[#13003a] border-t-2 border-[#4f4632]">
-        <p className="font-mono text-[#9c8f78] text-[10px] text-center italic">
-          💡 Edit style di komponen minigame langsung — perubahan auto-refresh di dev server
-        </p>
+
+      <div className="shrink-0 h-40 bg-black border-t-4 border-[#4f4632] flex flex-col">
+        <div className="bg-[#270067] text-white text-xs font-mono font-bold px-3 py-1 flex justify-between items-center border-b border-gray-700">
+          <div className="flex items-center gap-2"><Terminal size={12} /> Test Console ({currentMg.label})</div>
+          <div>Status: {isCompleted ? <span className="text-green-400">✅ COMPLETED</span> : <span className="text-yellow-400">⏳ PLAYING</span>}</div>
+        </div>
+        <div className="flex-1 p-2 overflow-y-auto font-mono text-xs">
+          {logs.length === 0 && <span className="text-gray-500">Waiting for events...</span>}
+          {logs.map((msg, i) => (
+            <div key={i} className="text-green-400 mb-1">{msg}</div>
+          ))}
+        </div>
       </div>
     </div>
   );

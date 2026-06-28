@@ -190,14 +190,42 @@ function startRoomTicker(roomCode, io) {
       if (r.debate.timer <= 0) tallyVotes(roomCode, io);
     }
 
-    // ── 5. Timer debat topik bebas ──
-    if (r.topicDebate?.active && r.topicDebate.timer > 0) {
-      r.topicDebate.timer--;
+    // ── 5. Timer debat topik bebas (Terstruktur Exact) ──
+    if (r.topicDebate?.active && r.topicDebate.totalTimer > 0) {
+      r.topicDebate.totalTimer--;
+      r.topicDebate.phaseTimer--;
       changed = true;
-      if (r.topicDebate.timer <= 0) {
+
+      if (r.topicDebate.totalTimer <= 0) {
+        // Keseluruhan waktu debat habis
         r.topicDebate.active = false;
         r.topicDebate = null;
         io.to(roomCode).emit('topic-debate-ended', { message: 'Sesi debat topik selesai!' });
+      } else if (r.topicDebate.phaseTimer <= 0) {
+        // Daftar urutan fase yang pasti
+        const DEBATE_SEQ = [
+          { phase: 'thinking', timer: 30 },
+          { phase: 'pro_turn', timer: 30 },
+          { phase: 'transition', timer: 5, nextPhase: 'kontra_turn' },
+          { phase: 'kontra_turn', timer: 30 },
+          { phase: 'transition', timer: 5, nextPhase: 'pro_turn' },
+          { phase: 'pro_turn', timer: 30 },
+          { phase: 'transition', timer: 5, nextPhase: 'kontra_turn' },
+          { phase: 'kontra_turn', timer: 30 }
+        ];
+        
+        r.topicDebate.phaseIndex = (r.topicDebate.phaseIndex ?? 0) + 1;
+        
+        if (r.topicDebate.phaseIndex >= DEBATE_SEQ.length) {
+          r.topicDebate.active = false;
+          r.topicDebate = null;
+          io.to(roomCode).emit('topic-debate-ended', { message: 'Sesi debat topik selesai!' });
+        } else {
+          const nextSeq = DEBATE_SEQ[r.topicDebate.phaseIndex];
+          r.topicDebate.phase = nextSeq.phase;
+          r.topicDebate.phaseTimer = nextSeq.timer;
+          if (nextSeq.nextPhase) r.topicDebate.nextPhase = nextSeq.nextPhase;
+        }
       }
     }
 

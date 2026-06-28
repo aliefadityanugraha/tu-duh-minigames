@@ -23,17 +23,17 @@ export default function Navbar({ navItems = [], roomCode = null, rightContent = 
   return (
     <nav
       className={`
-        flex flex-col sm:flex-row items-center justify-between
-        px-6 md:px-8 py-3 w-full
-        bg-[#190047] border-b-4 border-black shadow-[6px_6px_0px_#000000]
-        z-50 sticky top-0 gap-3
+        flex flex-row items-center justify-between
+        px-2 py-2 sm:px-6 md:px-8 sm:py-3 w-full
+        bg-[#190047] border-b-4 border-black shadow-[4px_4px_0px_#000000] sm:shadow-[6px_6px_0px_#000000]
+        z-50 sticky top-0 gap-1.5 sm:gap-3
         ${className}
       `}
     >
       {/* ── Sisi Kiri: Logo + Nav Items ── */}
-      <div className="flex items-center gap-6 self-start sm:self-auto">
+      <div className="flex items-center w-auto gap-2 sm:gap-6 shrink-0">
         <a href="/" className="shrink-0 select-none">
-          <span className="font-rubik italic font-bold text-[#ffc312] text-3xl md:text-4xl tracking-[-1.5px] leading-none whitespace-nowrap hover:text-[#ffe5b3] transition-colors">
+          <span className="font-rubik italic font-bold text-[#ffc312] text-[20px] sm:text-3xl md:text-4xl tracking-[-1px] sm:tracking-[-1.5px] leading-none whitespace-nowrap hover:text-[#ffe5b3] transition-colors">
             TU-DUH!
           </span>
         </a>
@@ -77,21 +77,21 @@ export default function Navbar({ navItems = [], roomCode = null, rightContent = 
       </div>
 
       {/* ── Sisi Kanan: Room Code Badge + Custom Content ── */}
-      <div className="flex items-center gap-3 self-start sm:self-auto w-full sm:w-auto justify-start sm:justify-end">
+      <div className="flex items-center gap-1.5 sm:gap-3 w-auto justify-end shrink-0">
         {/* Room Code Badge */}
         {roomCode && (
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2.5 px-5 py-2.5 bg-[#ffc312] border-4 border-solid border-black shadow-[4px_4px_0px_#000000] hover:shadow-neo-md active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+            className="flex items-center gap-1 sm:gap-2.5 px-2 py-1.5 sm:px-5 sm:py-2.5 bg-[#ffc312] border-[3px] sm:border-4 border-solid border-black shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] hover:shadow-neo-md active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer shrink-0"
             title="Klik untuk menyalin kode room"
           >
-            <span className="font-rubik italic text-[#6e5200] text-base sm:text-xl tracking-[1.5px] leading-none whitespace-nowrap font-bold select-none">
-              KODE ROOM: {roomCode}
+            <span className="font-rubik italic text-[#6e5200] text-[11px] sm:text-base md:text-xl tracking-[0.5px] sm:tracking-[1.5px] leading-none whitespace-nowrap font-bold select-none">
+              <span className="hidden sm:inline">KODE </span>ROOM: {roomCode}
             </span>
             {copied ? (
-              <Check size={16} className="text-[#004d39] shrink-0" />
+              <Check size={14} className="text-[#004d39] shrink-0 sm:w-4 sm:h-4 w-3.5 h-3.5" />
             ) : (
-              <Copy size={16} className="text-[#6e5200] shrink-0" />
+              <Copy size={14} className="text-[#6e5200] shrink-0 sm:w-4 sm:h-4 w-3.5 h-3.5" />
             )}
           </button>
         )}

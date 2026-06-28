@@ -35,7 +35,7 @@ export function MinigameHeader({ icon: Icon, iconBg = 'bg-white', title, sila, s
         </div>
       </div>
       {statusLabel && (
-        <div className={`neo-badge border border-black text-[8px] sm:text-xs py-0.5 px-1.5 sm:py-1 sm:px-3 shrink-0 ${badgeClass}`}>
+        <div className={`border-[1.5px] sm:border-4 border-black text-[7px] sm:text-xs font-black uppercase tracking-wider py-0.5 px-1 sm:py-1 sm:px-2 shrink-0 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] sm:shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center ml-auto ${badgeClass}`}>
           {statusLabel}
         </div>
       )}

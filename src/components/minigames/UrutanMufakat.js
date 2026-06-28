@@ -70,7 +70,7 @@ const SCENARIOS = [
  * UrutanMufakat - Chronological Block Ordering Minigame Component
  * Implements Sila ke-4 (Kerakyatan yang Dipimpin oleh Hikmat Kebijaksanaan...)
  */
-export default function UrutanMufakat({ onGameComplete, onComplete }) {
+export default function UrutanMufakat({ onGameComplete, onComplete, isProvokator }) {
   const [scenario, setScenario] = useState(null);
   const [blocks, setBlocks] = useState([]);
   const [isWin, setIsWin] = useState(false);
@@ -169,15 +169,15 @@ export default function UrutanMufakat({ onGameComplete, onComplete }) {
       <MinigameWorkArea className="justify-start overflow-hidden !p-0 sm:!p-0 flex flex-col relative bg-emerald-50">
         
         {/* Compact Hint Box */}
-        <div className="w-full bg-yellow-100 border-b-[3px] border-black p-2 sm:p-2.5 px-3 flex items-center justify-center shrink-0 z-20 shadow-[0_2px_0_0_rgba(0,0,0,1)] relative">
-           <span className="text-[10px] sm:text-[11px] font-black uppercase text-black text-center tracking-wide">
+        <div className="w-full bg-yellow-100 border-b-[3px] border-black p-1 sm:p-2.5 px-1.5 sm:px-3 flex items-center justify-center shrink-0 z-20 shadow-[0_2px_0_0_rgba(0,0,0,1)] relative">
+           <span className="text-[7.5px] sm:text-[11px] font-black uppercase text-black text-center tracking-wide leading-tight">
              💡 Urutkan tahapan musyawarah dari atas ke bawah menggunakan panah.
            </span>
         </div>
 
-        <div className="relative w-full flex-1 min-h-0 px-2 py-2 sm:px-6 sm:py-3 flex flex-col justify-center items-center z-10 max-w-4xl mx-auto">
+        <div className="relative w-full flex-1 min-h-0 px-2 py-2 sm:px-6 sm:py-4 flex flex-col justify-center items-center z-10 max-w-3xl md:max-w-4xl mx-auto">
           
-          <div className="w-full flex flex-col justify-center gap-1 sm:gap-2">
+        <div className="w-full h-full max-h-[800px] md:max-h-[550px] flex flex-col justify-evenly gap-1 sm:gap-2">
             {blocks.map((blockName, index) => {
               const theme = scenario.themes[blockName];
               const slot = scenario.slots[index];
@@ -186,60 +186,60 @@ export default function UrutanMufakat({ onGameComplete, onComplete }) {
               return (
                 <div 
                   key={blockName}
-                  className="flex flex-row items-center justify-between gap-1 sm:gap-2 p-1 sm:p-2 bg-white border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300"
+                  className="flex flex-row items-center justify-between gap-1 sm:gap-3 md:gap-2 p-1.5 sm:p-2.5 md:p-2 bg-white border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 w-full"
                 >
                   {/* Slot Target Label */}
-                  <div className="flex flex-col text-left shrink-0 w-20 sm:w-32">
-                    <span className="text-[8px] sm:text-[9px] text-gray-600 font-bold font-mono-tech tracking-wider uppercase">
+                  <div className="flex flex-col text-left shrink-0 w-20 sm:w-32 md:w-36 overflow-hidden">
+                    <span className="text-[8px] sm:text-[10px] md:text-[10px] text-gray-600 font-bold font-mono-tech tracking-wider uppercase">
                       LANGKAH {index + 1}
                     </span>
-                    <span className="text-[9px] sm:text-[11px] font-black text-black font-mono-tech leading-tight">
+                    <span className="text-[9px] sm:text-xs md:text-xs lg:text-sm font-black text-black font-mono-tech leading-tight truncate">
                       {slot.label}
                     </span>
                   </div>
 
                   {/* Connecting Arrow indicator */}
-                  <div className="shrink-0 text-black font-mono-tech font-black text-[10px] sm:text-xs hidden sm:block">
+                  <div className="shrink-0 text-black font-mono-tech font-black text-[10px] sm:text-sm md:text-base hidden sm:block">
                     ➔
                   </div>
 
                   {/* Interactive Block */}
-                  <div className={`flex-1 flex items-center justify-between px-2 py-1 sm:px-3 sm:py-1.5 border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${theme.bg}`}>
-                    <span className={`text-[9px] sm:text-[11px] font-black font-mono-tech tracking-wide truncate ${theme.text}`}>
+                  <div className={`flex-1 flex items-center justify-between px-2 py-1.5 sm:px-4 sm:py-2.5 md:py-2 md:px-3 border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${theme.bg}`}>
+                    <span className={`text-[9px] sm:text-xs md:text-xs lg:text-sm font-black font-mono-tech tracking-wide truncate ${theme.text}`}>
                       {theme.label}
                     </span>
 
                     {/* Swap Action controls */}
                     {!isWin && (
-                      <div className="flex items-center gap-1 shrink-0 ml-1">
+                      <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-1">
                         <button
                           type="button"
                           onClick={() => handleSwap(index, 'up')}
                           disabled={index === 0}
-                          className="p-1 sm:p-1.5 bg-black text-white border-2 border-black hover:bg-neutral-800 disabled:opacity-40 disabled:bg-neutral-500 disabled:cursor-not-allowed active:translate-y-[1px] shadow-[1px_1px_0px_0px_rgba(255,255,255,0.5)] transition-all"
+                          className="p-1.5 sm:p-1.5 md:p-1.5 bg-black text-white border-2 border-black hover:bg-neutral-800 disabled:opacity-40 disabled:bg-neutral-500 disabled:cursor-not-allowed active:translate-y-[1px] shadow-[1px_1px_0px_0px_rgba(255,255,255,0.5)] transition-all"
                           title="Naik"
                         >
-                          <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <ArrowUp className="w-4 h-4 sm:w-4 sm:h-4 md:w-4 md:h-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSwap(index, 'down')}
                           disabled={index === blocks.length - 1}
-                          className="p-1 sm:p-1.5 bg-black text-white border-2 border-black hover:bg-neutral-800 disabled:opacity-40 disabled:bg-neutral-500 disabled:cursor-not-allowed active:translate-y-[1px] shadow-[1px_1px_0px_0px_rgba(255,255,255,0.5)] transition-all"
+                          className="p-1.5 sm:p-1.5 md:p-1.5 bg-black text-white border-2 border-black hover:bg-neutral-800 disabled:opacity-40 disabled:bg-neutral-500 disabled:cursor-not-allowed active:translate-y-[1px] shadow-[1px_1px_0px_0px_rgba(255,255,255,0.5)] transition-all"
                           title="Turun"
                         >
-                          <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <ArrowDown className="w-4 h-4 sm:w-4 sm:h-4 md:w-4 md:h-4" />
                         </button>
                       </div>
                     )}
                   </div>
 
                   {/* Position accuracy visual dot */}
-                  <div className="shrink-0 flex items-center justify-center pl-0.5 sm:pl-1">
-                    <div className={`w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-full border-[3px] border-black flex items-center justify-center ${
+                  <div className="shrink-0 flex items-center justify-center pl-1 sm:pl-2 md:pl-2">
+                    <div className={`w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 rounded-full border-[3px] border-black flex items-center justify-center ${
                       isCorrectPosition ? 'bg-green-500 shadow-sm' : 'bg-red-500 animate-pulse'
                     }`} title={isCorrectPosition ? "Benar" : "Salah"}>
-                      {isCorrectPosition && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>}
+                      {isCorrectPosition && <div className="w-2 h-2 md:w-2 md:h-2 bg-white rounded-full"></div>}
                     </div>
                   </div>
                 </div>
@@ -263,7 +263,7 @@ export default function UrutanMufakat({ onGameComplete, onComplete }) {
 
           <div className="flex gap-2 sm:gap-3">
             {isWin ? (
-              <MinigameWinBanner win winMessage="Mufakat tercapai! Menunggu konfirmasi misi..." />
+              <MinigameWinBanner win winMessage={isProvokator ? "Sabotase berhasil! Menunggu konfirmasi..." : "Mufakat tercapai! Menunggu konfirmasi misi..."} />
             ) : (
               <>
                 <MinigameButton

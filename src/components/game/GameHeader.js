@@ -29,18 +29,16 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
 
   // Timer Circle (Absolute centered if possible, but we'll put it in rightContent for Navbar flex)
   const timerBadge = room?.state === 'playing' && room.gameTimer != null ? (
-    <div className={`flex items-center justify-center w-14 h-14 rounded-full border-4 border-black shadow-[4px_4px_0px_#000000] z-50 ${room.gameTimer <= 60 ? 'bg-[#ffb4ab] text-[#690005] animate-pulse' : 'bg-[#ffc312] text-[#6e5200]'
+    <div className={`flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 shrink-0 rounded-full border-[3px] sm:border-4 border-black shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] z-50 ${room.gameTimer <= 60 ? 'bg-[#ffb4ab] text-[#690005] animate-pulse' : 'bg-[#ffc312] text-[#6e5200]'
       }`}>
-      <span className="font-rubik text-base font-black">
+      <span className="font-rubik text-sm sm:text-base font-black">
         {Math.floor(room.gameTimer / 60)}:{String(room.gameTimer % 60).padStart(2, '0')}
       </span>
     </div>
   ) : null;
 
   const rightContent = (
-    <div className="flex items-center gap-3">
-      {/* {statusBadge} */}
-
+    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
       {/* Guru Controls */}
       {roleInfo.isGuru && (room?.state === 'playing' || room?.state === 'ended') && (
         <div className="flex gap-2 border-l-4 border-black pl-3 ml-1">
@@ -79,10 +77,10 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
       {/* Mute */}
       <button
         onClick={() => setMuted(!muted)}
-        className="p-2 bg-[#270067] border-2 border-black rounded hover:bg-[#330081] text-[#d3c5ab] transition-all shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ml-2"
+        className="p-1.5 sm:p-2 shrink-0 bg-[#270067] border-[3px] sm:border-2 border-black rounded hover:bg-[#330081] text-[#d3c5ab] transition-all shadow-[3px_3px_0px_#000000] sm:shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
         title={muted ? 'Aktifkan suara' : 'Matikan suara'}
       >
-        {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+        {muted ? <VolumeX size={16} className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 size={16} className="w-4 h-4 sm:w-5 sm:h-5" />}
       </button>
 
       {/* Logout */}
@@ -91,10 +89,10 @@ export default function GameHeader({ room, player, roleInfo, socket, muted, setM
           if (onLeaveRoom) onLeaveRoom();
           router.push('/');
         }}
-        className="p-2 bg-[#93000a] hover:bg-[#ffb4ab] hover:text-[#690005] text-[#ffdad6] border-2 border-black rounded transition-all shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+        className="p-1.5 sm:p-2 shrink-0 bg-[#93000a] hover:bg-[#ffb4ab] hover:text-[#690005] text-[#ffdad6] border-[3px] sm:border-2 border-black rounded transition-all shadow-[3px_3px_0px_#000000] sm:shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
         title="Keluar"
       >
-        <LogOut size={16} />
+        <LogOut size={16} className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     </div>
   );

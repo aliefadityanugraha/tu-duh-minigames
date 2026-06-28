@@ -9,7 +9,7 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket]   = useState(null);
   const [room, setRoom]       = useState(null);
   const [player, setPlayer]   = useState(null);
-  const [roleInfo, setRoleInfo] = useState({ role: null, isGuru: false });
+  const [roleInfo, setRoleInfo] = useState({ role: null, isGuru: false, teammates: [] });
 
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
@@ -128,7 +128,7 @@ export const SocketProvider = ({ children }) => {
     // ── Join ──
     s.on('join-success', ({ roomCode, player }) => {
       setPlayer(player);
-      setRoleInfo({ role: player.role, isGuru: player.isGuru });
+      setRoleInfo({ role: player.role, isGuru: player.isGuru, teammates: player.teammates || [] });
       setLoading(false);
       addLog(`Bergabung ke Room ${roomCode}.`);
       // Simpan session untuk auto re-join jika koneksi terputus
@@ -160,8 +160,8 @@ export const SocketProvider = ({ children }) => {
     });
 
     // ── Peran ditetapkan ──
-    s.on('role-assigned', ({ role, isGuru }) => {
-      setRoleInfo({ role, isGuru });
+    s.on('role-assigned', ({ role, isGuru, teammates }) => {
+      setRoleInfo({ role, isGuru, teammates: teammates || [] });
       setCurrentTask(null); setCurrentQuestion(null);
       setFeedback(null); setIsAnswered(false); setSelectedOption(null);
       setTaskError(null); setMinigameRetryKey(0);
@@ -216,6 +216,14 @@ export const SocketProvider = ({ children }) => {
     s.on('game-error', (msg) => {
       setError(msg);
       addLog(`⚠️ ${msg}`);
+    });
+
+    s.on('kicked-by-guru', (msg) => {
+      alert(msg);
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('among_us_room_session');
+        window.location.href = '/';
+      }
     });
 
     // ── Task locked (Warga non-target saat sabotase fase 2) ──
@@ -421,7 +429,7 @@ export const SocketProvider = ({ children }) => {
     _clearSession();
     setRoom(null);
     setPlayer(null);
-    setRoleInfo({ role: null, isGuru: false });
+    setRoleInfo({ role: null, isGuru: false, teammates: [] });
     setCurrentTask(null);
     setCurrentQuestion(null);
     setFeedback(null);

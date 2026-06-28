@@ -11,6 +11,11 @@ export default function AdminView({
   onPauseDebat, onResetGame, onRestart,
   onTriggerTopicDebate, onEndTopicDebate, onTriggerPresentation, onEndPresentation,
 }) {
+  const { skinList } = useSocket();
+  const avatarColors = [
+    '#41e5b3', '#8fb2ff', '#ffdf9c', '#ffb7d7',
+    '#cda4ff', '#ffc58f', '#8ffff3', '#ffb4ab',
+  ];
 
   return (
     <main className="relative z-10 w-full flex-1 flex flex-col">

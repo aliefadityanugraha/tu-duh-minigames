@@ -37,6 +37,7 @@ function checkWinConditions(roomCode, io) {
 function _endGame(roomCode, io, winner, reason) {
   const room = rooms[roomCode];
   if (!room || room.state === 'ended') return;
+  if (room.tickerInterval) clearInterval(room.tickerInterval);
   room.state      = 'ended';
   room.winner     = winner;
   room.winReason  = reason;   // simpan alasan kemenangan
@@ -73,7 +74,8 @@ function tallyVotes(roomCode, io) {
   let eliminatedPlayer = null;
   let reason           = '';
 
-  const livingCount = room.players.filter(p => !p.isDead && !p.isGuru).length;
+  // Hanya pemain online yang bisa memilih (offline tidak dihitung agar voting tidak mandek)
+  const livingCount = room.players.filter(p => !p.isDead && !p.isGuru && p.isOnline !== false).length;
   const majorityThreshold = Math.ceil(livingCount / 2);
 
   if (skipVotes >= highestVotes && skipVotes > 0) {
@@ -158,7 +160,7 @@ function startRoomTicker(roomCode, io) {
           io.to(roomCode).emit('sabotage-cancelled', { reason: 'Provokator gagal menyelesaikan soal kilat! Sabotase dibatalkan.' });
         } else {
           // Fase rescue: Warga gagal → Provokator menang
-          r.sabotage.active = false;
+          r.sabotage = null;
           r.gameStats.sabotagesFailed++;
           r.gameStats.eventLog.push({ time: Date.now(), type: 'sabotage_failed', message: 'Sabotase gagal diatasi! Provokator menang!' });
           _endGame(roomCode, io, 'provokator', 'Sabotase Pancasila gagal diatasi tepat waktu!');
@@ -229,7 +231,18 @@ function startRoomTicker(roomCode, io) {
       }
     }
 
-    // ── 6. Timer per-misi (15 detik per task) ──
+    // ── 6. Timer presentasi (auto-end jika Guru lupa menekan tombol selesai) ──
+    if (r.presentation?.active && r.presentation?.timer != null && r.presentation.timer > 0) {
+      r.presentation.timer--;
+      changed = true;
+      if (r.presentation.timer <= 0) {
+        r.presentation.active = false;
+        r.presentation = null;
+        io.to(roomCode).emit('presentation-ended', { message: 'Waktu presentasi habis! Sesi selesai otomatis.' });
+      }
+    }
+
+    // ── 7. Timer per-misi (15 detik per task) ──
     if (r.activeTaskSessions && r.state === 'playing') {
       const timerPausedTask = r.sabotage?.active || r.duel?.active || r.debate?.active || r.topicDebate?.active;
       if (!timerPausedTask) {

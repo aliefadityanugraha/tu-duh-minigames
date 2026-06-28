@@ -14,6 +14,7 @@ import SabotageOverlay from '../components/overlays/SabotageOverlay';
 import SabotageRescueOverlay from '../components/overlays/SabotageRescueOverlay';
 import DebateOverlay from '../components/overlays/DebateOverlay';
 import PresentationOverlay from '../components/overlays/PresentationOverlay';
+import RoleRevealOverlay from '../components/overlays/RoleRevealOverlay';
 
 export default function Game() {
   const [isMounted, setIsMounted] = useState(false);
@@ -23,6 +24,7 @@ export default function Game() {
   const [muted, setMuted] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [isNextTaskLoading, setIsNextTaskLoading] = useState(false);
+  const [showRoleReveal, setShowRoleReveal] = useState(true);
   
   const socketContext = useSocket();
 
@@ -53,6 +55,7 @@ export default function Game() {
 
   const {
     socket, room, player, roleInfo, logs,
+    skinList,
     currentTask, feedback, isAnswered,
     selectedOption, setSelectedOption,
     setCurrentTask, setFeedback, setIsAnswered, setTaskError,
@@ -241,6 +244,7 @@ export default function Game() {
           room={room}
           player={player}
           roleInfo={roleInfo}
+          skinList={skinList}
           currentTask={currentTask}
           isAnswered={isAnswered}
           selectedOption={selectedOption}
@@ -320,6 +324,17 @@ export default function Game() {
         room.presentation?.playerId === player?.id &&
         presentationNotif && (
         <PresentationOverlay message={presentationNotif} />
+      )}
+
+      {/* 6. Role Reveal Overlay — dipanggil saat awal game */}
+      {showRoleReveal && room.state === 'playing' && !roleInfo.isGuru && (
+        <RoleRevealOverlay
+          role={roleInfo.role}
+          isGuru={roleInfo.isGuru}
+          player={player}
+          skinList={skinList}
+          onComplete={() => setShowRoleReveal(false)}
+        />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { io } from 'socket.io-client';
+import { INITIAL_SKINS } from '../components/lobby/WaitingRoom';
 
 const SocketContext = createContext(null);
 
@@ -17,7 +18,6 @@ export const SocketProvider = ({ children }) => {
 
   // State task (kuis atau mini-game) & feedback
   const [currentTask, setCurrentTask]         = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState(null); // legacy alias
   const [feedback, setFeedback]                 = useState(null);
   const [isAnswered, setIsAnswered]             = useState(false);
   const [selectedOption, setSelectedOption]     = useState(null);
@@ -35,9 +35,29 @@ export const SocketProvider = ({ children }) => {
   // State presentasi (notifikasi ke pemain terpilih)
   const [presentationNotif, setPresentationNotif] = useState(null);
 
+  const [skinList, setSkinList] = useState(INITIAL_SKINS);
+  
+  // Sinkronisasi skin list dari server
+  useEffect(() => {
+    if (socket) {
+      socket.on('skin-list-updated', (newList) => {
+        setSkinList(newList);
+      });
+      // Ambil initial list jika perlu
+      socket.emit('get-skin-list');
+    }
+  }, [socket]);
+
   // State audio
   const [audio, setAudio] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef(null);
+  const isMutedRef = useRef(false);
+
+  // Keep isMutedRef in sync with isMuted state
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
 
   // State debat topik
   const [topicDebateNotif, setTopicDebateNotif] = useState(null);
@@ -67,6 +87,18 @@ export const SocketProvider = ({ children }) => {
     // ── Koneksi / reconnect ──
     s.on('connect', () => {
       console.log('[Socket] Terhubung:', s.id);
+      // Auto re-join setelah reconnect (socket.id baru)
+      if (typeof window === 'undefined') return;
+      const saved = _loadSession();
+      if (saved?.roomCode && saved?.name && saved?.sessionId) {
+        console.log('[Socket] Auto re-join room:', saved.roomCode);
+        s.emit('join-room', {
+          roomCode:  saved.roomCode,
+          name:      saved.name,
+          isGuru:    saved.isGuru ?? false,
+          sessionId: saved.sessionId,
+        });
+      }
     });
 
     s.on('disconnect', (reason) => {
@@ -92,25 +124,6 @@ export const SocketProvider = ({ children }) => {
 
     s.on('reconnect_attempt', () => {
       console.log('[Socket] Mencoba reconnect...');
-    });
-
-    // ── Auto re-join setelah reconnect ──
-    // Saat koneksi putus lalu terhubung lagi, socket.id berubah.
-    // Kita perlu kirim join-room lagi dengan sessionId agar server bisa
-    // mengenali pemain lama dan menyambung kembali ke room yang sama.
-    s.on('connect', () => {
-      // Baca data dari sessionStorage (persisten meski koneksi putus)
-      if (typeof window === 'undefined') return;
-      const saved = _loadSession();
-      if (saved?.roomCode && saved?.name && saved?.sessionId) {
-        console.log('[Socket] Auto re-join room:', saved.roomCode);
-        s.emit('join-room', {
-          roomCode:  saved.roomCode,
-          name:      saved.name,
-          isGuru:    saved.isGuru ?? false,
-          sessionId: saved.sessionId,
-        });
-      }
     });
 
     // Handle jika room sudah dihapus server saat idle / error join
@@ -171,8 +184,9 @@ export const SocketProvider = ({ children }) => {
       // Play backsound on game start
       const newAudio = new Audio('/sounds/bg-game.mp3');
       newAudio.loop = true;
-      newAudio.muted = isMuted;
+      newAudio.muted = isMutedRef.current;
       newAudio.play().catch(e => console.log('Autoplay blocked:', e));
+      audioRef.current = newAudio;
       setAudio(newAudio);
 
       router.push('/game');
@@ -181,8 +195,6 @@ export const SocketProvider = ({ children }) => {
     // ── Task delivery (kuis atau mini-game) ──
     const _applyTaskDelivery = (task) => {
       setCurrentTask(task);
-      if (task.type === 'quiz') setCurrentQuestion(task.data);
-      else setCurrentQuestion(null);
       setFeedback(null);
       setIsAnswered(false);
       setSelectedOption(null);
@@ -240,7 +252,6 @@ export const SocketProvider = ({ children }) => {
     // ── Task timeout (auto-skip after 15s) ──
     s.on('task-timeout', ({ sessionId, message }) => {
       setCurrentTask(null);
-      setCurrentQuestion(null);
       setFeedback(null);
       setIsAnswered(false);
       setSelectedOption(null);
@@ -341,12 +352,14 @@ export const SocketProvider = ({ children }) => {
     });
     s.on('game-restarted', () => {
       addLog('🔄 Game di-restart ke lobi.');
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
       }
+      setAudio(null);
       // Jangan reset roleInfo di sini — biarkan room-updated yang sync
-      setCurrentTask(null); setCurrentQuestion(null); setFeedback(null);
+      setCurrentTask(null); setFeedback(null);
       setIsAnswered(false); setSelectedOption(null);
       setTaskError(null); setMinigameRetryKey(0);
       setSabotageQuiz(null); setSabotageRescue(null);
@@ -359,7 +372,14 @@ export const SocketProvider = ({ children }) => {
 
     s.on('player-left', ({ name }) => addLog(`🚪 ${name} terputus dari room.`));
 
-    return () => s.disconnect();
+    return () => {
+      s.disconnect();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   // Countdown cooldown duel di sisi client (sinkronisasi dengan server)
@@ -421,17 +441,26 @@ export const SocketProvider = ({ children }) => {
     if (socket) socket.emit('change-skin', { skinId });
   };
 
+  const uploadCustomSkin = (skinUrl) => {
+    if (socket) socket.emit('add-custom-skin', { skinUrl });
+  };
+
   const leaveRoom = () => {
     if (socket) {
       socket.emit('leave-room');
       socket.disconnect();
     }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    setAudio(null);
     _clearSession();
     setRoom(null);
     setPlayer(null);
     setRoleInfo({ role: null, isGuru: false, teammates: [] });
     setCurrentTask(null);
-    setCurrentQuestion(null);
     setFeedback(null);
     setIsAnswered(false);
     setSelectedOption(null);
@@ -450,13 +479,15 @@ export const SocketProvider = ({ children }) => {
       error, setError, loading, setLoading,
       logs, joinRoom, startGame, leaveRoom,
       // soal & task
-      currentTask, currentQuestion, feedback, isAnswered, selectedOption,
+      currentTask, feedback, isAnswered, selectedOption,
       setCurrentTask, setSelectedOption, setIsAnswered, setFeedback,
       taskError, setTaskError, minigameRetryKey,
       taskTimer,
       // audio
       isMuted, toggleMute: () => {
-        if (audio) audio.muted = !audio.muted;
+        if (audioRef.current) {
+          audioRef.current.muted = !audioRef.current.muted;
+        }
         setIsMuted(prev => !prev);
       },
       // sabotase
@@ -473,6 +504,8 @@ export const SocketProvider = ({ children }) => {
       sendDebateChat,
       // skin
       changeSkin,
+      uploadCustomSkin,
+      skinList,
     }}>
       {children}
     </SocketContext.Provider>

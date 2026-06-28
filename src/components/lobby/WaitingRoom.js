@@ -3,24 +3,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, LogOut, Settings, Timer, X, Users, Info, ShieldAlert } from 'lucide-react';
 import Navbar from '../Navbar';
 import { useSocket } from '../../hooks/useSocket';
+import { CustomSkinUploader } from './CustomSkinUploader';
 
 const snappy = { type: 'spring', stiffness: 500, damping: 30 };
 const punchy = { type: 'spring', stiffness: 400, damping: 25 };
 
-export const SKINS = [
-  { id: 0, name: 'Astronot', img: '/images/characters/astronot.png' },
-  { id: 1, name: 'Pelajar', img: '/images/characters/pelajar.png' },
-  { id: 2, name: 'Seniman', img: '/images/characters/seniman.png' },
-  { id: 3, name: 'Petani', img: '/images/characters/petani.png' },
-  { id: 4, name: 'Dokter', img: '/images/characters/dokter.png' },
-  { id: 5, name: 'Polisi', img: '/images/characters/polisi.png' },
-  { id: 6, name: 'Musisi', img: '/images/characters/musisi.png' },
+export const INITIAL_SKINS = [
+  { id: 0, name: 'Astronot',  img: '/images/characters/astronot.png', bg: '#ffb4ab', text: '#690005', border: '#ff897d' },
+  { id: 1, name: 'Pelajar',   img: '/images/characters/pelajar.png',   bg: '#8fb2ff', text: '#002d70', border: '#5988f8' },
+  { id: 2, name: 'Seniman',   img: '/images/characters/seniman.png',   bg: '#cda4ff', text: '#2c005b', border: '#a87aff' },
+  { id: 3, name: 'Petani',    img: '/images/characters/petani.png',    bg: '#5ffcc9', text: '#003829', border: '#00d9a2' },
+  { id: 4, name: 'Dokter',    img: '/images/characters/dokter.png',    bg: '#8ffff3', text: '#003833', border: '#3ae9d8' },
+  { id: 5, name: 'Polisi',    img: '/images/characters/polisi.png',    bg: '#ffdf9c', text: '#251a00', border: '#ffc312' },
+  { id: 6, name: 'Musisi',    img: '/images/characters/musisi.png',    bg: '#ffb7d7', text: '#5b002c', border: '#ff6eb4' },
+  { id: 7, name: 'Guru',      img: '/images/characters/guru.png',      bg: '#ffc312', text: '#3f2e00', border: '#e6aa00' },
 ];
 
-export const PLAYER_COLORS = [
-  '#ffb4ab', '#8fb2ff', '#5ffcc9', '#ffdf9c', '#ffb7d7', '#cda4ff', '#8ffff3',
-  '#ffc8a1', '#d6ffb4', '#ffb4e5', '#a3c2ff', '#c4ffcb', '#ffd3b4', '#e2b4ff'
-];
+export let SKINS = [...INITIAL_SKINS];
+
+// ── Modal Pilih Skin ──────────────────────────────────────────────────────────
+function SkinModal({ mySkinId, onSelect, onClose }) {
+  const { skinList, uploadCustomSkin } = useSocket();
+  const [hoveredId, setHoveredId] = useState(null);
+  const activeSkin = skinList[mySkinId] ?? skinList[0];
 
 export const OPERATOR_SKIN = { id: 'operator', name: 'Operator', img: '/images/characters/operator.png', bg: '#e5e7eb', text: '#111827', border: '#9ca3af' };
 
@@ -56,10 +61,13 @@ function SkinModal({ mySkinId, mySlotColor, onSelect, onClose }) {
               <p className="font-mono text-[#9c8f78] text-xs uppercase">Saat Ini</p>
               <p className="font-rubik italic text-[#ffc312] text-xl font-bold leading-tight">{activeSkin.name}</p>
             </div>
-          </div>
-          <div className="grid grid-cols-4 gap-3 p-4 overflow-y-auto custom-scrollbar">
-            {SKINS.map((skin, i) => {
-              const isActive = mySkinId === skin.id;
+          </motion.div>
+
+          {/* Grid 4×2 */}
+          <div className="grid grid-cols-4 gap-3 p-5">
+            {skinList.map((skin, i) => {
+              const isActive  = mySkinId === skin.id;
+              const isHovered = hoveredId === skin.id;
               return (
                 <motion.button
                   key={skin.id} onClick={() => { onSelect(skin.id); onClose(); }} title={skin.name}
@@ -68,11 +76,25 @@ function SkinModal({ mySkinId, mySlotColor, onSelect, onClose }) {
                   className={`relative flex flex-col items-center justify-center aspect-square rounded-lg border-[3px] cursor-pointer overflow-hidden group ${isActive ? 'border-[#ffc312] shadow-[4px_4px_0px_#ffc312] z-10' : 'border-black shadow-[2px_2px_0px_#000] hover:border-[#ffc312]'}`}
                   style={{ backgroundColor: mySlotColor }}
                 >
-                  <img src={skin.img} alt={skin.name} className="w-[125%] h-[125%] object-contain mt-2" />
-                  {isActive && <div className="absolute bottom-1 bg-black text-[#ffc312] px-2 py-0.5 rounded text-[9px] font-bold border border-[#ffc312]">DIPAKAI</div>}
+                  <img src={skin.img} alt={skin.name} className="w-full h-full object-contain" />
+                  {isActive && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={snappy}
+                      className="text-[8px] font-mono font-bold leading-none"
+                      style={{ color: skin.text }}
+                    >
+                      ✓ AKTIF
+                    </motion.span>
+                  )}
                 </motion.button>
               );
             })}
+            <CustomSkinUploader onUpload={(skinUrl) => {
+              uploadCustomSkin(skinUrl);
+              onClose();
+            }} />
           </div>
           <div className="px-4 py-3 bg-[#190047] border-t-2 border-[#4f4632] shrink-0">
             <p className="text-[#9c8f78] text-xs font-mono text-center">Pilihan terlihat oleh semua pemain</p>

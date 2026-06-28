@@ -12,7 +12,7 @@ import { SKINS, PLAYER_COLORS, OPERATOR_SKIN } from '../lobby/WaitingRoom';
  * Layout in-game: Mission Book (+ optional Radar Monitor).
  */
 export default function PlayerView({
-  room, player, roleInfo,
+  room, player, roleInfo, skinList,
   currentTask, isAnswered, selectedOption, feedback,
   taskError, minigameRetryKey,
   taskLocked,
@@ -441,10 +441,152 @@ export default function PlayerView({
                           <span className="text-[9px] sm:text-[11px] text-[#ffc312] font-extrabold">{p.score} TASK</span>
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
-              </div>
+                    </div>
+
+                    <div className="flex flex-col border-t-4 border-black bg-[#22005c] h-64">
+                      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 scrollbar-thin">
+                        {studentPlayers.map((p, idx) => {
+                          const skin = skinList.find(s => s.id === p.skinId) || skinList[0];
+                          const color = skin.bg;
+                          const isMe = p.id === player?.id;
+                          return (
+                            <div
+                              key={p.name}
+                              className={`px-2.5 py-2 flex items-center justify-between text-[10px] sm:text-[11px] font-mono transition-all duration-100 ${isMe
+                                ? 'bg-[#2c007a] border-4 border-[#ffc312] text-yellow-300 shadow-[3px_3px_0px_rgba(0,0,0,1)]'
+                                : p.isDead
+                                  ? 'bg-[#1e004e] border-2 border-dashed border-[#5b4a79] text-neutral-500 opacity-50'
+                                  : 'bg-[#2c007a] border-4 border-black text-[#d3c5ab] shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_rgba(0,0,0,1)]'
+                                }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div
+                                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-black flex-shrink-0 flex items-center justify-center text-sm ${p.isDead ? 'opacity-40 grayscale' : ''}`}
+                                  style={{ backgroundColor: color }}
+                                >
+                                  <img src={skin.img} alt={skin.name} className="w-full h-full object-contain" />
+                                </div>
+                                <span className="font-bold truncate max-w-[80px] sm:max-w-[100px]">
+                                  {p.name} {isMe && '(Anda)'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[9px] text-[#ffc312] font-extrabold">
+                                  {p.score} PT
+                                </span>
+                                <span className={`text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 border border-black rounded shadow-[1px_1px_0px_rgba(0,0,0,1)] ${p.isDead ? 'bg-[#93000a] text-red-200' : 'bg-[#00c899] text-black'
+                                  }`}>
+                                  {p.isDead ? 'DEAD' : 'ALIVE'}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* CARD 2: COLLAPSIBLE MONITOR WARGA (Mobile Collapsed) */
+                  <div
+                    onClick={() => setShowRadar(true)}
+                    className="w-full bg-[#22005c] border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] px-3 py-4 flex items-center justify-between cursor-pointer hover:bg-[#270067] transition-all select-none"
+                  >
+                    <span className="font-mono text-[#ffc312] text-[10px] sm:text-[11px] font-black tracking-wider flex items-center gap-1.5">
+                      📡 MONITOR WARGA ({alivePlayers.length}/{studentPlayers.length})
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] text-[#41e5b3] font-bold tracking-widest">LIVE RADAR</span>
+                      <ChevronUp size={14} className="text-yellow-400" />
+                    </div>
+                  </div>
+                )
+              ) : (
+                // DESKTOP & LANDSCAPE VIEW
+                showRadar ? (
+                  /* CARD 2: COLLAPSIBLE MONITOR WARGA (Desktop Expanded) */
+                  <div className="w-full flex flex-col bg-[#22005c] border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] h-full min-h-0">
+                    <div
+                      onClick={() => setShowRadar(false)}
+                      className={`shrink-0 px-3 bg-[#270067] flex items-center justify-between cursor-pointer hover:bg-[#330081] transition-colors select-none ${isMobileLandscape ? 'py-2.5' : 'py-5'
+                        }`}
+                    >
+                      <span className="font-mono text-[#ffc312] text-[10px] sm:text-[11px] font-black tracking-wider flex items-center gap-1.5">
+                        📡 MONITOR WARGA ({alivePlayers.length}/{studentPlayers.length})
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[10px] text-[#41e5b3] font-bold tracking-widest hidden sm:inline">LIVE RADAR</span>
+                        <ChevronDown size={14} className="text-yellow-400" />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col border-t-4 border-black flex-1 min-h-0 bg-[#22005c]">
+                      <div className={`flex-1 overflow-y-auto flex flex-col scrollbar-thin ${isMobileLandscape ? 'p-1.5 gap-1.5' : 'p-3 gap-3'
+                        }`}>
+                        {studentPlayers.map((p, idx) => {
+                          const skin = skinList.find(s => s.id === p.skinId) || skinList[0];
+                          const color = skin.bg;
+                          const isMe = p.id === player?.id;
+                          return (
+                            <div
+                              key={p.name}
+                              className={`px-2 py-1.5 flex items-center justify-between text-[10px] sm:text-[11px] font-mono transition-all duration-100 ${isMobileLandscape ? 'border-2' : 'border-4'
+                                } ${isMe
+                                  ? 'bg-[#2c007a] border-[#ffc312] text-yellow-300 shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                  : p.isDead
+                                    ? 'bg-[#1e004e] border-dashed border-[#5b4a79] text-neutral-500 opacity-50'
+                                    : 'bg-[#2c007a] border-black text-[#d3c5ab] shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_rgba(0,0,0,1)]'
+                                }`}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <div
+                                  className={`rounded-full border border-black flex-shrink-0 flex items-center justify-center overflow-hidden text-[10px] sm:text-xs ${isMobileLandscape ? 'w-5 h-5' : 'w-7 h-7 sm:w-8 sm:h-8'
+                                    } ${p.isDead ? 'opacity-40 grayscale' : ''}`}
+                                  style={{ backgroundColor: color }}
+                                >
+                                  <img src={skin.img} alt={skin.name} className="w-full h-full object-contain" />
+                                </div>
+                                <span className="font-bold truncate max-w-[75px] sm:max-w-[100px]">
+                                  {p.name} {isMe && '(Anda)'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[9px] text-[#ffc312] font-extrabold">
+                                  {p.score} PT
+                                </span>
+                                <span className={`text-[8px] font-black px-1.5 py-0.5 border border-black rounded shadow-[1px_1px_0px_rgba(0,0,0,1)] ${p.isDead ? 'bg-[#93000a] text-red-200' : 'bg-[#00c899] text-black'
+                                  }`}>
+                                  {p.isDead ? 'DEAD' : 'ALIVE'}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => setShowRadar(true)}
+                    className="flex-1 w-full h-full bg-[#22005c] border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-between py-5 cursor-pointer hover:bg-[#270067] transition-all select-none"
+                  >
+                    <div className="relative flex flex-col items-center justify-center bg-[#270067] p-2 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform">
+                      <span className="text-xl">📡</span>
+                      <span className="absolute -top-1.5 -right-1.5 bg-[#41e5b3] text-black border border-black font-mono text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-[1px_1px_0px_rgba(0,0,0,1)]">
+                        {alivePlayers.length}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center py-4">
+                      <span className="font-mono text-[#ffc312] text-[10px] font-black tracking-widest uppercase [writing-mode:vertical-lr] select-none">
+                        MONITOR WARGA
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <ChevronUp size={16} className="text-yellow-400 rotate-90 animate-pulse" />
+                      <span className="font-mono text-[#41e5b3] text-[8px] font-extrabold tracking-tighter">LIVE</span>
+                    </div>
+                  </div>
+                )
+              )}
             </aside>
 
             {/* MAIN GAME WORK AREA */}

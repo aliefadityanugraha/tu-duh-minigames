@@ -1,13 +1,13 @@
 ---
 name: character-skin-system
-description: Pattern for transitioning from emoji-based character identifiers to image-based character assets in the lobby/roster.
+description: Pattern for transitioning to image-based character assets and implementing dynamic custom skin uploads.
 source: auto-skill
-extracted_at: '2026-06-24T12:36:54.600Z'
+extracted_at: '2026-06-25T15:27:10.595Z'
 ---
 
 # Character Skin System
 
-This skill documents the approach for replacing character emoji identifiers with image-based assets (e.g., PNGs) within the game's skin system.
+This skill documents the approach for replacing character emoji identifiers with image-based assets and enabling dynamic custom skin uploads.
 
 ## Procedure
 
@@ -16,21 +16,26 @@ This skill documents the approach for replacing character emoji identifiers with
     *   Replace `emoji: '...'` with `img: '/images/characters/<name>.png'`.
     *   Ensure all existing skin objects share the same schema for consistency.
 
-2.  **Asset Preparation**
-    *   Create the target directory: `public/images/characters/`.
-    *   Ensure all images are optimized, appropriately sized (e.g., 64x64 or 128x128), and follow consistent naming conventions.
+2.  **Dynamic Upload Implementation**
+    *   **Backend:** Use `multer` in `server.js` to handle `multipart/form-data`.
+    *   **Endpoint:** Create an API route (e.g., `/api/upload-skin`) that saves files to `public/images/characters/custom/`.
+    *   **Client:** Create an `CustomSkinUploader` component that uses `FormData` and `fetch` to POST images to the server.
+    *   **State:** Update the client-side `SKINS` array dynamically once the server returns the new `skinUrl`.
 
-3.  **UI Component Updates**
-    *   **Skin Selection Modal:** Find rendering loops for `SKINS.map(...)` and replace `<span className="text-3xl">{skin.emoji}</span>` with `<img src={skin.img} alt={skin.name} className="..." />`.
-    *   **Waiting Room Roster:** Update the mapping in the player grid. Ensure consistent styling (`object-contain`) to prevent image distortion.
-    *   **Player Preview Buttons:** Update `MySkinButton` or equivalent preview components.
+3.  **Asset Preparation**
+    *   Ensure the target directory `public/images/characters/custom/` exists and is writable.
+    *   Use appropriate file naming (e.g., `skin-<timestamp>.png`).
 
-4.  **Styling & UX**
-    *   Use `object-contain` for `<img>` tags to ensure images scale correctly within square containers.
-    *   Retain existing shadow/border props from the original emoji-based design to maintain the neo-brutalist aesthetic.
+4.  **UI Component Updates**
+    *   **Skin Selection Modal:** Include `CustomSkinUploader` as an entry point for users to add their own character images.
+    *   **Rendering:** Ensure the mapping loop in the `SkinModal` renders both static and custom-uploaded skins using `object-contain` for consistency.
+
+5.  **Styling & UX**
+    *   Maintain the neo-brutalist aesthetic (thick borders, flat shadows) for custom skin tiles.
+    *   Ensure proper loading/error states for image uploads.
 
 ## Why
-Images provide higher visual fidelity and more thematic branding than standard Unicode emojis, essential for a game's identity.
+Images provide higher visual fidelity than emojis. Allowing custom user uploads increases engagement and personal branding.
 
 ## How to apply
 When migrating or adding new skins, ensure both the data constant and the `public/images` directory are synchronized. Always use standard `alt` text for accessibility.

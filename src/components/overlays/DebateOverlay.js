@@ -6,9 +6,16 @@ const snappy = { type: 'spring', stiffness: 500, damping: 30 };
 const punchy = { type: 'spring', stiffness: 600, damping: 20 };
 
 export default function DebateOverlay({ debate, players, selfId, selfRole, isGuru, isPlayerDead, onVote, onSendChat }) {
+  const { skinList } = useSocket();
   const [chatInput, setChatInput] = useState('');
+  const [myVote, setMyVote] = useState(null);
 
   const chatEndRef = useRef(null);
+
+  // Reset vote lokal setiap kali sesi debat baru dimulai
+  useEffect(() => {
+    setMyVote(null);
+  }, [debate?.reason]);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -21,8 +28,10 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
   const eligibleVoters = players.filter(p => !p.isDead && !p.isGuru);
   const votablePlayers = players.filter(p => !p.isGuru);
 
-  const hasVoted = selfId && Object.keys(debate.votes || {}).includes(selfId);
-  const votedFor = hasVoted ? debate.votes[selfId] : null;
+  // Format baru dari server: { voterIds: [...], voteCounts: { targetId: count } }
+  const voterIds  = debate.votes?.voterIds  || [];
+  const voteCounts = debate.votes?.voteCounts || {};
+  const hasVoted  = myVote !== null || (selfId && voterIds.includes(selfId));
 
   const timer = debate.timer ?? 0;
   const minutes = Math.floor(timer / 60);
@@ -36,6 +45,7 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
 
   const handleVote = (targetId) => {
     if (hasVoted || isPlayerDead || isGuru) return;
+    setMyVote(targetId);
     onVote(targetId);
   };
 
@@ -48,8 +58,7 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
 
   const getDotsForPlayer = (playerId) => {
     if (debate.active) return false;
-    const hasThisPlayerVoted = Object.keys(debate.votes || {}).includes(playerId);
-    return hasThisPlayerVoted;
+    return voterIds.includes(playerId);
   };
 
   return (
@@ -217,9 +226,13 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
               {votablePlayers.map((p, i) => {
                 const isSelf = p.id === selfId;
                 const isDead = p.isDead;
-                const iVotedForThis = votedFor === p.id;
+                const iVotedForThis = myVote === p.id;
                 const disabled = hasVoted || isPlayerDead || isGuru || isDead || isSelf;
                 const hasVotedStatus = getDotsForPlayer(p.id);
+                const skin = skinList.find(s => s.id === p.skinId) ?? skinList[0];
+
+                // Gunakan voteCounts dari server (format baru yang anonim)
+                const voteCount = voteCounts[p.id] || 0;
 
                 const skin = SKINS.find(s => s.id === p.skinId) || SKINS[0];
                 const color = PLAYER_COLORS[p.colorId ?? 0];
@@ -231,24 +244,44 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ ...snappy, delay: 0.2 + i * 0.04 }}
                     whileHover={!isDead ? { scale: 1.04 } : {}}
-                    className={`pt-3 pb-4 px-2 flex flex-col items-center border-4 border-black ${
+                    className={`pb-4 flex flex-col items-center border-4 border-black overflow-hidden ${
                       isDead ? 'bg-[#190047] opacity-50 grayscale' :
                       isSelf ? 'bg-gradient-to-b from-[#00c899] to-[#190047]' :
                       'bg-[#40009d]'
                     }`}
                   >
-                    {/* Avatar Box */}
+                    {/* Avatar — full-width, square, fills top of card */}
                     <motion.div
                       animate={isDead ? {} : { scale: [1, 1.03, 1] }}
                       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                      className="flex flex-col w-12 h-12 md:w-16 md:h-16 items-center justify-center mb-2 border-4 border-black overflow-hidden"
-                      style={{ backgroundColor: color }}
+                      className="relative w-full aspect-square border-b-4 border-black overflow-hidden flex items-center justify-center"
+                      style={{ backgroundColor: skin.bg }}
                     >
-                      {isDead ? <span className="text-xl md:text-3xl">💀</span> : (skin.img ? <img src={skin.img} alt={skin.name} className="w-[125%] h-[125%] object-cover mt-2" /> : <span className="text-xl md:text-3xl">🧑‍🚀</span>)}
+                      {isDead ? (
+                        <span className="text-4xl md:text-5xl">💀</span>
+                      ) : (
+                        <img
+                          src={skin.img}
+                          alt={skin.name}
+                          className="w-full h-full object-contain scale-110"
+                        />
+                      )}
+
+                      {/* Vote count badge — top right corner */}
+                      {voteCount > 0 && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={snappy}
+                          className="absolute top-1 right-1 min-w-[22px] h-[22px] flex items-center justify-center bg-[#93000a] border-2 border-black font-mono font-black text-white text-[11px] px-1 shadow-[2px_2px_0px_#000]"
+                        >
+                          {voteCount}🗳
+                        </motion.div>
+                      )}
                     </motion.div>
 
                     {/* Name */}
-                    <div className="font-mono text-[#e9ddff] text-[11px] md:text-sm text-center mb-2 truncate w-full px-1">
+                    <div className="font-mono text-[#e9ddff] text-[11px] md:text-sm text-center mt-2 mb-1 truncate w-full px-2 font-bold">
                       {p.name}
                     </div>
 
@@ -282,7 +315,7 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                         whileHover={!disabled ? { scale: 1.05 } : {}}
                         whileTap={!disabled ? { scale: 0.93 } : {}}
                         transition={punchy}
-                        className={`w-full flex items-center justify-center gap-1 p-2.5 border-4 border-black shadow-[4px_4px_0px_#000000] ${
+                        className={`w-full mx-0 flex items-center justify-center gap-1 py-2.5 border-4 border-black shadow-[4px_4px_0px_#000000] ${
                           iVotedForThis
                             ? 'bg-[#ffc312] text-[#3f2e00] font-black'
                             : disabled
@@ -296,7 +329,7 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                       </motion.button>
                     )}
                     {!isDead && isSelf && (
-                      <div className="w-full flex items-center justify-center gap-1 p-2.5 border-4 border-black bg-[#4f4632] text-gray-400 font-mono text-[10px] font-bold text-center">
+                      <div className="w-full flex items-center justify-center gap-1 py-2.5 border-4 border-black bg-[#4f4632] text-gray-400 font-mono text-[10px] font-bold text-center">
                         🚫 CANNOT VOTE SELF
                       </div>
                     )}
@@ -329,7 +362,7 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                 whileTap={!hasVoted ? { scale: 0.96 } : {}}
                 transition={punchy}
                 className={`w-full flex items-center justify-center gap-2 py-3 border-4 border-black shadow-[6px_6px_0px_#000000] ${
-                  votedFor === 'skip'
+                  myVote === 'skip'
                     ? 'bg-[#ffc312] text-[#3f2e00]'
                     : hasVoted
                     ? 'bg-[#3d2a00] text-gray-400 cursor-not-allowed'
@@ -337,7 +370,7 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
                 }`}
               >
                 <span className="font-rubik font-extrabold text-sm md:text-base uppercase tracking-wider">
-                  {votedFor === 'skip' ? '✅ SKIPPED VOTE' : '⏭️ SKIP VOTE'}
+                  {myVote === 'skip' ? '✅ SKIPPED VOTE' : '⏭️ SKIP VOTE'}
                 </span>
               </motion.button>
             )}

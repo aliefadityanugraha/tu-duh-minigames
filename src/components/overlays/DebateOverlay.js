@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSocket } from '../../hooks/useSocket';
+import { SKINS, PLAYER_COLORS } from '../lobby/WaitingRoom';
 
 const snappy = { type: 'spring', stiffness: 500, damping: 30 };
 const punchy = { type: 'spring', stiffness: 600, damping: 20 };
@@ -233,6 +233,9 @@ export default function DebateOverlay({ debate, players, selfId, selfRole, isGur
 
                 // Gunakan voteCounts dari server (format baru yang anonim)
                 const voteCount = voteCounts[p.id] || 0;
+
+                const skin = SKINS.find(s => s.id === p.skinId) || SKINS[0];
+                const color = PLAYER_COLORS[p.colorId ?? 0];
 
                 return (
                   <motion.div

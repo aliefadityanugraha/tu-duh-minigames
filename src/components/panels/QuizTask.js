@@ -20,7 +20,7 @@ export default function QuizTask({
       : `SILA #${taskData?.sila}`;
 
   return (
-    <div className="p-5 bg-[#190047] border-b-4 border-black shadow-[6px_6px_0px_#000000] flex flex-col gap-3">
+    <div className="p-4 sm:p-5 bg-[#190047] border-b-4 border-black shadow-[6px_6px_0px_#000000] flex flex-col gap-2.5 sm:gap-3">
       <div className="flex items-center justify-between">
         <div className="neo-badge bg-[#ffc312] text-[#6e5200] border-black text-xs py-1 px-2">
           📝 KUIS
@@ -30,7 +30,7 @@ export default function QuizTask({
         </span>
       </div>
 
-      <h3 className="font-rubik font-extrabold text-[#e9ddff] text-lg leading-snug">
+      <h3 className="font-rubik font-extrabold text-[#e9ddff] text-base sm:text-lg leading-snug">
         {taskData?.question}
       </h3>
 
@@ -50,7 +50,7 @@ export default function QuizTask({
               type="button"
               onClick={() => onSelectOption(idx)}
               disabled={isAnswered || isPlayerDead}
-              className={`flex items-center gap-3 p-3 text-left text-sm font-mono border-2 border-solid transition-all ${
+              className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 text-left text-xs sm:text-sm font-mono border-2 border-solid transition-all ${
                 isAnswered && isCorrectAnswer
                   ? 'bg-[#003829] border-[#41e5b3] text-[#41e5b3]'
                   : isWrongSelected
@@ -62,7 +62,7 @@ export default function QuizTask({
                   : 'bg-[#22005c] border-[#4f4632] text-[#e9ddff] hover:border-[#ffc312] hover:text-white cursor-pointer'
               }`}
             >
-              <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-black border-2 border-current rounded text-xs font-black">
+              <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center bg-black border-2 border-current rounded text-[10px] sm:text-xs font-black">
                 {String.fromCharCode(65 + idx)}
               </span>
               <span className="leading-tight flex-1">{opt}</span>
@@ -76,7 +76,7 @@ export default function QuizTask({
           type="button"
           onClick={onSubmitAnswer}
           disabled={selectedOption === null || isPlayerDead}
-          className={`w-full py-3 font-rubik italic text-base font-bold border-4 border-black shadow-[4px_4px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all ${
+          className={`w-full py-2.5 sm:py-3 font-rubik italic text-sm sm:text-base font-bold border-[3px] sm:border-4 border-black shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all ${
             selectedOption !== null && !isPlayerDead
               ? 'bg-[#ffc312] text-[#3f2e00] hover:bg-[#ffe5b3] cursor-pointer'
               : 'bg-[#270067] text-[#4f4632] cursor-not-allowed'
@@ -106,7 +106,7 @@ export default function QuizTask({
           <button
             type="button"
             onClick={onNextTask}
-            className="w-full py-3 neo-btn neo-btn-secondary text-sm flex items-center justify-center gap-2"
+            className="w-full py-2.5 sm:py-3 neo-btn neo-btn-secondary text-xs sm:text-sm flex items-center justify-center gap-2"
           >
             MISI BERIKUTNYA <ArrowRight size={14} />
           </button>

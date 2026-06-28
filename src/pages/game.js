@@ -113,9 +113,9 @@ export default function Game() {
   };
 
   // Task — mini-game selesai
-  const handleMinigameComplete = ({ sessionId, type }) => {
+  const handleMinigameComplete = ({ sessionId, type, ...rest }) => {
     if (isAnswered || !currentTask) return;
-    socket.emit('submit-task', { sessionId, type, context: 'task' });
+    socket.emit('submit-task', { sessionId, type, context: 'task', ...rest });
   };
 
   const handleNextTask = () => {
@@ -192,7 +192,8 @@ export default function Game() {
   const handleRestartGame         = () => socket.emit('restart-game');
   const handleVotePlayer          = (targetId) => socket.emit('vote-player', { targetPlayerId: targetId });
   const handleTriggerTopicDebate  = (topic) => socket.emit('trigger-topic-debate', { topic });
-  const handleTriggerPresentation = () => socket.emit('trigger-presentation');
+  const handleEndTopicDebate      = () => socket.emit('end-topic-debate');
+  const handleTriggerPresentation = (playerId) => socket.emit('trigger-presentation', { playerId });
   const handleEndPresentation     = () => socket.emit('end-presentation');
 
   return (
@@ -231,6 +232,7 @@ export default function Game() {
           onResetGame={handleRestartGame}
           onRestart={handleRestartGame}
           onTriggerTopicDebate={handleTriggerTopicDebate}
+          onEndTopicDebate={handleEndTopicDebate}
           onTriggerPresentation={handleTriggerPresentation}
           onEndPresentation={handleEndPresentation}
         />

@@ -11,7 +11,7 @@ export default function WargaPanel({
   currentTask, isAnswered, selectedOption, feedback,
   taskError, minigameRetryKey,
   isPlayerDead, taskLocked, taskTimer,
-  onSelectOption, onSubmitQuiz, onMinigameComplete, onNextTask, onClearTaskError, onRetryMinigameSubmit, onRetryQuizSubmit,
+  onSelectOption, onSubmitQuiz, onMinigameComplete, onNextTask, onClearTaskError, onRetryMinigameSubmit, onRetryQuizSubmit, playerProfile
 }) {
 
   // ── Task locked (sabotase aktif) ──
@@ -56,6 +56,8 @@ export default function WargaPanel({
           onClearTaskError={onClearTaskError}
           onRetryMinigameSubmit={onRetryMinigameSubmit}
           onRetryQuizSubmit={onRetryQuizSubmit}
+          isProvokator={false}
+          playerProfile={playerProfile}
         />
 
         {/* {lockedPreviews.map((task) => (

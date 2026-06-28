@@ -72,7 +72,13 @@ function registerJoinHandlers(socket, io) {
       socket.emit('join-success', { roomCode: code, player: existingPlayer });
       
       if (room.state === 'playing') {
-        socket.emit('role-assigned', { role: existingPlayer.role, isGuru: existingPlayer.isGuru, tasksRequired: room.tasksRequired });
+        let teammates = [];
+        if (existingPlayer.role === 'provokator') {
+          teammates = room.players
+            .filter(tp => tp.role === 'provokator')
+            .map(tp => tp.id);
+        }
+        socket.emit('role-assigned', { role: existingPlayer.role, isGuru: existingPlayer.isGuru, tasksRequired: room.tasksRequired, teammates });
       }
       console.log(`${existingPlayer.name} (Reconnected) ke room ${code}`);
       return;
@@ -91,7 +97,16 @@ function registerJoinHandlers(socket, io) {
       socket.emit('join-error', 'Room sudah penuh.'); return;
     }
 
-    const newPlayer = { id: socket.id, sessionId, name: sanitized, isGuru: !!isGuru, role: isGuru ? 'guru' : null, isDead: false, score: 0, answerHistory: [], isOnline: true, skinId: 0 };
+    const usedColors = new Set(room.players.map(p => p.colorId).filter(c => c !== undefined));
+    let colorId = 0;
+    for (let i = 0; i < 14; i++) {
+      if (!usedColors.has(i)) {
+        colorId = i;
+        break;
+      }
+    }
+
+    const newPlayer = { id: socket.id, sessionId, name: sanitized, isGuru: !!isGuru, role: isGuru ? 'guru' : null, isDead: false, score: 0, answerHistory: [], isOnline: true, skinId: 0, colorId };
     room.players.push(newPlayer);
     socket.join(code);
     socket.roomCode = code;
@@ -166,6 +181,33 @@ function registerJoinHandlers(socket, io) {
 
     io.to(code).emit('room-updated', getSanitizedRoom(code));
     io.to(code).emit('player-left', { name: leaving.name, isOffline: false });
+  });
+
+  // ── Guru mengeluarkan pemain (Kick) ──
+  socket.on('kick-player', (targetId) => {
+    const code = socket.roomCode;
+    const room = rooms[code];
+    if (!room) return;
+
+    const kicker = room.players.find(p => p.id === socket.id);
+    if (!kicker || !kicker.isGuru) return;
+
+    const targetIdx = room.players.findIndex(p => p.id === targetId);
+    if (targetIdx === -1) return;
+
+    const kicked = room.players[targetIdx];
+    io.to(targetId).emit('kicked-by-guru', 'Anda dikeluarkan dari room oleh Guru.');
+
+    room.players.splice(targetIdx, 1);
+    room.lastActivity = Date.now();
+
+    const targetSocket = io.sockets.sockets.get(targetId);
+    if (targetSocket) {
+      targetSocket.leave(code);
+      targetSocket.roomCode = null;
+    }
+
+    io.to(code).emit('room-updated', getSanitizedRoom(code));
   });
 
   // ── Disconnect ──

@@ -18,6 +18,7 @@ export default function ProvokateurPanel(props) {
     onTriggerSabotage, onTriggerDuel,
     duelCooldownRemaining,
     sabotageQuiz, onSubmitSabotageQuiz,
+    playerProfile
   } = props;
 
   const livingCitizens = room.players.filter(p => !p.isGuru && !p.isDead && p.id !== selfId);
@@ -72,40 +73,41 @@ export default function ProvokateurPanel(props) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[#190047]">
-      <div className="flex-1 overflow-y-auto">
-        <TaskContainer
-          currentTask={currentTask}
-          isAnswered={isAnswered}
-          selectedOption={selectedOption}
-          feedback={feedback}
-          taskError={taskError}
-          minigameRetryKey={minigameRetryKey}
-          isPlayerDead={isPlayerDead}
-          taskTimer={taskTimer}
-          isNextTaskLoading={isNextTaskLoading}
-          onSelectOption={onSelectOption}
-          onSubmitQuiz={onSubmitQuiz}
-          onMinigameComplete={onMinigameComplete}
-          onNextTask={onNextTask}
-          onClearTaskError={onClearTaskError}
-          onRetryMinigameSubmit={onRetryMinigameSubmit}
-          onRetryQuizSubmit={onRetryQuizSubmit}
-        />
+      <TaskContainer
+        currentTask={currentTask}
+        isAnswered={isAnswered}
+        selectedOption={selectedOption}
+        feedback={feedback}
+        taskError={taskError}
+        minigameRetryKey={minigameRetryKey}
+        isPlayerDead={isPlayerDead}
+        taskTimer={taskTimer}
+        isNextTaskLoading={isNextTaskLoading}
+        onSelectOption={onSelectOption}
+        onSubmitQuiz={onSubmitQuiz}
+        onMinigameComplete={onMinigameComplete}
+        onNextTask={onNextTask}
+        onClearTaskError={onClearTaskError}
+        onRetryMinigameSubmit={onRetryMinigameSubmit}
+        onRetryQuizSubmit={onRetryQuizSubmit}
+        isProvokator={true}
+        playerProfile={playerProfile}
+      >
         <div className="mx-4 my-3 border-t-2 border-dashed border-[#4f4632]" />
         <SabotaseDuelPanel
-            room={room}
-            selfId={selfId}
-            duelCooldownRemaining={duelCooldownRemaining}
-            onTriggerSabotage={onTriggerSabotage}
-            onTriggerDuel={onTriggerDuel}
-            sabotageBlocked={sabotageBlocked}
-            duelBlocked={duelBlocked}
-            hasCooldown={hasCooldown}
-            livingCitizens={livingCitizens}
-            duelTargetId={duelTargetId}
-            setDuelTargetId={setDuelTargetId}
+          room={room}
+          selfId={selfId}
+          duelCooldownRemaining={duelCooldownRemaining}
+          onTriggerSabotage={onTriggerSabotage}
+          onTriggerDuel={onTriggerDuel}
+          sabotageBlocked={sabotageBlocked}
+          duelBlocked={duelBlocked}
+          hasCooldown={hasCooldown}
+          livingCitizens={livingCitizens}
+          duelTargetId={duelTargetId}
+          setDuelTargetId={setDuelTargetId}
         />
-      </div>
+      </TaskContainer>
     </div>
   );
 }

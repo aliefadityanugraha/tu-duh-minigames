@@ -72,7 +72,13 @@ function registerGameHandlers(socket, io) {
 
     // Kirim peran secara privat
     room.players.forEach(p => {
-      io.to(p.id).emit('role-assigned', { role: p.role, isGuru: p.isGuru, tasksRequired: room.tasksRequired });
+      let teammates = [];
+      if (p.role === 'provokator') {
+        teammates = room.players
+          .filter(tp => tp.role === 'provokator')
+          .map(tp => tp.id); // Send IDs, client can look up skin/name
+      }
+      io.to(p.id).emit('role-assigned', { role: p.role, isGuru: p.isGuru, tasksRequired: room.tasksRequired, teammates });
     });
 
     io.to(room.code).emit('room-updated', getSanitizedRoom(room.code));
@@ -312,19 +318,47 @@ function registerGameHandlers(socket, io) {
     const room = _getGuruRoom(socket, rooms);
     if (!room || room.state !== 'playing' || room.topicDebate?.active || room.debate?.active) return;
 
+    // Ambil semua murid yang masih hidup
+    const livingStudents = room.players.filter(p => !p.isGuru && !p.isDead);
+    if (livingStudents.length < 2) {
+      socket.emit('game-error', 'Tidak cukup pemain (minimal 2 murid) untuk sesi debat!');
+      return;
+    }
+
+    // Pilih secara acak 1 Pro dan 1 Kontra
+    const shuffled = [...livingStudents].sort(() => 0.5 - Math.random());
+    const proPlayer = shuffled[0];
+    const kontraPlayer = shuffled[1];
+
     const s = room.settings || DEFAULT_SETTINGS;
     const rawTopic = (topic || '').trim();
     const topicText = rawTopic.slice(0, 150) || 'Topik bebas — diskusikan nilai Pancasila dalam kehidupan sehari-hari!';
 
     room.topicDebate = {
       active: true,
-      timer:  s.topicDebateTimer ?? 120,
       topic:  topicText,
+      totalTimer: 165, // 30+30+5+30+5+30+5+30 = 165s
+      phaseIndex: 0,
+      phase: 'thinking',
+      phaseTimer: 30, // 30s untuk berpikir
+      proPlayerId: proPlayer.id,
+      kontraPlayerId: kontraPlayer.id,
     };
     room.gameStats.topicDebatesHeld = (room.gameStats.topicDebatesHeld || 0) + 1;
-    room.gameStats.eventLog.push({ time: Date.now(), type: 'topic_debate', message: `Debat topik dimulai: "${topicText}"` });
+    room.gameStats.eventLog.push({ time: Date.now(), type: 'topic_debate', message: `Debat topik dimulai: "${topicText}". Pro: ${proPlayer.name}, Kontra: ${kontraPlayer.name}` });
 
-    io.to(room.code).emit('topic-debate-triggered', { topic: topicText, timer: room.topicDebate.timer });
+    io.to(room.code).emit('topic-debate-triggered', { topic: topicText, totalTimer: room.topicDebate.totalTimer });
+    io.to(room.code).emit('room-updated', getSanitizedRoom(room.code));
+  });
+
+  socket.on('end-topic-debate', () => {
+    const room = _getGuruRoom(socket, rooms);
+    if (!room || room.state !== 'playing' || !room.topicDebate?.active) return;
+
+    room.topicDebate.active = false;
+    room.topicDebate = null;
+    room.gameStats.eventLog.push({ time: Date.now(), type: 'topic_debate_ended', message: 'Sesi debat topik diakhiri lebih awal oleh Guru' });
+    io.to(room.code).emit('topic-debate-ended', { message: 'Sesi debat topik diakhiri!' });
     io.to(room.code).emit('room-updated', getSanitizedRoom(room.code));
   });
 
@@ -608,7 +642,11 @@ function _deliverNextTask(socket) {
 
 function _handleMinigameComplete(socket, io, room, player, minigameType, code) {
   player.score++;
-  room.tasksCompleted++;
+  if (player.role === 'provokator') {
+    room.tasksCompleted = Math.max(0, room.tasksCompleted - 1);
+  } else {
+    room.tasksCompleted++;
+  }
   room.gameStats.totalAnswersCorrect++;
   if (!room.gameStats.minigamesCompleted) room.gameStats.minigamesCompleted = 0;
   room.gameStats.minigamesCompleted++;

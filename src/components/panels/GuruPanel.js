@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MessageSquare, RotateCcw, Shield, Mic, BookOpen } from 'lucide-react';
 import TaskProgressBar from '../TaskProgressBar';
 
-export default function GuruPanel({ room, onPauseDebat, onResetGame, onTriggerTopicDebate, onTriggerPresentation, onEndPresentation }) {
+export default function GuruPanel({ room, onPauseDebat, onResetGame, onTriggerTopicDebate, onEndTopicDebate, onTriggerPresentation, onEndPresentation }) {
   const [topicInput, setTopicInput] = useState('');
   const [showTopicInput, setShowTopicInput] = useState(false);
 
@@ -105,13 +105,23 @@ export default function GuruPanel({ room, onPauseDebat, onResetGame, onTriggerTo
 
           {/* Debat Topik Khusus */}
           {room.topicDebate?.active ? (
-            <div className="p-4 bg-[#003829] border-2 border-[#41e5b3] flex items-center gap-3">
-              <BookOpen size={20} className="text-[#41e5b3] flex-shrink-0" />
-              <div className="flex-1">
-                <span className="block font-mono text-[#5ffcc9] text-[10px] uppercase tracking-wider mb-1">Debat Topik Aktif</span>
-                <strong className="font-rubik text-[#e9ddff] text-base leading-tight">"{room.topicDebate.topic}"</strong>
+            <div className="p-4 bg-[#003829] border-2 border-[#41e5b3] flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <BookOpen size={20} className="text-[#41e5b3] flex-shrink-0" />
+                <div className="flex-1">
+                  <span className="block font-mono text-[#5ffcc9] text-[10px] uppercase tracking-wider mb-1">Debat Topik Aktif</span>
+                  <strong className="font-rubik text-[#e9ddff] text-base leading-tight">"{room.topicDebate.topic}"</strong>
+                </div>
+                <span className="font-mono text-[#ffc312] text-xl font-black bg-[#13003a] p-2 border-2 border-black">
+                  {room.topicDebate.totalTimer}s
+                </span>
               </div>
-              <span className="font-mono text-[#ffc312] text-xl font-black bg-[#13003a] p-2 border-2 border-black">{room.topicDebate.timer}s</span>
+              <button
+                onClick={onEndTopicDebate}
+                className="w-full py-2 bg-[#ff4d4d] border-2 border-black text-white font-mono text-xs font-bold hover:bg-[#ff7675] shadow-[2px_2px_0px_#000000] cursor-pointer"
+              >
+                AKHIRI DEBAT SEKARANG
+              </button>
             </div>
           ) : (
             <>

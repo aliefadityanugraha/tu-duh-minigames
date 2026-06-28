@@ -72,7 +72,7 @@ function generatePuzzle() {
 /**
  * TimbanganKeadilan - Scale Balancing Minigame (Sila 5)
  */
-export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
+export default function TimbanganKeadilan({ onGameComplete, onComplete, isProvokator }) {
   const [puzzle, setPuzzle] = useState(() => generatePuzzle());
   const [leftStock, setLeftStock] = useState(puzzle.leftInit);
   const [rightStock, setRightStock] = useState(puzzle.rightInit);
@@ -87,8 +87,8 @@ export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
 
   const isBalanced = leftStock === target && rightStock === target;
 
-  // tilt: positive = left heavier → left pan goes down
-  const tiltAngle = Math.max(-32, Math.min(32, (leftStock - rightStock) * 5));
+  // tilt: positive = right heavier → right pan goes down
+  const tiltAngle = Math.max(-32, Math.min(32, (rightStock - leftStock) * 5));
 
   const leftProgress = Math.max(0, 1 - Math.abs(leftStock - target) / target);
   const rightProgress = Math.max(0, 1 - Math.abs(rightStock - target) / target);
@@ -167,30 +167,30 @@ export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
 
   /* ── Province side panel ── */
   const SidePanel = ({ name, color, textColor, stock, onMove, disabled, isLeft, hideButton }) => (
-    <div className="flex flex-col gap-1.5 sm:gap-2 w-full h-full justify-between">
-      <div className="flex flex-col gap-1.5 sm:gap-2 h-full min-h-0">
+    <div className="flex flex-col gap-1 sm:gap-2 w-full h-full justify-between">
+      <div className="flex flex-col gap-1 sm:gap-2 h-full min-h-0">
         {/* Name badge */}
         <div
-          className="w-full text-center font-mono font-black text-[9px] sm:text-[10px] lg:text-xs uppercase tracking-widest py-1.5 border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0"
+          className="w-full text-center font-mono font-black text-[9px] sm:text-[10px] lg:text-xs uppercase tracking-widest py-1 sm:py-1.5 border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0"
           style={{ background: color, color: '#000' }}
         >
           {name}
         </div>
         {/* Count + boxes */}
         <div
-          className="w-full flex-1 min-h-0 border-[3px] border-black flex flex-col items-center justify-center gap-1.5 py-2 shadow-[inset_0_4px_8px_rgba(0,0,0,0.4)] overflow-hidden"
+          className="w-full flex-1 min-h-0 border-[3px] border-black flex flex-col items-center justify-center gap-1 sm:gap-1.5 py-1 sm:py-2 shadow-[inset_0_4px_8px_rgba(0,0,0,0.4)] overflow-hidden"
           style={{ background: '#1e293b' }}
         >
-          <span className="font-mono font-black text-2xl sm:text-3xl lg:text-4xl leading-none" style={{ color: textColor }}>
-            {stock}<span className="text-[9px] sm:text-[10px] lg:text-xs opacity-50">/{target}</span>
+          <span className="font-mono font-black text-xl sm:text-3xl lg:text-4xl leading-none" style={{ color: textColor }}>
+            {stock}<span className="text-[8px] sm:text-[10px] lg:text-xs opacity-50">/{target}</span>
           </span>
-          <div className="flex flex-wrap gap-1 justify-center px-1 content-start" style={{ minHeight: '24px' }}>
+          <div className="flex flex-wrap gap-1 justify-center px-1 content-start" style={{ minHeight: '20px' }}>
             {Array.from({ length: stock }).map((_, i) => (
               <div key={i} className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 border-2 border-black shrink-0" style={{ background: color }} />
             ))}
           </div>
           {stock === target && (
-            <span className="text-[8px] sm:text-[9px] font-mono font-black text-green-400 tracking-wider animate-pulse mt-0.5">✓ TARGET</span>
+            <span className="text-[7px] sm:text-[9px] font-mono font-black text-green-400 tracking-wider animate-pulse mt-0.5">✓ TARGET</span>
           )}
         </div>
       </div>
@@ -200,7 +200,7 @@ export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
           type="button"
           onClick={onMove}
           disabled={disabled}
-          className={`w-full py-1.5 sm:py-2 lg:py-2.5 font-mono font-black text-[9px] sm:text-[10px] lg:text-xs uppercase border-[3px] border-black transition-all flex items-center justify-center gap-1 sm:gap-2 shrink-0 ${
+          className={`w-full py-1 sm:py-2 lg:py-2.5 font-mono font-black text-[9px] sm:text-[10px] lg:text-xs uppercase border-[3px] border-black transition-all flex items-center justify-center gap-1 sm:gap-2 shrink-0 ${
             disabled 
               ? 'opacity-50 cursor-not-allowed shadow-none' 
               : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[2px] hover:shadow-[4px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)]'
@@ -235,24 +235,34 @@ export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
         statusLabel={headerLabel}
       />
 
-      <MinigameWorkArea className="flex flex-col !p-2 sm:!p-3 overflow-hidden h-full bg-slate-50 relative justify-between">
+      <MinigameWorkArea className="flex flex-col !p-1.5 sm:!p-3 overflow-hidden h-full bg-slate-50 relative justify-between">
 
         {/* Status strip & Description */}
-        <div className="flex flex-col items-center justify-center w-full mb-1.5 sm:mb-2 shrink-0 z-10 gap-1">
-          <MinigameInlineStatus
-            label={`STATUS: ${statusLabel}`}
-            variant={isWin ? 'win' : isSyncing ? 'syncing' : isBalanced ? 'syncing' : 'playing'}
-          />
-          <span className="text-[9px] sm:text-[10px] font-mono font-bold text-center text-slate-700 bg-white/80 px-2 py-0.5 rounded border border-slate-300">
-            Alokasikan bantuan bencana ke tempat yang terdampak, {target} unit di {pair.left.name} dan {target} unit ke {pair.right.name}
-          </span>
+        <div className="flex flex-col items-center w-full mb-1.5 sm:mb-4 shrink-0 z-10">
+          <div className="w-full max-w-3xl bg-neutral-900 border-[3px] border-black p-1.5 sm:p-3 shadow-[4px_4px_0_0_#fbbf24] flex flex-col items-center justify-center gap-0.5 sm:gap-2 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 opacity-80"></div>
+            
+            {/* Status Led */}
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-0">
+              <span className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-[2px] border-black ${isWin ? 'bg-green-400 animate-pulse shadow-[0_0_8px_#4ade80]' : isBalanced ? 'bg-green-400 shadow-[0_0_8px_#4ade80]' : isSyncing ? 'bg-yellow-400 animate-ping' : 'bg-red-500 animate-pulse shadow-[0_0_6px_#ef4444]'}`}></span>
+              <span className={`font-mono-tech font-bold text-[9px] sm:text-xs tracking-widest uppercase ${isWin ? 'text-green-300' : isBalanced ? 'text-green-300' : isSyncing ? 'text-yellow-300' : 'text-red-300'}`}>
+                {statusLabel}
+              </span>
+            </div>
+
+            <div className="w-full h-px bg-neutral-700 my-0.5 sm:my-1 max-w-sm"></div>
+
+            <p className="text-[8px] sm:text-xs font-bold text-white text-center leading-tight px-1 sm:px-2">
+              Alokasikan bantuan bencana secara merata: <span className="text-yellow-400 text-[9px] sm:text-sm px-0.5">{target} unit</span> di {pair.left.name} dan <span className="text-yellow-400 text-[9px] sm:text-sm px-0.5">{target} unit</span> di {pair.right.name}.
+            </p>
+          </div>
         </div>
 
-        {/* Main row: Left Panel | Scale | Right Panel */}
-        <div className="flex-1 min-h-0 w-full max-w-5xl mx-auto flex flex-row items-stretch justify-between gap-2 sm:gap-4 lg:gap-6 z-10 relative">
+        {/* Main row: Grid Layout */}
+        <div className="flex-1 min-h-0 w-full max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-[minmax(120px,28%)_1fr_minmax(120px,28%)] grid-rows-[auto_1fr] sm:grid-rows-1 gap-1.5 sm:gap-6 z-10 relative">
 
           {/* LEFT province panel */}
-          <div className="w-[28%] sm:w-[25%] lg:w-[22%] shrink-0 flex flex-col min-h-0">
+          <div className="col-start-1 col-span-1 sm:col-start-1 row-start-2 sm:row-start-1 flex flex-col min-h-0">
             <SidePanel
               name={pair.left.name}
               color={pair.left.color}
@@ -266,10 +276,10 @@ export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
           </div>
 
           {/* CENTER: SVG scale */}
-          <div className="flex-1 min-w-0 min-h-0 relative flex justify-center items-center h-full">
+          <div className="col-span-2 sm:col-span-1 sm:col-start-2 row-start-1 sm:row-start-1 min-h-[120px] sm:min-h-0 relative flex justify-center items-center pb-1 sm:pb-0 mb-1 sm:mb-0">
             <svg
               viewBox={`0 0 ${VW} ${VH}`}
-              className="w-full h-full max-w-md drop-shadow-xl overflow-visible transition-transform duration-300"
+              className="w-full h-full max-w-md drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)] overflow-visible transition-transform duration-300"
               style={{ maxHeight: '100%' }}
               preserveAspectRatio="xMidYMid meet"
               aria-hidden
@@ -331,7 +341,7 @@ export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
           </div>
 
           {/* RIGHT province panel */}
-          <div className="w-[28%] sm:w-[25%] lg:w-[22%] shrink-0 flex flex-col">
+          <div className="col-start-2 col-span-1 sm:col-start-3 row-start-2 sm:row-start-1 flex flex-col min-h-0">
             <SidePanel
               name={pair.right.name}
               color={pair.right.color}
@@ -346,7 +356,7 @@ export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
         </div>
 
         {/* Bottom container */}
-        <div className="mt-3 sm:mt-4 shrink-0 z-10 w-full flex flex-col gap-2">
+        <div className="mt-1.5 sm:mt-4 shrink-0 z-10 w-full flex flex-col gap-1.5 sm:gap-2">
           <MinigameProgress
             label={`INDEX KEADILAN (${target}-${target})`}
             value={indexKeadilan}
@@ -356,7 +366,7 @@ export default function TimbanganKeadilan({ onGameComplete, onComplete }) {
           <MinigameWinBanner
             syncing={isSyncing}
             win={isWin}
-            winMessage="Keadilan tercapai! Menunggu konfirmasi misi..."
+            winMessage={isProvokator ? "Sabotase berhasil! Menunggu konfirmasi..." : "Keadilan ditegakkan! Menunggu konfirmasi misi..."}
             syncingMessage="⚖️ Menyinkronkan timbangan..."
           />
         </div>

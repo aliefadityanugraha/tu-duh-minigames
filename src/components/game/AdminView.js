@@ -3,13 +3,13 @@ import { Users, MessageSquare } from 'lucide-react';
 import LiveStatsPanel from '../LiveStatsPanel';
 import GuruPanel from '../panels/GuruPanel';
 import GameEndedCard from './GameEndedCard';
-import { useSocket } from '../../hooks/useSocket';
+import { SKINS, PLAYER_COLORS, OPERATOR_SKIN } from '../lobby/WaitingRoom';
 
 export default function AdminView({
   room, player, roleInfo, logs,
   socket, statsOpen, onToggleStats,
   onPauseDebat, onResetGame, onRestart,
-  onTriggerTopicDebate, onTriggerPresentation, onEndPresentation,
+  onTriggerTopicDebate, onEndTopicDebate, onTriggerPresentation, onEndPresentation,
 }) {
   const { skinList } = useSocket();
   const avatarColors = [
@@ -61,8 +61,8 @@ export default function AdminView({
             <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 border-b-4 border-black">
               {room.players.map((p, idx) => {
                 const isMe = p.id === player?.id;
-                const skin = skinList.find(s => s.id === p.skinId) || skinList[0];
-                const color = p.isGuru ? '#ffc312' : skin.bg;
+                const skin = p.isGuru ? OPERATOR_SKIN : (SKINS.find(s => s.id === p.skinId) || SKINS[0]);
+                const color = p.isGuru ? '#e5e7eb' : PLAYER_COLORS[p.colorId ?? 0];
                 return (
                   <div
                     key={p.id}
@@ -72,9 +72,7 @@ export default function AdminView({
                   >
                     <div className="relative flex-shrink-0">
                       <div className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-lg overflow-hidden" style={{ backgroundColor: color }}>
-                        {p.isGuru ? '🏫' : p.isDead ? '👻' : (
-                          <img src={skin.img} alt={skin.name} className="w-full h-full object-contain" />
-                        )}
+                        {p.isGuru ? '🏫' : p.isDead ? '👻' : (skin.img ? <img src={skin.img} alt={skin.name} className="w-full h-full object-cover" /> : '🧑‍🚀')}
                       </div>
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
@@ -123,6 +121,7 @@ export default function AdminView({
                 onPauseDebat={onPauseDebat}
                 onResetGame={onResetGame}
                 onTriggerTopicDebate={onTriggerTopicDebate}
+                onEndTopicDebate={onEndTopicDebate}
                 onTriggerPresentation={onTriggerPresentation}
                 onEndPresentation={onEndPresentation}
               />

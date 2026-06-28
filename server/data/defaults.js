@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS = {
   caseStudy:         'anti-hoaks', // Paket studi kasus yang digunakan ('anti-hoaks' | 'saring-informasi')
   quizRatio:         0.4,       // Porsi kuis vs mini-game (0 = semua minigame, 1 = semua kuis)
   minigameEnabled:   true,      // Aktifkan mini-game dalam rotasi task
-  minTaskDuration:   3,         // Detik minimum sebelum submit mini-game dianggap valid
+  minTaskDuration:   1,         // Detik minimum sebelum submit mini-game dianggap valid
 };
 
 // Template gameStats kosong — dipakai saat game dimulai atau di-restart

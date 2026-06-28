@@ -12,7 +12,7 @@ import {
 /**
  * HubungkanKebaikan - Sila 2 Wiring Task Minigame Component
  */
-export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
+export default function HubungkanKebaikan({ onGameComplete, onComplete, isProvokator }) {
   const CORRECT_PAIRS = {
     "A1": "N1", // Bencana -> Solidaritas
     "A2": "N2", // Suku/Agama -> Kesetaraan
@@ -179,15 +179,15 @@ export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
       <MinigameWorkArea className="justify-start overflow-hidden !p-0 sm:!p-0 flex flex-col relative bg-violet-50">
 
         {/* Compact Hint Box to save vertical space */}
-        <div className="w-full bg-yellow-100 border-b-[3px] border-black p-2 sm:p-2.5 px-3 flex items-center justify-center shrink-0 z-20 shadow-[0_2px_0_0_rgba(0,0,0,1)] relative">
-          <span className="text-[10px] sm:text-[11px] font-black uppercase text-black text-center tracking-wide">
+        <div className="w-full bg-yellow-100 border-b-[3px] border-black p-1.5 sm:p-2.5 px-3 flex items-center justify-center shrink-0 z-20 shadow-[0_2px_0_0_rgba(0,0,0,1)] relative">
+          <span className="text-[10px] sm:text-sm font-bold text-black text-center leading-tight">
             💡 Klik aksi (kiri) lalu klik nilai (kanan) yang paling sesuai.
           </span>
         </div>
 
         <div
           ref={containerRef}
-          className="relative w-full flex-1 min-h-0 px-4 py-4 sm:px-8 sm:py-6 flex flex-col landscape:flex-row md:flex-row justify-between items-stretch gap-6 sm:gap-10 z-10 max-w-5xl mx-auto"
+          className="relative w-full flex-1 min-h-0 px-2 py-2 sm:px-8 sm:py-6 flex flex-row justify-between items-stretch gap-2 sm:gap-10 z-10 max-w-5xl mx-auto"
         >
           {/* SVG Connector Layer */}
           {Object.keys(coords).length > 0 && (
@@ -221,7 +221,7 @@ export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
           )}
 
           {/* Left Column: Actions (A1, A2, A3) */}
-          <div className="w-full landscape:w-[42%] md:w-[42%] lg:w-[38%] flex flex-col justify-around gap-3 sm:gap-4 z-20 shrink-0">
+          <div className="w-2/5 lg:w-[38%] flex flex-col justify-around gap-2 sm:gap-4 z-20 shrink-0">
             {shuffledLeft.map((card) => {
               const isSelected = activeLeft === card.id;
               const isConnected = connections.some(c => c.from === card.id);
@@ -231,15 +231,15 @@ export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
                 <div
                   key={card.id}
                   onClick={() => handleLeftClick(card.id)}
-                  className={`p-2.5 sm:p-4 bg-violet-900 border-[3px] border-black flex justify-between items-center gap-2.5 sm:gap-4 cursor-pointer select-none transition-all duration-200 ${isConnected ? 'opacity-80 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[2px]' : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[2px] hover:shadow-[4px_6px_0px_0px_rgba(0,0,0,1)]'
+                  className={`p-1.5 sm:p-4 bg-violet-900 border-[3px] border-black flex justify-between items-center gap-1 sm:gap-4 cursor-pointer select-none transition-all duration-200 ${isConnected ? 'opacity-80 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[2px]' : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[2px] hover:shadow-[4px_6px_0px_0px_rgba(0,0,0,1)]'
                     } ${isSelected ? 'ring-4 ring-yellow-400 bg-violet-800 scale-[1.02] shadow-[6px_6px_0px_0px_rgba(250,204,21,0.5)]' : ''}`}
                 >
                   {/* Left indicator box / icon */}
-                  <div className={`p-1.5 sm:p-2.5 border-[2px] border-black shrink-0 ${card.bg} shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]`}>
+                  <div className={`p-1 sm:p-2.5 border-[2px] border-black shrink-0 ${card.bg} shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] sm:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]`}>
                     {Icon ? (
-                      <Icon className="w-4 h-4 sm:w-6 sm:h-6 text-black" />
+                      <Icon className="w-3 h-3 sm:w-6 sm:h-6 text-black" />
                     ) : (
-                      <div className="w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center font-extrabold text-black font-mono-tech text-xs sm:text-base">
+                      <div className="w-3 h-3 sm:w-6 sm:h-6 flex items-center justify-center font-extrabold text-black font-mono-tech text-[10px] sm:text-base">
                         🤝
                       </div>
                     )}
@@ -247,10 +247,10 @@ export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
 
                   {/* Title & Progress Bar */}
                   <div className="flex-1 flex flex-col justify-start items-start gap-1">
-                    <span className="text-purple-200 text-[9px] sm:text-[10px] font-black font-mono-tech uppercase">
+                    <span className="text-purple-200 text-[7px] sm:text-[10px] font-black font-mono-tech uppercase">
                       {card.label}
                     </span>
-                    <span className="text-white text-[10px] sm:text-xs font-bold leading-tight">
+                    <span className="text-white text-[8px] sm:text-xs font-bold leading-tight">
                       {card.title}
                     </span>
                   </div>
@@ -275,7 +275,7 @@ export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
           </div>
 
           {/* Right Column: Values (N1, N2, N3) */}
-          <div className="w-full landscape:w-[42%] md:w-[42%] lg:w-[38%] flex flex-col justify-around gap-3 sm:gap-4 z-20 shrink-0">
+          <div className="w-2/5 lg:w-[38%] flex flex-col justify-around gap-2 sm:gap-4 z-20 shrink-0">
             {shuffledRight.map((card) => {
               const isConnected = connections.some(c => c.to === card.id);
               const isWrongFlash = errorFlash === card.id;
@@ -284,7 +284,7 @@ export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
                 <div
                   key={card.id}
                   onClick={() => handleRightClick(card.id)}
-                  className={`p-2.5 sm:p-4 bg-violet-950 border-[3px] border-black flex justify-between items-center gap-2.5 sm:gap-4 cursor-pointer select-none transition-all duration-200 ${isConnected ? 'opacity-80 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[2px]' : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[2px] hover:shadow-[4px_6px_0px_0px_rgba(0,0,0,1)]'
+                  className={`p-1.5 sm:p-4 bg-violet-950 border-[3px] border-black flex justify-between items-center gap-1 sm:gap-4 cursor-pointer select-none transition-all duration-200 ${isConnected ? 'opacity-80 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[2px]' : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[2px] hover:shadow-[4px_6px_0px_0px_rgba(0,0,0,1)]'
                     } ${isWrongFlash ? 'ring-4 ring-red-500 bg-red-900/60 animate-shake' : ''}`}
                 >
                   {/* Pin Dot connection target */}
@@ -301,8 +301,8 @@ export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
                   </div>
 
                   {/* Value Text Box */}
-                  <div className={`flex-1 px-1.5 py-2 sm:px-4 sm:py-3.5 bg-black border-[2px] inline-flex flex-col justify-center items-center ${card.outline} shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)]`}>
-                    <span className="text-center text-purple-100 text-[9px] sm:text-xs font-black font-mono-tech uppercase tracking-wide">
+                  <div className={`flex-1 px-1 py-1.5 sm:px-4 sm:py-3.5 bg-black border-[2px] inline-flex flex-col justify-center items-center ${card.outline} shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)]`}>
+                    <span className="text-center text-purple-100 text-[7px] sm:text-xs font-black font-mono-tech uppercase tracking-wide">
                       {card.label}
                     </span>
                   </div>
@@ -319,7 +319,7 @@ export default function HubungkanKebaikan({ onGameComplete, onComplete }) {
 
           <div className="flex gap-2 mt-1">
             {isWin ? (
-              <MinigameWinBanner win winMessage="Sirkuit aktif! Menunggu konfirmasi misi..." />
+              <MinigameWinBanner win winMessage={isProvokator ? "Sabotase berhasil! Menunggu konfirmasi..." : "Sirkuit aktif! Menunggu konfirmasi misi..."} />
             ) : (
               <MinigameButton
                 variant="ghost"

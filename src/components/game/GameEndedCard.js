@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { DEFAULT_SETTINGS, snappy, punchy } from '@shared/constants';
 
 /**

@@ -24,6 +24,7 @@ export default function TaskContainer({
   onRetryMinigameSubmit,
   onRetryQuizSubmit,
   isProvokator,
+  playerProfile,
   children
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -92,9 +93,22 @@ export default function TaskContainer({
               </div>
             </div>
           ) : (
-            identityBadge && (
+            playerProfile && (
               <div className="shrink-0 w-full flex items-center px-2 sm:px-5 py-2 sm:py-2.5 bg-[#270067]">
-                {identityBadge}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center overflow-hidden shrink-0"
+                    style={{ backgroundColor: playerProfile.color }}
+                  >
+                    {playerProfile.skin?.img ? <img src={playerProfile.skin.img} alt={playerProfile.name} className="w-full h-full object-cover" /> : <span className="text-xs">🧑‍🚀</span>}
+                  </div>
+                  <span className="font-mono font-bold text-white text-[10px] sm:text-xs truncate max-w-[100px]">
+                    {playerProfile.name}
+                  </span>
+                  <span className={`font-mono text-[8px] sm:text-[10px] font-bold tracking-wider ${playerProfile.role === 'Provokator' ? 'text-[#ffb3b3]' : 'text-[#a7f3d0]'}`}>
+                    {playerProfile.role?.toUpperCase() || ''}
+                  </span>
+                </div>
               </div>
             )
           )}
@@ -177,9 +191,22 @@ export default function TaskContainer({
           </div>
         </div>
       ) : (
-        identityBadge && (
+        playerProfile && (
           <div className="shrink-0 w-full flex items-center px-2 sm:px-5 py-2 sm:py-2.5 bg-[#270067]">
-            {identityBadge}
+            <div className="flex items-center gap-2">
+              <div
+                className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center overflow-hidden shrink-0"
+                style={{ backgroundColor: playerProfile.color }}
+              >
+                {playerProfile.skin?.img ? <img src={playerProfile.skin.img} alt={playerProfile.name} className="w-full h-full object-cover" /> : <span className="text-xs">🧑‍🚀</span>}
+              </div>
+              <span className="font-mono font-bold text-white text-[10px] sm:text-xs truncate max-w-[100px]">
+                {playerProfile.name}
+              </span>
+              <span className={`font-mono text-[8px] sm:text-[10px] font-bold tracking-wider ${playerProfile.role === 'Provokator' ? 'text-[#ffb3b3]' : 'text-[#a7f3d0]'}`}>
+                {playerProfile.role?.toUpperCase() || ''}
+              </span>
+            </div>
           </div>
         )
       )}

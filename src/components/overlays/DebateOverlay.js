@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '../../hooks/useSocket';
-import { PLAYER_COLORS } from '../lobby/WaitingRoom';
-
-const snappy = { type: 'spring', stiffness: 500, damping: 30 };
-const punchy = { type: 'spring', stiffness: 600, damping: 20 };
+import { PLAYER_COLORS, snappy, punchy } from '@shared/constants';
 
 export default function DebateOverlay({ debate, players, selfId, selfRole, isGuru, isPlayerDead, onVote, onSendChat }) {
   const { skinList } = useSocket();

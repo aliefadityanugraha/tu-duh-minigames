@@ -1,7 +1,7 @@
 import React from 'react';
 import { MessageSquare, Timer, ArrowRightLeft, Brain, Zap } from 'lucide-react';
 import { useSocket } from '../../hooks/useSocket';
-import { PLAYER_COLORS } from '../lobby/WaitingRoom';
+import { PLAYER_COLORS } from '@shared/constants';
 
 export default function TopicDebateBanner({ topicDebate, players }) {
   const { skinList } = useSocket();

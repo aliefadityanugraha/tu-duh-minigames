@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldAlert, Swords, Clock, Lock } from 'lucide-react';
 import { useSocket } from '../../hooks/useSocket';
-import { PLAYER_COLORS } from '../lobby/WaitingRoom';
+import { PLAYER_COLORS } from '@shared/constants';
 
 export default function SabotaseDuelPanel({
   room, selfId, duelCooldownRemaining,

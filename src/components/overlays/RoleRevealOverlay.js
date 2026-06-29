@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, WifiOff, Users } from 'lucide-react';
-import { PLAYER_COLORS } from '../lobby/WaitingRoom';
+import { PLAYER_COLORS } from '@shared/constants';
 
 export default function RoleRevealOverlay({ role, isGuru, player, room, teammates, skinList, onComplete }) {
   const [timeLeft, setTimeLeft] = useState(3);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     if (isGuru) {
-      onComplete();
+      onCompleteRef.current();
       return;
     }
 
     if (timeLeft <= 0) {
-      onComplete();
+      onCompleteRef.current();
       return;
     }
 
@@ -22,7 +24,6 @@ export default function RoleRevealOverlay({ role, isGuru, player, room, teammate
     }, 1000);
 
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, isGuru]);
 
   if (isGuru) return null;

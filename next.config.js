@@ -1,6 +1,12 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false, // Set to false to avoid double execution in development with socket.io
+  reactStrictMode: false,
+  webpack: (config) => {
+    config.resolve.alias['@shared'] = path.join(__dirname, 'shared');
+    return config;
+  },
 }
 
 module.exports = nextConfig

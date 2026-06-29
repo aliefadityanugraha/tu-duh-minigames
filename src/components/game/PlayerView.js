@@ -6,7 +6,7 @@ import GameEndedCard from './GameEndedCard';
 import LiveStatsPanel from '../LiveStatsPanel';
 import TopicDebateBanner from '../overlays/TopicDebateOverlay';
 
-import { PLAYER_COLORS, OPERATOR_SKIN } from '../lobby/WaitingRoom';
+import { PLAYER_COLORS, OPERATOR_SKIN } from '@shared/constants';
 
 /**
  * Layout in-game: Mission Book (+ optional Radar Monitor).
@@ -58,7 +58,7 @@ export default function PlayerView({
   // Mendefinisikan isNextTaskLoading yang hilang
   const isNextTaskLoading = false; 
 
-  const playerSkin = player?.isGuru ? OPERATOR_SKIN : (skinList.find(s => s.id === player?.skinId) || skinList[0]);
+  const playerSkin = player?.isGuru ? OPERATOR_SKIN : (skinList?.find(s => s.id === player?.skinId) || skinList?.[0] || {});
   const playerColor = player?.isGuru ? '#e5e7eb' : PLAYER_COLORS[player?.colorId ?? 0];
   const roleName = roleInfo?.role === 'provokator' ? 'Provokator' : roleInfo?.isGuru ? 'Guru' : 'Warga';
 
@@ -404,7 +404,7 @@ export default function PlayerView({
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 sm:p-3 flex flex-col gap-2 scrollbar-thin">
                   {studentPlayers.map((p, idx) => {
-                    const skin = p.isGuru ? OPERATOR_SKIN : (skinList.find(s => s.id === p.skinId) || skinList[0]);
+                    const skin = p.isGuru ? OPERATOR_SKIN : (skinList?.find(s => s.id === p.skinId) || skinList?.[0] || {});
                     const color = p.isGuru ? '#e5e7eb' : PLAYER_COLORS[p.colorId ?? 0];
                     const isMe = p.id === player?.id;
                     return (

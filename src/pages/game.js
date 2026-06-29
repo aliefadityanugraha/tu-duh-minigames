@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useSocket } from '../hooks/useSocket';
 import { AlertTriangle } from 'lucide-react';
+import { DEFAULT_SETTINGS } from '@shared/constants';
 
 import GameHeader from '../components/game/GameHeader';
 import PlayerView from '../components/game/PlayerView';

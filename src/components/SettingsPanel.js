@@ -4,22 +4,10 @@ import {
   Users, ListChecks, ChevronDown, ChevronUp,
   RotateCcw, Save, CheckCircle2, Info
 } from 'lucide-react';
+import { DEFAULT_SETTINGS } from '@shared/constants';
 
 export default function SettingsPanel({ socket, currentSettings = {}, playerCount = 0 }) {
-  const defaults = {
-    tasksPerPlayer:   5,
-    sabotageTimer:    40,
-    duelTimer:        20,
-    debateTimer:      90,
-    topicDebateTimer: 120,
-    gameTimer:        300,
-    provokatorCount:  'auto',
-
-    quizRatio:        0.4,
-    minigameEnabled:  true,
-    minTaskDuration:  8,
-  };
-
+  const defaults = { ...DEFAULT_SETTINGS, minTaskDuration: 8 };
   const merged = { ...defaults, ...currentSettings };
   const [settings, setSettings] = useState(merged);
   const [isOpen, setIsOpen] = useState(false);
@@ -101,8 +89,8 @@ export default function SettingsPanel({ socket, currentSettings = {}, playerCoun
             <SettingSlider
               icon={<ListChecks size={15} className="text-violet-600" />}
               label="Porsi Kuis vs Mini-Game"
-              description={`${Math.round((settings.quizRatio ?? 0.4) * 100)}% kuis, ${Math.round((1 - (settings.quizRatio ?? 0.4)) * 100)}% mini-game`}
-              value={Math.round((settings.quizRatio ?? 0.4) * 100)}
+              description={`${Math.round((settings.quizRatio ?? DEFAULT_SETTINGS.quizRatio) * 100)}% kuis, ${Math.round((1 - (settings.quizRatio ?? DEFAULT_SETTINGS.quizRatio)) * 100)}% mini-game`}
+              value={Math.round((settings.quizRatio ?? DEFAULT_SETTINGS.quizRatio) * 100)}
               min={0} max={100} step={10} unit="% kuis"
               accentColor="#7C3AED"
               onChange={v => handleChange('quizRatio', v / 100)}

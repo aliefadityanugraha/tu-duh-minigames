@@ -57,7 +57,7 @@ export default function TopicDebateBanner({ topicDebate, players }) {
       {/* Pattern Overlay */}
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[length:16px_16px] pointer-events-none"></div>
 
-      <div className="relative z-10 flex flex-col items-center justify-between h-full w-full max-w-5xl mx-auto py-4 sm:py-6 px-4 sm:px-6">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-between w-full max-w-5xl mx-auto py-4 sm:py-6 px-4 sm:px-6">
         
         {/* TOP SECTION: Header & Timer */}
         <div className="w-full flex flex-col items-center gap-3 sm:gap-4 shrink-0 mt-2">

@@ -289,6 +289,7 @@ export default function Game() {
         sabotageRescue && (
         <SabotageRescueOverlay
           sabotageRescue={sabotageRescue}
+          currentTimer={room.sabotage?.timer ?? 40}
           maxTimer={room.sabotage?.maxTimer ?? 40}
           onSubmitAnswer={handleSubmitSabotageRescue}
         />

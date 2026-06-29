@@ -101,10 +101,10 @@ export default function SabotageOverlay({ sabotage, role }) {
                 className="py-5 bg-[#270067] border-4 border-black text-center space-y-3 p-4"
               >
                 <motion.span
-                  animate={{ y: [0, -4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  animate={{ rotate: [0, -12, 12, -6, 0] }}
+                  transition={{ delay: 0.2, duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
                   className="text-4xl block"
-                >😈</motion.span>
+                >🚨</motion.span>
                 <span className="font-rubik italic text-[#ffb4ab] text-lg font-bold">SABOTASE BERJALAN!</span>
                 <p className="font-mono text-[#d3c5ab] text-sm max-w-sm mx-auto leading-relaxed">
                   {sabotage.targetWargaName

@@ -137,6 +137,12 @@ function startRoomTicker(roomCode, io) {
 
     let changed = false;
 
+    // Tunggu 3 detik pertama (animasi Role Reveal Overlay)
+    if (r.state === 'playing') {
+      const timeSinceStart = Date.now() - (r.gameStats?.startedAt || 0);
+      if (timeSinceStart < 3000) return;
+    }
+
     // ── 1. Game timer keseluruhan (pause saat musyawarah / debat topik) ──
     const timerPaused = r.debate?.active || r.topicDebate?.active;
     if (r.state === 'playing' && !timerPaused && r.gameTimer != null && r.gameTimer > 0) {

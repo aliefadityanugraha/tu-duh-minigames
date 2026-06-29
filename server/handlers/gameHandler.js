@@ -14,7 +14,7 @@
  */
 const { rooms, getSanitizedRoom } = require('../lib/roomHelpers');
 const { DEFAULT_SETTINGS, DEFAULT_SKINS, EMPTY_GAME_STATS } = require('../data/defaults');
-const { checkWinConditions, tallyVotes } = require('../lib/gameLogic');
+const { checkWinConditions, tallyVotes, startRoomTicker } = require('../lib/gameLogic');
 const { generateMathQuiz } = require('../lib/mathQuiz');
 const { shuffleArray } = require('../lib/roomHelpers');
 const { pickVariedMinigame, pickVariedQuestion, shouldDeliverQuiz, isMinigameType } = require('../data/minigames');
@@ -80,6 +80,9 @@ function registerGameHandlers(socket, io) {
       }
       io.to(p.id).emit('role-assigned', { role: p.role, isGuru: p.isGuru, tasksRequired: room.tasksRequired, teammates });
     });
+
+    // Pastikan interval server dijalankan (restart jika mati)
+    startRoomTicker(room.code, io);
 
     io.to(room.code).emit('room-updated', getSanitizedRoom(room.code));
     io.to(room.code).emit('game-started-alert');
@@ -776,7 +779,7 @@ function _handleSabotageProvokatorAnswer(socket, io, room, player, isCorrect, co
   room.sabotage.timer          = rescueTimer;
   room.sabotage.maxTimer       = rescueTimer;
   room.sabotage.targetWargaId  = targetWarga.id;
-  room.sabotage.targetWargaName = targetWarga.name;
+  room.sabotage.targetWargaName = 'Warga';
 
   // Ganti soal sabotase ke soal Pancasila untuk fase rescue
   const rescueQ = room.questions[Math.floor(Math.random() * room.questions.length)];
@@ -787,8 +790,8 @@ function _handleSabotageProvokatorAnswer(socket, io, room, player, isCorrect, co
 
   // Beritahu semua bahwa sabotase aktif
   io.to(code).emit('sabotage-triggered', {
-    message:        `BAHAYA! Provokator menyabotase! ${targetWarga.name} harus menyelamatkan!`,
-    targetWargaName: targetWarga.name,
+    message:        `BAHAYA! Provokator menyabotase! Seorang Warga harus menyelamatkan!`,
+    targetWargaName: 'Warga',
   });
 
   // Kirim soal rescue khusus ke Warga terpilih
@@ -813,13 +816,14 @@ function _handleSabotageRescue(socket, io, room, player, questionId, isCorrect, 
     io.to(code).emit('sabotage-resolved', { solvedBy: player.name, message: `Sabotase dinonaktifkan oleh ${player.name}!` });
     io.to(code).emit('room-updated', getSanitizedRoom(code));
   } else {
-    // Jawaban salah → kirim soal Pancasila baru
+    // Jawaban salah → kirim soal Pancasila baru dan kurangi waktu 2 detik
     const newQ = room.questions[Math.floor(Math.random() * room.questions.length)];
     room.sabotage.question = newQ;
+    room.sabotage.timer -= 2;
     socket.emit('sabotage-rescue-wrong', {
       question: { id: newQ.id, sila: newQ.sila, type: newQ.type, question: newQ.question, options: newQ.options },
       timer:    room.sabotage.timer,
-      message:  'Jawaban salah! Coba soal berikutnya.',
+      message:  'Jawaban salah! Waktu dikurangi 2 detik!',
     });
     io.to(code).emit('room-updated', getSanitizedRoom(code));
   }

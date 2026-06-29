@@ -282,13 +282,15 @@ export const SocketProvider = ({ children }) => {
       setTaskLocked(false); // target rescue tidak terkunci
       addLog(`🆘 ${message}`);
     });
-    s.on('sabotage-rescue-wrong', ({ question, timer }) => {
+    s.on('sabotage-rescue-wrong', ({ question, timer, message }) => {
       setSabotageRescue({ question, timer });
+      if (message) addLog(`⚠️ ${message}`);
     });
 
     // ── Sabotase events ──
     s.on('sabotage-triggered', ({ message, targetWargaName }) => {
       setTaskLocked(true); // default lock, akan di-override oleh rescue-assigned
+      setSabotageQuiz(null); // hapus kuis fase 1 untuk provokator
       addLog(`🚨 SABOTASE: ${message}`);
       setSabotageFeedback('');
     });

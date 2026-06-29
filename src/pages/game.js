@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useSocket } from '../hooks/useSocket';
 import { AlertTriangle } from 'lucide-react';
+import { DEFAULT_SETTINGS } from '@shared/constants';
 
 import GameHeader from '../components/game/GameHeader';
 import PlayerView from '../components/game/PlayerView';
@@ -289,7 +290,7 @@ export default function Game() {
         sabotageRescue && (
         <SabotageRescueOverlay
           sabotageRescue={sabotageRescue}
-          maxTimer={room.sabotage?.maxTimer ?? 40}
+          maxTimer={room.sabotage?.maxTimer ?? DEFAULT_SETTINGS.sabotageTimer}
           onSubmitAnswer={handleSubmitSabotageRescue}
         />
       )}

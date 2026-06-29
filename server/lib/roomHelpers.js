@@ -45,7 +45,7 @@ function getSanitizedRoom(roomCode) {
       active:          room.sabotage.active,
       phase:           room.sabotage.phase,       // 'provokator_quiz' | 'warga_rescue'
       timer:           room.sabotage.timer,
-      maxTimer:        room.sabotage.maxTimer ?? room.settings?.sabotageTimer ?? 40,
+      maxTimer:        room.sabotage.maxTimer ?? room.settings?.sabotageTimer ?? DEFAULT_SETTINGS.sabotageTimer,
       targetWargaName: room.sabotage.targetWargaName ?? null,
       question:        _stripQuestion(room.sabotage.question),
     } : null,

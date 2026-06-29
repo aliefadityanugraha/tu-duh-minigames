@@ -4,28 +4,9 @@ import { Play, LogOut, Settings, Timer, X, Users, Info, ShieldAlert } from 'luci
 import Navbar from '../Navbar';
 import { useSocket } from '../../hooks/useSocket';
 import { CustomSkinUploader } from './CustomSkinUploader';
+import { DEFAULT_SETTINGS, PLAYER_COLORS, OPERATOR_SKIN, snappy } from '@shared/constants';
 
-const snappy = { type: 'spring', stiffness: 500, damping: 30 };
 const punchy = { type: 'spring', stiffness: 400, damping: 25 };
-
-export const INITIAL_SKINS = [
-  { id: 0, name: 'Astronot',  img: '/images/characters/astronot.png', bg: '#ffb4ab', text: '#690005', border: '#ff897d' },
-  { id: 1, name: 'Pelajar',   img: '/images/characters/pelajar.png',   bg: '#8fb2ff', text: '#002d70', border: '#5988f8' },
-  { id: 2, name: 'Seniman',   img: '/images/characters/seniman.png',   bg: '#cda4ff', text: '#2c005b', border: '#a87aff' },
-  { id: 3, name: 'Petani',    img: '/images/characters/petani.png',    bg: '#5ffcc9', text: '#003829', border: '#00d9a2' },
-  { id: 4, name: 'Dokter',    img: '/images/characters/dokter.png',    bg: '#8ffff3', text: '#003833', border: '#3ae9d8' },
-  { id: 5, name: 'Polisi',    img: '/images/characters/polisi.png',    bg: '#ffdf9c', text: '#251a00', border: '#ffc312' },
-  { id: 6, name: 'Musisi',    img: '/images/characters/musisi.png',    bg: '#ffb7d7', text: '#5b002c', border: '#ff6eb4' },
-  { id: 7, name: 'Guru',      img: '/images/characters/guru.png',      bg: '#ffc312', text: '#3f2e00', border: '#e6aa00' },
-];
-
-export const PLAYER_COLORS = [
-  '#ffb4ab', '#8fb2ff', '#5ffcc9', '#ffdf9c', '#ffb7d7', '#cda4ff', '#8ffff3',
-  '#ffc8a1', '#d6ffb4', '#ffb4e5', '#a3c2ff', '#c4ffcb', '#ffd3b4', '#e2b4ff'
-];
-
-// ── Modal Pilih Skin ──────────────────────────────────────────────────────────
-export const OPERATOR_SKIN = { id: 'operator', name: 'Operator', img: '/images/characters/operator.png', bg: '#e5e7eb', text: '#111827', border: '#9ca3af' };
 
 function SkinModal({ mySkinId, mySlotColor, onSelect, onClose }) {
   const { skinList, uploadCustomSkin } = useSocket();
@@ -155,14 +136,14 @@ export default function WaitingRoom({ socket, room: roomProp, player: playerProp
   const mySkinId = player?.skinId ?? 0;
   const mySkin = isGuru ? OPERATOR_SKIN : (skinList[mySkinId] ?? skinList[0]);
 
-  const currentSettings = room?.settings || {};
-  const caseStudy = currentSettings.caseStudy || 'anti-hoaks';
-  const gameTimer = currentSettings.gameTimer || 300;
-  const provokatorCount = String(currentSettings.provokatorCount || 'auto');
-  const tasksPerPlayer = currentSettings.tasksPerPlayer || 5;
-  const sabotageTimer = currentSettings.sabotageTimer || 40;
-  const duelTimer = currentSettings.duelTimer || 20;
-  const debateTimer = currentSettings.debateTimer || 90;
+  const currentSettings = { ...DEFAULT_SETTINGS, ...(room?.settings || {}) };
+  const caseStudy = currentSettings.caseStudy;
+  const gameTimer = currentSettings.gameTimer;
+  const provokatorCount = String(currentSettings.provokatorCount);
+  const tasksPerPlayer = currentSettings.tasksPerPlayer;
+  const sabotageTimer = currentSettings.sabotageTimer;
+  const duelTimer = currentSettings.duelTimer;
+  const debateTimer = currentSettings.debateTimer;
 
   const updateSetting = (key, value) => { if (isGuru) socket?.emit('update-settings', { ...currentSettings, [key]: value }); };
   const startGame = () => socket?.emit('start-game');

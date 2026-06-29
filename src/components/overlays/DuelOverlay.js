@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Swords, Timer, Zap } from 'lucide-react';
-
-const snappy = { type: 'spring', stiffness: 500, damping: 30 };
-const punchy = { type: 'spring', stiffness: 600, damping: 20 };
+import { snappy, punchy } from '@shared/constants';
 
 export default function DuelOverlay({ duel, selfName, onSubmitAnswer }) {
   const [selected, setSelected] = useState(null);

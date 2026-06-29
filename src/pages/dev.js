@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { ArrowLeft, Eye, Layers, Palette, LayoutDashboard, ChevronRight, ChevronDown, CheckCircle, Terminal } from 'lucide-react';
+import { DEFAULT_SETTINGS } from '@shared/constants';
 
 import GameHeader from '../components/game/GameHeader';
 import PlayerView from '../components/game/PlayerView';
@@ -35,16 +36,8 @@ const MOCK_PLAYERS = [
 ];
 
 const MOCK_SETTINGS = {
-  caseStudy: 'anti-hoaks',
-  gameTimer: 300,
-  provokatorCount: 'auto',
-  tasksPerPlayer: 5,
-  sabotageTimer: 40,
-  duelTimer: 20,
-  debateTimer: 90,
-
+  ...DEFAULT_SETTINGS,
   quizRatio: 0.6,
-  minigameEnabled: true,
   minTaskDuration: 15,
 };
 
@@ -650,18 +643,6 @@ function DevLayout({ children, activeScreen, setActiveScreen, darkMode, setDarkM
         </div>
       </div>
       
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: #4f4632;
-          border-radius: 10px;
-        }
-      `}</style>
     </div>
   );
 }

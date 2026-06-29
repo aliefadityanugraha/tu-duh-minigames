@@ -13,15 +13,11 @@
  *  - toggle-broadcast-stats
  */
 const { rooms, getSanitizedRoom } = require('../lib/roomHelpers');
-const { DEFAULT_SETTINGS, DEFAULT_SKINS, EMPTY_GAME_STATS } = require('../data/defaults');
+const { DEFAULT_SETTINGS, DEFAULT_SKINS, EMPTY_GAME_STATS, DUEL_COOLDOWN_MS, SABOTAGE_COOLDOWN_MS, DUEL_WRONG_ANSWER_COOLDOWN_MS } = require('../data/defaults');
 const { checkWinConditions, tallyVotes } = require('../lib/gameLogic');
 const { generateMathQuiz } = require('../lib/mathQuiz');
 const { shuffleArray } = require('../lib/roomHelpers');
 const { pickVariedMinigame, pickVariedQuestion, shouldDeliverQuiz, isMinigameType } = require('../data/minigames');
-
-const DUEL_COOLDOWN_MS = 30_000; // 30 detik cooldown setelah duel
-const SABOTAGE_COOLDOWN_MS = 30_000; // 30 detik cooldown sabotase
-const DUEL_WRONG_ANSWER_COOLDOWN_MS = 10_000; // 10 detik cooldown provokator salah jawab di duel
 
 function registerGameHandlers(socket, io) {
 
@@ -232,7 +228,7 @@ function registerGameHandlers(socket, io) {
       active:         true,
       phase:          'provokator_quiz',
       provocateurId:  socket.id,
-      timer:          s.sabotageQuizTimer ?? 15,
+      timer:          s.sabotageQuizTimer ?? DEFAULT_SETTINGS.sabotageQuizTimer,
       question:       mathQ,
       targetWargaId:  null,
       targetWargaName: null,
@@ -272,7 +268,7 @@ function registerGameHandlers(socket, io) {
 
     const q = room.questions[Math.floor(Math.random() * room.questions.length)];
     const s = room.settings || DEFAULT_SETTINGS;
-    const duelDuration = s.duelTimer ?? 20;
+    const duelDuration = s.duelTimer ?? DEFAULT_SETTINGS.duelTimer;
 
     room.duel = {
       active:      true,
@@ -303,7 +299,7 @@ function registerGameHandlers(socket, io) {
     if (!room || room.state !== 'playing') return;
 
     const s = room.settings || DEFAULT_SETTINGS;
-    room.debate = { active: true, timer: s.debateTimer ?? 90, reason: 'teacher_pause', votes: {}, votedOut: null, chat: [] };
+    room.debate = { active: true, timer: s.debateTimer ?? DEFAULT_SETTINGS.debateTimer, reason: 'teacher_pause', votes: {}, votedOut: null, chat: [] };
     room.gameStats.debatesHeld++;
     room.gameStats.eventLog.push({ time: Date.now(), type: 'debate', message: 'Guru memulai sesi debat voting!' });
 
@@ -605,7 +601,7 @@ function _deliverNextTask(socket) {
   const s = room.settings || DEFAULT_SETTINGS;
   const minigameOn = s.minigameEnabled !== false;
   // Provokator sekarang menggunakan quizRatio yang sama dengan Warga
-  const quizRatio = minigameOn ? (s.quizRatio ?? 0.4) : 1;
+  const quizRatio = minigameOn ? (s.quizRatio ?? DEFAULT_SETTINGS.quizRatio) : 1;
   const isQuiz = shouldDeliverQuiz(player, quizRatio, minigameOn);
 
   const sessionId = `${socket.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -771,7 +767,7 @@ function _handleSabotageProvokatorAnswer(socket, io, room, player, isCorrect, co
   });
 
   const s = room.settings || DEFAULT_SETTINGS;
-  const rescueTimer = s.sabotageTimer ?? 40;
+  const rescueTimer = s.sabotageTimer ?? DEFAULT_SETTINGS.sabotageTimer;
   room.sabotage.phase          = 'warga_rescue';
   room.sabotage.timer          = rescueTimer;
   room.sabotage.maxTimer       = rescueTimer;
@@ -907,7 +903,7 @@ function _resolveDuel(io, room, code, winnerId, loserId, reason) {
     const s = room.settings || DEFAULT_SETTINGS;
     room.debate = {
       active: true,
-      timer: s.debateTimer ?? 90,
+      timer: s.debateTimer ?? DEFAULT_SETTINGS.debateTimer,
       reason: 'emergency_meeting',
       votes: {}, votedOut: null, chat: []
     };

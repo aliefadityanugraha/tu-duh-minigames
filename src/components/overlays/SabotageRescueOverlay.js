@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Timer } from 'lucide-react';
-
-const snappy = { type: 'spring', stiffness: 500, damping: 30 };
-const punchy = { type: 'spring', stiffness: 600, damping: 20 };
+import { snappy, punchy, DEFAULT_SETTINGS } from '@shared/constants';
 
 /**
  * Overlay khusus untuk Warga yang terpilih sebagai target rescue sabotase.
  * Muncul di atas semua konten, hanya untuk 1 Warga terpilih.
  */
-export default function SabotageRescueOverlay({ sabotageRescue, maxTimer = 40, onSubmitAnswer }) {
+export default function SabotageRescueOverlay({ sabotageRescue, maxTimer = DEFAULT_SETTINGS.sabotageTimer, onSubmitAnswer }) {
   const [selected, setSelected]     = useState(null);
   const [submitted, setSubmitted]   = useState(false);
 

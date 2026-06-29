@@ -6,7 +6,7 @@ import GameEndedCard from './GameEndedCard';
 import LiveStatsPanel from '../LiveStatsPanel';
 import TopicDebateBanner from '../overlays/TopicDebateOverlay';
 
-import { PLAYER_COLORS, OPERATOR_SKIN } from '../lobby/WaitingRoom';
+import { PLAYER_COLORS, OPERATOR_SKIN } from '@shared/constants';
 
 /**
  * Layout in-game: Mission Book (+ optional Radar Monitor).

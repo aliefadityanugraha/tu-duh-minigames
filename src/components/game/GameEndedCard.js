@@ -1,8 +1,4 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-
-const snappy = { type: 'spring', stiffness: 500, damping: 30 };
-const punchy = { type: 'spring', stiffness: 600, damping: 20 };
+import { DEFAULT_SETTINGS, snappy, punchy } from '@shared/constants';
 
 /**
  * Layar akhir permainan dengan Neo-Pop Brutalism Podium UI.
@@ -299,7 +295,7 @@ function _buildWinReason(winner, rawReason, room) {
 
   // Provokator menang
   if (rawReason?.includes('Waktu') || rawReason?.includes('waktu')) {
-    const elapsed = room.settings?.gameTimer ?? 300;
+    const elapsed = room.settings?.gameTimer ?? DEFAULT_SETTINGS.gameTimer;
     const menit   = Math.floor(elapsed / 60);
     return {
       headline: `Provokator berhasil mengulur waktu hingga ${menit} menit permainan habis!`,

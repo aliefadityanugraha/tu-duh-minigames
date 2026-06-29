@@ -4,7 +4,7 @@ import { useSocket } from '../../hooks/useSocket';
 import LiveStatsPanel from '../LiveStatsPanel';
 import GuruPanel from '../panels/GuruPanel';
 import GameEndedCard from './GameEndedCard';
-import { PLAYER_COLORS, OPERATOR_SKIN } from '../lobby/WaitingRoom';
+import { PLAYER_COLORS, OPERATOR_SKIN } from '@shared/constants';
 
 export default function AdminView({
   room, player, roleInfo, logs,
@@ -13,10 +13,6 @@ export default function AdminView({
   onTriggerTopicDebate, onEndTopicDebate, onTriggerPresentation, onEndPresentation,
 }) {
   const { skinList } = useSocket();
-  const avatarColors = [
-    '#41e5b3', '#8fb2ff', '#ffdf9c', '#ffb7d7',
-    '#cda4ff', '#ffc58f', '#8ffff3', '#ffb4ab',
-  ];
 
   return (
     <main className="relative z-10 w-full flex-1 flex flex-col">

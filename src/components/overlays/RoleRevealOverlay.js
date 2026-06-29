@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, WifiOff, Users } from 'lucide-react';
-import { PLAYER_COLORS } from '../lobby/WaitingRoom';
+import { PLAYER_COLORS } from '@shared/constants';
 
 export default function RoleRevealOverlay({ role, isGuru, player, room, teammates, skinList, onComplete }) {
   const [timeLeft, setTimeLeft] = useState(3);

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { io } from 'socket.io-client';
-import { INITIAL_SKINS } from '../components/lobby/WaitingRoom';
+import { DEFAULT_SKINS, DEFAULT_SETTINGS } from '@shared/constants';
 
 const SocketContext = createContext(null);
 
@@ -36,7 +36,7 @@ export const SocketProvider = ({ children }) => {
   // State presentasi (notifikasi ke pemain terpilih)
   const [presentationNotif, setPresentationNotif] = useState(null);
 
-  const [skinList, setSkinList] = useState(INITIAL_SKINS);
+  const [skinList, setSkinList] = useState(DEFAULT_SKINS);
   
   // Sinkronisasi skin list dari server
   useEffect(() => {
@@ -206,7 +206,7 @@ export const SocketProvider = ({ children }) => {
       setSelectedOption(null);
       setTaskError(null);
       setMinigameRetryKey(0);
-      setTaskTimer(task.timer ?? 15);
+      setTaskTimer(task.timer ?? DEFAULT_SETTINGS.sabotageQuizTimer);
     };
 
     s.on('next-task-delivery', (task) => {

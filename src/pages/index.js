@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { useSocket } from '../hooks/useSocket';
 import LoginForm from '../components/lobby/LoginForm';
 import WaitingRoom from '../components/lobby/WaitingRoom';
 
 export default function Home() {
   const { socket, room, player, roleInfo, error, setError, loading, joinRoom } = useSocket();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (room?.state === 'playing') {
+      router.push('/game');
+    }
+  }, [room?.state, router]);
 
   const handleSubmit = ({ name, roomCode, isGuru }) => {
     setError('');

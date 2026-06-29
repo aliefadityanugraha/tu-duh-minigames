@@ -439,8 +439,8 @@ export default function PlayerView({
             </aside>
 
             {/* MAIN GAME WORK AREA */}
-            <main className="flex-1 min-h-0 bg-transparent flex flex-col items-stretch transition-all duration-300 ease-in-out w-full h-full shrink-0">
-              <div className="w-full flex flex-col items-stretch h-full">
+            <main className="flex-1 min-h-0 bg-transparent flex flex-col items-stretch transition-all duration-300 ease-in-out w-full shrink-0">
+              <div className="w-full flex-1 min-h-0 flex flex-col items-stretch">
 
                 {room.topicDebate?.active && (
                   <TopicDebateBanner topicDebate={room.topicDebate} players={room.players} />

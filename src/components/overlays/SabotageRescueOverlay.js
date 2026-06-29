@@ -18,7 +18,8 @@ export default function SabotageRescueOverlay({ sabotageRescue, maxTimer = DEFAU
 
   if (!sabotageRescue) return null;
 
-  const { question, timer } = sabotageRescue;
+  const { question } = sabotageRescue;
+  const timer = currentTimer !== undefined ? currentTimer : sabotageRescue.timer;
   const RESCUE_MAX  = maxTimer;
   const timerPct    = Math.min(100, Math.max(0, (timer / RESCUE_MAX) * 100));
   const isUrgent    = timer <= 10;
@@ -74,10 +75,10 @@ export default function SabotageRescueOverlay({ sabotageRescue, maxTimer = DEFAU
           >
             <div className="flex items-center gap-3">
               <motion.span
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                animate={{ rotate: [0, -12, 12, -6, 0] }}
+                transition={{ delay: 0.2, duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
                 className="text-2xl"
-              >🆘</motion.span>
+              >🚨</motion.span>
               <div>
                 <span className="font-rubik italic text-[#ffdad6] text-xl font-bold leading-none">KAMU DIPILIH!</span>
                 <p className="font-mono text-[#ffb4ab] text-[10px] mt-0.5">
@@ -158,7 +159,7 @@ export default function SabotageRescueOverlay({ sabotageRescue, maxTimer = DEFAU
               {submitted ? (
                 <><div className="w-4 h-4 border-2 border-[#ffc312] border-t-transparent rounded-full animate-spin" /> Mengirim...</>
               ) : (
-                '🆘 KIRIM JAWABAN PENYELAMATAN!'
+                '🚨 KIRIM JAWABAN PENYELAMATAN!'
               )}
             </motion.button>
           </div>

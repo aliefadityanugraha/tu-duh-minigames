@@ -3,21 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   PlusCircle,
   LogIn,
-  Users,
-  Trophy,
-  Gamepad2,
-  ClipboardList,
-  MessageSquare,
-  BarChart3,
   X,
   Key,
-  GraduationCap
 } from 'lucide-react';
-import Navbar from '../Navbar';
 import { snappy, punchy } from '@shared/constants';
 
 export default function LoginForm({ onSubmit, error, loading }) {
-  const [name, setName]         = useState('');
+  const [name, setName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [activeModal, setActiveModal] = useState(null);
 
@@ -34,24 +26,43 @@ export default function LoginForm({ onSubmit, error, loading }) {
     setActiveModal(null);
   };
 
-  const navRightContent = (
-    <div className="flex items-center gap-2">
-      <span className="neo-badge bg-[#270067] text-[#5ffcc9] border-[#000000] text-xs py-1 px-3">VERSI 1.0.0</span>
-    </div>
-  );
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...snappy, delay: 0.05 }}
-      className="flex-1 flex flex-col justify-between w-full min-h-screen relative z-10"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="flex-1 flex flex-col justify-between w-full min-h-screen relative overflow-hidden bg-[#241c5a]"
     >
-      {/* ── TOP BAR (Global Navbar) ── */}
-      <Navbar rightContent={navRightContent} />
+      {/* ── BACKGROUND OVERLAY ── */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <img
+          src="/images/overlay.png"
+          alt="overlay"
+          className="w-full h-screen object-cover opacity-100"
+        />
+      </div>
+
+      {/* ── TOP BAR (Logos) ── */}
+      <motion.div
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ ...snappy, delay: 0.2 }}
+        className="w-full flex justify-center py-6 md:py-10 z-10 relative px-4"
+      >
+        <div className="flex items-center justify-center flex-wrap gap-3 md:gap-5">
+          {/* Logos Group */}
+          <div className="flex items-center">
+            <img
+              src="/images/logo-udinus.png"
+              alt="Logos Udinus"
+              className="h-20 md:h-30 object-contain pointer-events-none drop-shadow-md"
+            />
+          </div>
+        </div>
+      </motion.div>
 
       {/* ── MAIN AREA ── */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-8 px-4 py-12 md:py-20 max-w-4xl mx-auto w-full z-0">
+      <div className="flex-1 flex flex-col items-center justify-center gap-8 px-4 py-4 md:py-8 max-w-4xl mx-auto w-full z-10 relative">
 
         {/* Title / Logo */}
         <motion.div
@@ -60,14 +71,27 @@ export default function LoginForm({ onSubmit, error, loading }) {
           transition={{ ...punchy, delay: 0.15 }}
           className="flex flex-col items-center relative mb-4"
         >
-          <div className="flex w-full max-w-[726.2px] items-center flex-col relative">
+          <div className="flex w-full items-center flex-col relative">
+            {/* Garuda Outline */}
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              className="mb-[-30px] md:mb-[-40px] z-20"
+            >
+
+            </motion.div>
+
             {/* Logo TU-DUH! */}
             <motion.div
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="font-rubik font-bold italic text-[#ffc312] text-7xl sm:text-8xl md:text-[180px] tracking-[-4px] sm:tracking-[-6px] md:tracking-[-9px] leading-none flex items-center select-none drop-shadow-[8px_8px_0px_#000000] md:drop-shadow-[12px_12px_0px_#000000] mb-2 sm:mb-4"
+              className="flex items-center justify-center select-none drop-shadow-[6px_6px_0px_#000000] md:drop-shadow-[10px_10px_0px_#000000] mb-6 sm:mb-10 z-30"
             >
-              TU-DUH!
+              <img
+                src="/images/logo.png"
+                alt="TU-DUH!"
+                className="w-[600px] sm:w-[650px] md:w-[700px] object-contain pointer-events-none"
+              />
             </motion.div>
 
             {/* Subtitle */}
@@ -75,10 +99,13 @@ export default function LoginForm({ onSubmit, error, loading }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...snappy, delay: 0.35 }}
-              className="flex items-center justify-center px-6 py-2 bg-[#00000066] rounded-lg border-2 border-solid border-black rotate-[-2.00deg] shadow-[6px_6px_0px_#000000] backdrop-blur-[2px] backdrop-brightness-[100%] max-w-sm sm:max-w-md md:max-w-none"
+              className="flex flex-col items-center justify-center px-8 py-3 bg-black/40 rounded-xl border-2 border-white/20 shadow-lg backdrop-blur-md"
             >
-              <span className="font-rubik text-[#5ffcc9] text-base sm:text-xl md:text-[32px] text-center tracking-[0] leading-none whitespace-nowrap select-none">
+              <span className="font-rubik text-white text-xl md:text-2xl text-center tracking-widest leading-none whitespace-nowrap select-none font-medium">
                 SIAP MAIN? GASKEUN!
+              </span>
+              <span className="text-white text-sm md:text-lg text-center tracking-widest leading-none whitespace-nowrap select-none font-medium">
+                TUGAS DEDUKSI HARIAN PANCASILA
               </span>
             </motion.div>
           </div>
@@ -89,7 +116,7 @@ export default function LoginForm({ onSubmit, error, loading }) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...snappy, delay: 0.4 }}
-          className="flex flex-col sm:flex-row w-full max-w-2xl gap-4 md:gap-6 px-4"
+          className="flex flex-col sm:flex-row w-full max-w-2xl gap-4 md:gap-6 px-4 mt-2"
         >
           {/* BUAT ROOM */}
           <motion.button
@@ -254,11 +281,10 @@ export default function LoginForm({ onSubmit, error, loading }) {
                         whileHover={!loading ? { scale: 1.02 } : {}}
                         whileTap={!loading ? { scale: 0.96 } : {}}
                         transition={punchy}
-                        className={`w-full py-4 font-rubik text-base font-black tracking-wide flex items-center justify-center gap-2 border-4 border-black shadow-[4px_4px_0px_#000000] ${
-                          activeModal === 'buat'
+                        className={`w-full py-4 font-rubik text-base font-black tracking-wide flex items-center justify-center gap-2 border-4 border-black shadow-[4px_4px_0px_#000000] ${activeModal === 'buat'
                             ? 'bg-[#ffc312] text-[#3f2e00]'
                             : 'bg-[#41e5b3] text-[#003829]'
-                        } ${loading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                          } ${loading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         {loading ? (
                           <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
